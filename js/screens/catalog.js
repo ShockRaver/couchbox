@@ -28,13 +28,16 @@ Screens.catalog = {
         });
         this.grid = new VList(this.gridBox, { cols: 7, itemW: 200, itemH: 372, pad: 14, render: function (it) { return self.renderCard(it); } });
         this.lastCat = {};
+        UI.addNav(this, 'movie');
     },
 
     show: function (p) {
         var self = this;
         this.mode = p.mode;
         var movie = this.mode === 'movie';
-        this.hdr.title.textContent = movie ? 'Films' : 'Series';
+        this.hdr.title.textContent = (movie ? 'Films' : 'Series') + ': categorieën';
+        this.nav.active = this.mode;
+        this.nav.draw();
         this.hdr.sub.textContent = '';
         this.catList = null;
         this.cats.setItems([]);
@@ -146,6 +149,7 @@ Screens.catalog = {
         while (this.cats.current() && this.cats.current().header) {
             if (!this.cats.move(k)) { this.cats.focus(from); break; }
         }
+        return this.cats.index !== from;
     },
 
     schedCat: function () {
@@ -171,7 +175,9 @@ Screens.catalog = {
         if (!this.catList) return false;
         if (this.zone === 'cats') {
             switch (k) {
-                case 'up': case 'down': this.moveCat(k); this.schedCat(); return true;
+                case 'up': case 'down':
+                    if (this.moveCat(k)) this.schedCat(); else if (k === 'up') this.navFocus(true);
+                    return true;
                 case 'chup': case 'chdown':
                     this.cats.page(k === 'chup' ? -1 : 1);
                     if (this.cats.current().header) this.moveCat(k === 'chup' ? 'up' : 'down');
@@ -191,7 +197,8 @@ Screens.catalog = {
         }
         var it = this.grid.current();
         switch (k) {
-            case 'up': case 'down': case 'right': this.grid.move(k); return true;
+            case 'up': if (!this.grid.move(k)) this.navFocus(true); return true;
+            case 'down': case 'right': this.grid.move(k); return true;
             case 'left': if (!this.grid.move('left')) this.setZone('cats'); return true;
             case 'chup': case 'chdown': this.grid.page(k === 'chup' ? -1 : 1); return true;
             case 'back': this.setZone('cats'); return true;

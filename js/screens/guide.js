@@ -21,6 +21,7 @@ Screens.guide = {
         this.el.appendChild(this.rowsBox);
         this.list = new VList(this.rowsBox, { itemH: 88, render: function (c, i) { return self.renderRow(c, i); } });
         this.list.setEmpty('Geen zenders');
+        UI.addNav(this, 'guide');
     },
 
     px: function () { return this.AREA_W / this.WIN; },
@@ -171,6 +172,7 @@ Screens.guide = {
         switch (k) {
             case 'up': case 'down':
                 if (this.list.move(k)) { this.syncProg(); this.list.refresh(); this.updateDetail(); this.requestEpg(); }
+                else if (k === 'up') this.navFocus(true);
                 return true;
             case 'chup': case 'chdown':
                 this.list.page(k === 'chup' ? -1 : 1); this.syncProg(); this.list.refresh(); this.updateDetail(); this.requestEpg();

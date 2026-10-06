@@ -18,6 +18,7 @@ Screens.settings = {
         this.el.appendChild(box);
         this.list = new VList(box, { itemH: 96, pad: 8, render: function (r) { return self.renderRow(r); } });
         this.list.setActive(true);
+        UI.addNav(this, 'settings');
     },
 
     show: function () { this.render(0); this.startTicker(); },
@@ -78,7 +79,7 @@ Screens.settings = {
     onKey: function (k) {
         var r = this.list.current();
         switch (k) {
-            case 'up': case 'down': this.list.move(k); return true;
+            case 'up': case 'down': if (!this.list.move(k) && k === 'up') this.navFocus(true); return true;
             case 'left': case 'right': if (this.OPTS[r.id]) this.cycle(r.id, k === 'left' ? -1 : 1); return true;
             case 'ok':
                 if (this.OPTS[r.id]) this.cycle(r.id, 1);

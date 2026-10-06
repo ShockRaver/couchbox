@@ -102,7 +102,7 @@ Screens.section = {
         var r = this.rows.rows[this.rows.cur], it = r && r.list.current();
         if (!it) return;
         if (r.id === 'hist') UI.heroHistory(this.hero, it);
-        else if (r.id === 'fresh') this.hero.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, '<b>🔔 Nieuw</b>');
+        else if (r.id === 'fresh') this.hero.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
         else this.hero.forItem(this.type, it);
     },
 

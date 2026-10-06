@@ -61,6 +61,9 @@ var UI = {
         return { el: U.h('header', { class: 'hdr' }, [t, sub, right]), title: t, sub: sub, right: right };
     },
 
+    // Waardering als ster-icoon met cijfer (0-10 of 0-100)
+    rating: function (r) { return '<span class="rating">' + Icons.get('star') + (r > 10 ? r / 10 : r).toFixed(1) + '</span>'; },
+
     pbar: function (frac) {
         var i = U.h('i');
         i.style.width = (U.clamp(frac || 0, 0, 1) * 100).toFixed(1) + '%';
@@ -78,7 +81,7 @@ var UI = {
             o.sub ? U.h('div', { class: 'card-sub', text: o.sub }) : null
         ]);
         var r = parseFloat(o.rating);
-        if (r > 0) card.appendChild(U.h('div', { class: 'badge', text: '★ ' + (r > 10 ? r / 10 : r).toFixed(1) }));
+        if (r > 0) card.appendChild(U.h('div', { class: 'badge', html: Icons.get('star') + (r > 10 ? r / 10 : r).toFixed(1) }));
         if (o.fav) card.appendChild(U.h('div', { class: 'card-fav', html: Icons.get('star') }));
         if (o.seen) card.appendChild(U.h('div', { class: 'card-seen', html: Icons.get('check') }));
         if (o.progress) { var pb = UI.pbar(o.progress); pb.classList.add('card-pbar'); card.appendChild(pb); }
@@ -267,6 +270,29 @@ TopNav.prototype.key = function (k) {
     return false;
 };
 
+/* Menu bovenaan toevoegen aan een scherm met lijsten (Live TV, TV-gids, Instellingen, Categorieën).
+   Het scherm roept scr.navFocus(true) aan als 'omhoog' bovenaan de lijst niet verder kan;
+   zolang het menu focus heeft, gaan toetsen naar het menu en is de focus in de lijst gedimd. */
+UI.addNav = function (scr, active) {
+    var inner = scr.onKey, show = scr.show;
+    scr.show = function () { scr.navFocus(false); return show.apply(scr, arguments); };
+    scr.nav = new TopNav(active);
+    scr.el.appendChild(scr.nav.el);
+    scr.el.classList.add('has-nav');
+    scr.navOn = false;
+    scr.navFocus = function (b) {
+        scr.navOn = !!b;
+        scr.nav.setFocus(scr.navOn);
+        scr.el.classList.toggle('nav-on', scr.navOn);
+    };
+    scr.onKey = function (k) {
+        if (!scr.navOn) return inner.call(scr, k);
+        if (k === 'down' || k === 'back') { scr.navFocus(false); return true; }
+        if (k === 'longok') k = 'ok';
+        return scr.nav.key(k) || k === 'up';
+    };
+};
+
 /* Groot "hero"-blok bovenaan: backdrop, titel, gegevens en beschrijving van het geselecteerde item */
 function Hero(box) {
     this.box = box;
@@ -308,7 +334,7 @@ Hero.prototype.set = function (d) {
 Hero.prototype.forItem = function (type, item, extra, onTmdb) {
     var self = this, my = ++this.token, m = Meta.info(type, item), id = Tmdb.idOf(item);
     var meta = [], r = Meta.rating(type, item);
-    if (r > 0) meta.push('<span class="rating">★ ' + r.toFixed(1) + '</span>');
+    if (r > 0) meta.push(UI.rating(r));
     if (m && m.year) meta.push(String(m.year));
     if (m && type === 'm' && m.runtime) meta.push(App.durText(m.runtime * 60));
     if (m && type === 't' && m.seasons) meta.push(m.seasons + (m.seasons === 1 ? ' seizoen' : ' seizoenen'));
@@ -381,7 +407,7 @@ UI.histCard = function (h) {
 };
 UI.heroHistory = function (hero, h) {
     var ep = h.mode === 'episode' && h.series;
-    var extra = '<b>' + (h.upNext ? '▶ ' : '▶ Verder kijken · ') + '</b>' + U.esc(App.historyLabel(h, true));
+    var extra = Icons.get('play') + '<b>' + (h.upNext ? '' : 'Verder kijken · ') + '</b>' + U.esc(App.historyLabel(h, true));
     var save = function (tid) { Store.patchHistory(h.key, ep ? { seriesTmdb: tid } : { tmdb: tid }); if (hero.onUpdate) hero.onUpdate(); };
     if (ep) hero.forItem('t', { series_id: h.series.id, name: h.series.name, tmdb: h.series.tmdb, cover: h.series.icon }, extra, save);
     else hero.forItem('m', { stream_id: h.id, name: h.name, tmdb: h.tmdb, stream_icon: h.icon }, extra, save);

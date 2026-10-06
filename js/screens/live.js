@@ -19,6 +19,7 @@ Screens.live = {
         this.cats = new VList(this.catBox, { itemH: 72, pad: 10, render: function (c) { return self.renderCat(c); } });
         this.chans = new VList(this.chBox, { itemH: 100, pad: 10, render: function (c) { return self.renderCh(c); } });
         this.numBuf = '';
+        UI.addNav(this, 'live');
     },
 
     show: function (p) {
@@ -230,7 +231,9 @@ Screens.live = {
         if (Keys.isDigit(k)) { this.numInput(k); return true; }
         if (this.zone === 'cats') {
             switch (k) {
-                case 'up': case 'down': this.cats.move(k); this.schedCat(); return true;
+                case 'up': case 'down':
+                    if (this.cats.move(k)) this.schedCat(); else if (k === 'up') this.navFocus(true);
+                    return true;
                 case 'chup': case 'chdown': this.cats.page(k === 'chup' ? -1 : 1); this.schedCat(); return true;
                 case 'right': case 'ok': case 'longok':
                     this.flushCat();
@@ -240,7 +243,9 @@ Screens.live = {
             return false;
         }
         switch (k) {
-            case 'up': case 'down': this.chans.move(k); this.focusChanged(); return true;
+            case 'up': case 'down':
+                if (this.chans.move(k)) this.focusChanged(); else if (k === 'up') this.navFocus(true);
+                return true;
             case 'chup': case 'chdown': this.chans.page(k === 'chup' ? -1 : 1); this.focusChanged(); return true;
             case 'left': this.setZone('cats'); return true;
             case 'right': return true;

@@ -71,7 +71,7 @@ Screens.movie = {
         this.sub.textContent = subs.join('  ·  ');
 
         var meta = [], r = Meta.rating('m', it) || parseFloat(inf.rating) || 0;
-        if (r > 0) meta.push('<span class="rating">★ ' + (r > 10 ? r / 10 : r).toFixed(1) + '</span>');
+        if (r > 0) meta.push(UI.rating(r));
         var year = (m && m.year) || String(inf.releasedate || inf.release_date || '').slice(0, 4);
         if (/^\d{4}$/.test(String(year))) meta.push(U.esc(year));
         var dur = m && m.runtime ? App.durText(m.runtime * 60) : App.durText(inf.duration_secs, inf.duration);

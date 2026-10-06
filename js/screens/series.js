@@ -2,7 +2,7 @@
 Screens.series = {
     build: function () {
         var self = this;
-        this.el = UI.screen('series', 'detail');
+        this.el = UI.screen('series', 'detail series3');
         this.bg = U.h('div', { class: 'detail-bg' });
         this.posterBox = U.h('div', { class: 'series-poster-box' });
         this.titleEl = U.h('h1');
@@ -88,7 +88,7 @@ Screens.series = {
         this.titleEl.textContent = (m && m.title) || it.name || inf.name || '';
         var meta = [], year = (m && m.year) || String(inf.releaseDate || inf.releasedate || it.releaseDate || '').slice(0, 4);
         var r = Meta.rating('t', Object.assign({ tmdb: this.tmdbId }, it)) || parseFloat(inf.rating) || 0;
-        if (r > 0) meta.push('<span class="rating">★ ' + (r > 10 ? r / 10 : r).toFixed(1) + '</span>');
+        if (r > 0) meta.push(UI.rating(r));
         if (/^\d{4}$/.test(String(year))) meta.push(U.esc(year));
         var genres = det && det.genres.length ? det.genres.slice(0, 3).join(', ') : (inf.genre || it.genre);
         if (genres) meta.push(U.esc(genres));

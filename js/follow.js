@@ -76,8 +76,8 @@ var Follow = (function () {
         var d = data();
         if (ids.length === 1) {
             var fr = d.fresh[ids[0]], e = fr.eps[fr.eps.length - 1];
-            Toast.show('🔔 Nieuwe aflevering: ' + fr.name + ' S' + U.pad(+e.season) + ' E' + U.pad(+e.episode), 6000);
-        } else Toast.show('🔔 Nieuwe afleveringen in ' + ids.length + ' series', 6000);
+            Toast.show('Nieuwe aflevering: ' + fr.name + ' S' + U.pad(+e.season) + ' E' + U.pad(+e.episode), 6000);
+        } else Toast.show('Nieuwe afleveringen in ' + ids.length + ' series', 6000);
         var s = App.screen();
         if (s === Screens.home) Screens.home.render(Screens.home.rows.state());
     }

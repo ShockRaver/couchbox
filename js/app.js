@@ -155,11 +155,11 @@ var App = {
         var ep = h.mode === 'episode' && h.series;
         Dialog.menu({
             title: 'Verder kijken?',
-            image: (ep && h.series.icon) || h.icon,
+            image: ep ? Meta.poster('t', { tmdb: h.series.tmdb }, h.series.icon) : Meta.poster('m', { tmdb: h.tmdb }, h.icon),
             imageName: ep ? h.series.name : h.name,
             text: (ep ? h.series.name : h.name) + '\n' + this.historyLabel(h, true),
             progress: h.duration ? h.position / h.duration : 0,
-            items: [{ id: 'play', label: h.upNext ? '▶  Afspelen' : '▶  Verder kijken' }, { id: 'home', label: 'Naar het startscherm' }]
+            items: [{ id: 'play', label: h.upNext ? 'Afspelen' : 'Verder kijken' }, { id: 'home', label: 'Naar het startscherm' }]
         }, function (it) {
             if (it && it.id === 'play') self.playHistory(h, h.position);
         });

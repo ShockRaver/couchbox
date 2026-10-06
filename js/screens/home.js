@@ -90,7 +90,7 @@ Screens.home = {
         var H = this.hero;
         if (r.id === 'hist') {
             UI.heroHistory(H, it);
-        } else if (r.id === 'fresh') H.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, '<b>🔔 Nieuw</b>');
+        } else if (r.id === 'fresh') H.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
         else if (r.id === 'favs') H.forItem(it._type === 'movie' ? 'm' : 't', it._type === 'movie' ? App.vodFromFav(it) : App.seriesFromFav(it));
         else if (r.id === 'chans') H.forChannel(it);
     },
@@ -107,7 +107,7 @@ Screens.home = {
         Dialog.menu({
             title: ep ? h.series.name : h.name,
             text: App.historyLabel(h, true),
-            image: (ep && h.series.icon) || h.icon, imageName: ep ? h.series.name : h.name,
+            image: ep ? Meta.poster('t', { tmdb: h.series.tmdb }, h.series.icon) : Meta.poster('m', { tmdb: h.tmdb }, h.icon), imageName: ep ? h.series.name : h.name,
             progress: h.duration ? h.position / h.duration : 0,
             items: [
                 { id: 'resume', label: h.upNext || !h.position ? 'Afspelen' : 'Verder kijken vanaf ' + U.fmtTime(h.position) },
