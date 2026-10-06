@@ -53,13 +53,11 @@ The QN90D's SolarCell remote has **no colour or number buttons**. The **123** bu
 
 ## Setup
 
-**TMDB key (optional, recommended)**: genres, posters, search by actor and recommendations need a free [TMDB](https://www.themoviedb.org/settings/api) API key (v3). Put it in `js/config.local.js` (not in git):
+**TMDB key (optional, recommended)**: genres, posters, search by actor and TMDB recommendations need a free [TMDB](https://www.themoviedb.org/settings/api) API key (v3, 32 characters). Two ways to set it:
+- On the TV: *Instellingen → TMDB-gegevens* opens an on-screen keyboard; the key is checked with TMDB before it's saved.
+- Built in: put it in `js/config.local.js` (not in git): `CONFIG.tmdbKey = 'your-key';`
 
-```js
-CONFIG.tmdbKey = 'your-key';
-```
-
-Without a key the app still works, with provider data only. This product uses the TMDB API but is not endorsed or certified by TMDB. A personal key is for personal use; commercial use needs a TMDB agreement.
+Without a key the app still works with provider data only; Home then shows recommendations based on your provider's categories, ratings and newest titles. This product uses the TMDB API but is not endorsed or certified by TMDB. A personal key is for personal use; commercial use needs a TMDB agreement.
 
 ## Test in the browser (UI only)
 

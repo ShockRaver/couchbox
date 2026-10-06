@@ -212,6 +212,8 @@ var Genres = (function () {
         },
         // Alle titels in je gekozen talen, zonder dubbelen, nieuwste eerst (uit de genre-index, dus in stukjes opgebouwd)
         all: function (type, cats) { return indexed(type, '*', cats); },
+        // Volledige index { genreId: [titels], '*': [...] } (voor aanbevelingen zonder TMDB)
+        index: index,
         // Index alvast op de achtergrond opbouwen (na het opstarten), zodat Films/Series meteen open gaan
         warm: function () {
             return Promise.all([Api.vodCategories(), Api.seriesCategories()]).then(function (c) {

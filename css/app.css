@@ -143,7 +143,10 @@ b { font-weight: 700; }
 
 /* ---- Startscherm ---- */
 .home-body { position: absolute; top: 120px; left: 0; right: 0; bottom: 0; overflow: hidden; }
-.rows-wrap { transition: transform .22s ease-out; padding-bottom: 60px; }
+.rows-wrap { transition: transform .2s var(--ease); padding-bottom: 60px; will-change: transform; }
+/* Rijen ver buiten beeld: niet tekenen; elke rij apart opgemaakt, zodat een wijziging niet de hele pagina raakt */
+.hrow { contain: layout paint; }
+.hrow.far { visibility: hidden; }
 .hrow { padding: 0 66px; margin-bottom: 26px; }
 .hrow h3 { font-size: 30px; font-weight: 600; color: var(--muted); margin: 0 0 4px 14px; }
 .hrow.cur h3 { color: var(--text); }
@@ -583,3 +586,11 @@ b { font-weight: 700; }
 .g-prog.g-past.focus .g-tm { color: var(--focus-sub); }
 .g-archic { display: flex; color: var(--accent); flex-shrink: 0; }
 .g-archic .ic { width: 22px; height: 22px; }
+
+/* Tekstinvoer in een dialoog (bv. TMDB-sleutel) */
+.dlg-text { width: 760px; }
+.dlg-text .sk-keys { margin: 8px 0 6px; }
+.dlg-text .sk-key { background: var(--panel2); }
+.dlg-text .sk-key.focus { background: var(--focus); color: var(--focus-ink); }
+.dlg-query { margin-bottom: 18px; font-size: 32px; }
+.dlg-text .btn.focus { transform: none; }

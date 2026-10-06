@@ -137,11 +137,76 @@ var Reco = (function () {
         return items.length >= 5 ? { id: 'short', title: 'Korter dan 90 minuten', items: byRank(items) } : null;
     }
 
+    // ---- Zonder TMDB (of als TMDB nog weinig oplevert): alleen gegevens van de provider ----
+    // Rating van de provider (0-10), of 0
+    function pRating(it) {
+        var r = parseFloat(it.rating);
+        if (!(r > 0)) r = (parseFloat(it.rating_5based) || 0) * 2;
+        return r > 10 ? r / 10 : r;
+    }
+    function basic(kind, w) {
+        var types = kind === 'home' ? ['m', 't'] : [kind];
+        return Promise.all([Api.vodCategories(), Api.seriesCategories()]).then(function (c) {
+            return Promise.all(types.map(function (t) { return Genres.index(t, t === 'm' ? c[0] : c[1]); }));
+        }).then(function (idxs) {
+            var idx = {}, out = [];
+            types.forEach(function (t, i) { idx[t] = idxs[i]; });
+            var wrap = function (t) { return function (it) { return { type: t, item: it, id: Tmdb.idOf(it) || '' }; }; };
+            var keyOf = function (t, it) { return String(t === 'm' ? it.stream_id : it.series_id); };
+            // Genres waar jouw bekeken titels in zitten
+            var mine = {}, srcs = [];
+            Store.history().forEach(function (h) {
+                var t = h.mode === 'movie' ? 'm' : 't', id = t === 'm' ? String(h.id) : h.series && String(h.series.id);
+                if (id && idx[t] && srcs.length < 2 && !srcs.some(function (s) { return s.t === t && s.id === id; })) srcs.push({ t: t, id: id, name: t === 'm' ? h.name : h.series.name });
+            });
+            types.forEach(function (t) {
+                Object.keys(idx[t]).forEach(function (g) {
+                    if (g === '*' || !Genres.byId(g)) return;
+                    idx[t][g].forEach(function (it) {
+                        var k = keyOf(t, it);
+                        srcs.forEach(function (s) { if (s.t === t && s.id === k) { (s.genres = s.genres || []).push(g); mine[g] = (mine[g] || 0) + 2; } });
+                    });
+                });
+            });
+            var best = function (list, t) {
+                return list.slice().sort(function (a, b) { return pRating(b) - pRating(a) || (b._t || 0) - (a._t || 0); }).map(wrap(t));
+            };
+            // "Omdat je X keek": titels uit hetzelfde genre, best gewaardeerd eerst
+            srcs.forEach(function (s) {
+                var g = (s.genres || [])[0];
+                if (!g) return;
+                var items = pick(best(idx[s.t][g], s.t).filter(function (x) { return keyOf(s.t, x.item) !== s.id; }), w, [s.t]);
+                if (items.length >= 5) out.push({ id: 'b:bc:' + s.t + s.id, title: 'Omdat je ' + s.name + ' keek', items: items });
+            });
+            // Jouw genre (behalve als het al in "Omdat je X keek" zit)
+            var used = srcs.map(function (s) { return (s.genres || [])[0]; });
+            Object.keys(mine).filter(function (g) { return used.indexOf(g) < 0; }).sort(function (a, b) { return mine[b] - mine[a]; }).slice(0, 1).forEach(function (g) {
+                var items = [];
+                types.forEach(function (t) { if (idx[t][g]) items = items.concat(best(idx[t][g], t)); });
+                items = pick(items, w, types);
+                if (items.length >= 5) out.push({ id: 'b:g:' + g, title: Genres.byId(g).name + ' voor jou', items: items });
+            });
+            // Nieuw en best gewaardeerd (rating van de provider)
+            if (kind === 'home') {
+                if (idx.m) out.push({ id: 'b:new-m', title: 'Nieuwe films', items: pick(idx.m['*'].map(wrap('m')), w, ['m']) });
+                if (idx.t) out.push({ id: 'b:new-t', title: 'Nieuwe series', items: pick(idx.t['*'].map(wrap('t')), w, ['t']) });
+            }
+            var top = [];
+            types.forEach(function (t) { top = top.concat(idx[t]['*'].filter(function (it) { return pRating(it) >= 7; }).slice(0, 2000)); });
+            var topItems = pick(top.sort(function (a, b) { return pRating(b) - pRating(a); }).map(function (it) {
+                return wrap(it.series_id != null && it.stream_id == null ? 't' : 'm')(it);
+            }), w, types);
+            if (topItems.length >= 5) out.push({ id: 'b:top', title: 'Hoogst gewaardeerd', items: topItems });
+            return out.filter(function (r) { return r.items.length >= 3; });
+        }).catch(function () { return []; });
+    }
+
     // ---- Samenstellen ----
     // kind: 'home' (films + series), 'm' of 't'. Geeft een vaste volgorde; lege rijen vallen weg.
     function build(kind) {
         var types = kind === 'home' ? ['m', 't'] : [kind], w = watched();
-        if (!Tmdb.enabled()) return Promise.resolve([]);
+        // Geen TMDB: rijen op basis van de provider
+        if (!Tmdb.enabled()) return basic(kind, w);
         return pool().then(function (list) {
             return Promise.all([because(w, types, 2), trending(w, types)]).then(function (r) {
                 var bc = r[0].filter(Boolean), out = [];
@@ -151,7 +216,13 @@ var Reco = (function () {
                 genreRows(list, w, types, 2).forEach(function (g) { if (g) out.push(g); });
                 out.push(topRated(list, w, types));
                 if (types.indexOf('m') >= 0) { out.push(dutch(list, w)); out.push(short(list, w)); }
-                return out.filter(Boolean);
+                out = out.filter(Boolean);
+                // TMDB levert (nog) weinig op, bv. kort na installeren: aanvullen met rijen van de provider (zonder dubbele titels)
+                if (out.length >= 3) return out;
+                return basic(kind, w).then(function (extra) {
+                    var titles = out.map(function (r) { return r.title; });
+                    return out.concat(extra.filter(function (r) { return titles.indexOf(r.title) < 0; }));
+                });
             });
         });
     }

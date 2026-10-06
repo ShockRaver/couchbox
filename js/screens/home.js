@@ -16,7 +16,8 @@ Screens.home = {
         // Nieuwe gegevens voor het geselecteerde item (bv. backdrop): kaarten in beeld verversen
         this.hero.onUpdate = function () { self.rows.rows.forEach(function (r) { if (r.id === 'hist') r.list.refresh(); }); };
         this.heroT = null;
-        this.updateHero = function () { clearTimeout(self.heroT); self.heroT = setTimeout(function () { self.showHero(); }, 150); };
+        // Hero bijwerken als je even stilstaat; bij omhoog/omlaag iets langer wachten (dan scroll je vaak door)
+        this.updateHero = function (slow) { clearTimeout(self.heroT); self.heroT = setTimeout(function () { self.showHero(); }, slow ? 350 : 180); };
     },
 
     show: function () { this.render(null); },
@@ -153,8 +154,8 @@ Screens.home = {
             return this.nav.key(k) || k === 'up';
         }
         switch (k) {
-            case 'up': if (!this.rows.move('up')) this.setZone('nav'); else this.updateHero(); return true;
-            case 'down': case 'left': case 'right': if (this.rows.move(k)) this.updateHero(); return true;
+            case 'up': if (!this.rows.move('up')) this.setZone('nav'); else this.updateHero(true); return true;
+            case 'down': case 'left': case 'right': if (this.rows.move(k)) this.updateHero(k === 'down'); return true;
             case 'ok': this.rows.select(); return true;
             case 'longok':
                 var r = this.rows.rows[this.rows.cur];

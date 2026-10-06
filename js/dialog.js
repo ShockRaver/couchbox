@@ -13,6 +13,8 @@ var Dialog = (function () {
         if (!stack.length) root.classList.remove('show');
     }
     function onKey(k) { var d = stack[stack.length - 1]; if (d) d.onKey(k); }
+    // Teken van een gewoon toetsenbord; true als het bovenste venster tekst accepteert
+    function onChar(ch) { var d = stack[stack.length - 1]; if (!d || !d.onChar) return false; d.onChar(ch); return true; }
 
     // o: {title, text, items: [{id, label, checked, hint}], index}; cb(item|null)
     // Optioneel: image (poster), imageName (voor de placeholder) en progress (0..1, voortgangsbalk)
@@ -49,6 +51,57 @@ var Dialog = (function () {
             else if (k === 'ok') { close(d); if (cb) cb(o.items[list.index], list.index); }
             else if (k === 'back') { close(d); if (cb) cb(null); }
         };
+        return d;
+    }
+
+    // Tekst invoeren met het toetsenbord op het scherm. o: {title, text, value, placeholder, okLabel}; cb(tekst|null)
+    function text(o, cb) {
+        var value = o.value || '', btnIdx = 0, zone = 'keys';
+        var shown = U.h('span', { class: 'sk-text' });
+        var field = U.h('div', { class: 'sk-query dlg-query' }, [shown, U.h('i', { class: 'sk-caret' })]);
+        var kb = new Keyboard(function (id) {
+            if (id === 'space') value += ' ';
+            else if (id === 'del') value = value.slice(0, -1);
+            else if (id === 'clear') value = '';
+            else value += id;
+            draw();
+        });
+        var btns = [{ id: 'ok', label: o.okLabel || 'Opslaan' }, { id: 'cancel', label: 'Annuleren' }].map(function (b) {
+            b.el = U.h('div', { class: 'btn', text: b.label });
+            return b;
+        });
+        var box = U.h('div', { class: 'dialog dlg-text' }, [
+            U.h('h2', { text: o.title || '' }),
+            o.text ? U.h('p', { class: 'dialog-text', text: o.text }) : null,
+            field, kb.el,
+            U.h('div', { class: 'btn-row' }, btns.map(function (b) { return b.el; }))
+        ]);
+        var d = { el: U.h('div', { class: 'dialog-wrap' }, box) };
+        function draw() {
+            shown.textContent = value || o.placeholder || '';
+            shown.classList.toggle('ph', !value);
+            kb.setActive(zone === 'keys');
+            btns.forEach(function (b, i) { b.el.classList.toggle('focus', zone === 'btns' && i === btnIdx); });
+        }
+        function done(ok) { close(d); if (cb) cb(ok ? value.trim() : null); }
+        d.onKey = function (k) {
+            if (k === 'back') { done(false); return; }
+            if (Keys.isDigit(k)) { value += k; draw(); return; }   // cijfertoetsen van de afstandsbediening
+            if (zone === 'keys') {
+                var r = kb.key(k);
+                if (r === 'down' || r === 'right') { zone = 'btns'; draw(); }
+                return;
+            }
+            if (k === 'left' || k === 'right') { btnIdx = k === 'left' ? 0 : 1; draw(); }
+            else if (k === 'up') { zone = 'keys'; draw(); }
+            else if (k === 'ok') done(btns[btnIdx].id === 'ok');
+        };
+        d.onChar = function (ch) {
+            if (ch === '\b') value = value.slice(0, -1); else value += ch;
+            draw();
+        };
+        push(d);
+        draw();
         return d;
     }
 
@@ -101,5 +154,5 @@ var Dialog = (function () {
         return d;
     }
 
-    return { init: init, isOpen: isOpen, onKey: onKey, menu: menu, confirm: confirm, alert: alert, pin: pin };
+    return { init: init, isOpen: isOpen, onKey: onKey, onChar: onChar, menu: menu, text: text, confirm: confirm, alert: alert, pin: pin };
 })();

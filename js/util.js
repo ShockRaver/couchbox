@@ -116,6 +116,7 @@ var U = (function () {
         if (src && /^https?:\/\//i.test(src)) {
             var i = document.createElement('img');
             i.decoding = 'async';
+            i.loading = 'lazy';   // pas laden als de kaart (bijna) in beeld komt
             if (loadedSrc[src]) w.classList.add('loaded');
             i.onload = function () { loadedSrc[src] = 1; w.classList.add('loaded'); };
             i.onerror = function () { w.classList.remove('loaded'); if (i.parentNode) i.parentNode.removeChild(i); };

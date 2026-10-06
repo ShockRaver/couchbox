@@ -288,12 +288,12 @@ var App = {
             return;
         }
         // Gewoon toetsenbord (browser of USB aan de TV): letters en Backspace rechtstreeks naar een scherm met tekstinvoer
-        var sc = App.screen();
-        if (sc && sc.onChar && !Dialog.isOpen() && !Loader.active() && !e.ctrlKey && !e.metaKey && !e.altKey &&
-            (e.key === 'Backspace' || (e.key && e.key.length === 1 && !/[0-9]/.test(e.key)))) {
-            e.preventDefault();
-            sc.onChar(e.key === 'Backspace' ? '\b' : e.key);
-            return;
+        var sc = App.screen(), isChar = !e.ctrlKey && !e.metaKey && !e.altKey && !Loader.active() &&
+            (e.key === 'Backspace' || (e.key && e.key.length === 1 && !/[0-9]/.test(e.key)));
+        if (isChar) {
+            var ch = e.key === 'Backspace' ? '\b' : e.key;
+            // Tekstvenster open (bv. TMDB-sleutel)? Dan daarheen; anders naar een scherm met tekstinvoer (zoeken)
+            if (Dialog.isOpen() ? Dialog.onChar(ch) : (sc && sc.onChar && (sc.onChar(ch), true))) { e.preventDefault(); return; }
         }
         if (!k) return;
         e.preventDefault();

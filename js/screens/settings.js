@@ -111,11 +111,12 @@ Screens.settings = {
 
     tmdbMenu: function () {
         var self = this;
-        if (!Tmdb.enabled()) {
-            Dialog.alert('Genres via TMDB', 'Er is geen TMDB-sleutel ingesteld. Zet je sleutel in js/config.local.js en installeer de app opnieuw.');
-            return;
-        }
+        // Nog geen sleutel: meteen laten invoeren
+        if (!Tmdb.enabled()) { this.tmdbKeyEntry(); return; }
+        var own = (Store.settings().tmdbKey || '').trim();
         var items = Tmdb.running() ? [{ id: 'stop', label: 'Pauzeren' }] : [{ id: 'start', label: 'Nu bijwerken' }];
+        items.push({ id: 'key', label: own ? 'TMDB-sleutel wijzigen' : 'Eigen TMDB-sleutel invoeren' });
+        if (own) items.push({ id: 'delkey', label: 'Sleutel van deze TV verwijderen', danger: true });
         items.push({ id: 'clear', label: 'Alles opnieuw opzoeken', danger: true });
         Dialog.menu({
             title: 'TMDB-gegevens',
@@ -123,12 +124,54 @@ Screens.settings = {
             items: items
         }, function (it) {
             if (!it) return;
+            if (it.id === 'key') { self.tmdbKeyEntry(); return; }
+            if (it.id === 'delkey') {
+                Store.setSetting('tmdbKey', '');
+                Tmdb.stop(); Reco.reset(); Genres.reset(); Find.reset();
+                if (Tmdb.enabled()) Tmdb.start();
+                Toast.show(Tmdb.enabled() ? 'Sleutel verwijderd; de ingebouwde sleutel wordt gebruikt' : 'TMDB-sleutel verwijderd');
+                self.render(self.list.index);
+                return;
+            }
             if (it.id === 'start') Tmdb.start();
             else if (it.id === 'stop') Tmdb.stop();
             else if (it.id === 'clear') { Tmdb.clear(); Genres.reset(); Tmdb.start(); }
             Genres.reset();
             Toast.show('TMDB: ' + Tmdb.status());
             self.render(self.list.index);
+        });
+    },
+
+    // TMDB-sleutel invoeren met het toetsenbord op het scherm; eerst bij TMDB controleren, dan pas opslaan
+    tmdbKeyEntry: function () {
+        var self = this;
+        Dialog.text({
+            title: 'TMDB-sleutel',
+            text: 'Voor posters, genres, zoeken op acteurs en aanbevelingen. Maak gratis een account op themoviedb.org, ga naar Instellingen → API en typ de "API Key" (32 tekens) hier over. Je hoeft dit maar één keer te doen.',
+            value: Store.settings().tmdbKey || '', placeholder: '32 tekens, bv. 1a2b3c…', okLabel: 'Controleren en opslaan'
+        }, function (v) {
+            if (v == null) return;
+            v = v.replace(/\s+/g, '').toLowerCase();
+            if (!v) return;
+            if (!/^[0-9a-f]{32}$/.test(v)) {
+                Dialog.alert('Dit lijkt geen TMDB-sleutel', 'Een TMDB-sleutel ("API Key", niet de lange "Read Access Token") bestaat uit 32 tekens: cijfers en de letters a t/m f. Je typte ' + v.length + ' tekens.');
+                return;
+            }
+            var old = Store.settings().tmdbKey || '';
+            Store.setSetting('tmdbKey', v);
+            Loader.show('Sleutel controleren bij TMDB…');
+            Tmdb.api('configuration').then(function (d) {
+                Loader.hide();
+                if (!d) throw new Error('Geen antwoord van TMDB');
+                Tmdb.stop(); Reco.reset(); Genres.reset(); Find.reset();
+                Tmdb.start();
+                Toast.show('TMDB-sleutel werkt en is opgeslagen');
+                self.render(self.list.index);
+            }).catch(function (e) {
+                Loader.hide();
+                Store.setSetting('tmdbKey', old);
+                Dialog.alert('Sleutel werkt niet', (e && e.message) || 'TMDB weigert deze sleutel.');
+            });
         });
     },
 

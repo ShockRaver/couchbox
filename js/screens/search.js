@@ -2,8 +2,6 @@
    Lokaal (direct, met tikfouten en TMDB-titels) via Find; online via TMDB voor acteurs/regisseurs
    en titels die nog niet aan TMDB gekoppeld zijn. Rijen staan op volgorde van de beste treffer. */
 Screens.search = {
-    // Toetsenbord: bovenste rij acties (elk 2 kolommen breed), daarna a-z en 0-9 in 6 kolommen
-    LAYOUT: [[['space', 'Spatie'], ['del', ''], ['clear', 'Wissen']], 'abcdef', 'ghijkl', 'mnopqr', 'stuvwx', 'yz1234', '567890'],
     RECENT_MAX: 4,
 
     build: function () {
@@ -12,36 +10,20 @@ Screens.search = {
         this.nav = new TopNav('search');
         this.qText = U.h('span', { class: 'sk-text' });
         this.qEl = U.h('div', { class: 'sk-query', html: Icons.get('search') }, [this.qText, U.h('i', { class: 'sk-caret' })]);
-        this.keyBox = U.h('div', { class: 'sk-keys' });
+        this.kb = new Keyboard(function (id) { self.press(id); });
         this.recentBox = U.h('div', { class: 'sk-recent' });
-        this.el.appendChild(U.h('div', { class: 'sk' }, [this.qEl, this.keyBox, this.recentBox]));
+        this.el.appendChild(U.h('div', { class: 'sk' }, [this.qEl, this.kb.el, this.recentBox]));
         this.status = U.h('div', { class: 'search-msg' });
         var rowsBox = U.h('div', { class: 'nf-rows search-res' });
         this.el.appendChild(rowsBox);
         this.el.appendChild(this.status);
         this.el.appendChild(this.nav.el);
         this.rows = new RowStack(rowsBox);
-        this.buildKeys();
         this.q = '';
-        this.kr = 1; this.ki = 0;
         this.ri = 0;
         this.runSoon = U.debounce(function () { self.run(); }, 300);
         this.data = null;
         this.qToken = 0;
-    },
-
-    buildKeys: function () {
-        var self = this;
-        this.keys = this.LAYOUT.map(function (row) {
-            var list = typeof row === 'string'
-                ? row.split('').map(function (ch, i) { return { id: ch, label: ch, c: i, w: 1 }; })
-                : row.map(function (k, i) { return { id: k[0], label: k[1], c: i * 2, w: 2 }; });
-            list.forEach(function (k) {
-                k.el = U.h('div', { class: 'sk-key' + (k.w > 1 ? ' wide' : ''), html: k.id === 'del' ? Icons.get('backspace') : U.esc(k.label) });
-                self.keyBox.appendChild(k.el);
-            });
-            return list;
-        });
     },
 
     show: function () {
@@ -87,29 +69,17 @@ Screens.search = {
         this.zone = z;
         this.nav.setFocus(z === 'nav');
         this.rows.setActive(z === 'rows');
-        this.drawKeys();
+        this.kb.setActive(z === 'keys');
         this.drawRecent();
     },
     navFocus: function (b) { this.setZone(b ? 'nav' : 'keys'); },
 
     // ---- Toetsenbord en zoekregel ----
-    drawKeys: function () {
-        var self = this;
-        this.keys.forEach(function (row, r) {
-            row.forEach(function (k, i) { k.el.classList.toggle('focus', self.zone === 'keys' && r === self.kr && i === self.ki); });
-        });
-    },
     drawQuery: function () {
         // Lange zoekopdracht: het einde blijft zichtbaar
         var q = this.q;
         this.qText.textContent = q ? (q.length > 24 ? '…' + q.slice(-23) : q) : 'Titel, zender, persoon';
         this.qText.classList.toggle('ph', !q);
-    },
-    // Toets in een andere rij die onder/boven de huidige ligt
-    keyBelow: function (r) {
-        var k = this.keys[this.kr][this.ki], mid = k.c + k.w / 2 - 0.5, row = this.keys[r];
-        for (var i = 0; i < row.length; i++) if (mid >= row[i].c && mid < row[i].c + row[i].w) return i;
-        return row.length - 1;
     },
     press: function (id) {
         if (id === 'space') { if (this.q && this.q.slice(-1) !== ' ') this.q += ' '; }
@@ -289,24 +259,12 @@ Screens.search = {
     },
 
     keysKey: function (k) {
-        var row = this.keys[this.kr];
-        switch (k) {
-            case 'left': if (this.ki > 0) { this.ki--; this.drawKeys(); } return true;
-            case 'right':
-                if (this.ki < row.length - 1) { this.ki++; this.drawKeys(); }
-                else if (this.rows.rows.length) this.setZone('rows');
-                return true;
-            case 'up':
-                if (this.kr === 0) { this.setZone('nav'); return true; }
-                this.ki = this.keyBelow(this.kr - 1); this.kr--; this.drawKeys();
-                return true;
-            case 'down':
-                if (this.kr < this.keys.length - 1) { this.ki = this.keyBelow(this.kr + 1); this.kr++; this.drawKeys(); }
-                else if (this.recent().length) { this.ri = 0; this.setZone('recent'); }
-                return true;
-            case 'ok': this.press(row[this.ki].id); return true;
-        }
-        return false;
+        // Het toetsenbord verlaten: rechts naar de resultaten, omhoog naar het menu, omlaag naar recent gezocht
+        var r = this.kb.key(k);
+        if (r === 'right') { if (this.rows.rows.length) this.setZone('rows'); return true; }
+        if (r === 'up') { this.setZone('nav'); return true; }
+        if (r === 'down') { if (this.recent().length) { this.ri = 0; this.setZone('recent'); } return true; }
+        return r;
     },
 
     recentKey: function (k) {

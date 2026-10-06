@@ -183,6 +183,8 @@ RowStack.prototype.draw = function () {
     this.rows.forEach(function (r, i) {
         var on = self.active && i === self.cur;
         r.el.classList.toggle('cur', on);
+        // Rijen ver buiten beeld niet tekenen (scheelt veel werk op de TV tijdens het scrollen)
+        r.el.classList.toggle('far', i < self.cur - 1 || i > self.cur + 4);
         if (r.list.active !== on) r.list.setActive(on);
     });
     var r = this.rows[this.cur];
@@ -305,6 +307,52 @@ UI.addNav = function (scr, active) {
     };
 };
 
+/* Toetsenbord op het scherm (zoeken, TMDB-sleutel): acties bovenaan, daarna a-z en 0-9 in 6 kolommen.
+   onPress(id): 'space', 'del', 'clear' of een teken. key(k) geeft 'up'/'down'/'right' terug als de focus het toetsenbord verlaat. */
+function Keyboard(onPress) {
+    var self = this;
+    this.onPress = onPress;
+    this.el = U.h('div', { class: 'sk-keys' });
+    this.rows = Keyboard.LAYOUT.map(function (row) {
+        var list = typeof row === 'string'
+            ? row.split('').map(function (ch, i) { return { id: ch, label: ch, c: i, w: 1 }; })
+            : row.map(function (k, i) { return { id: k[0], label: k[1], c: i * 2, w: 2 }; });
+        list.forEach(function (k) {
+            k.el = U.h('div', { class: 'sk-key' + (k.w > 1 ? ' wide' : ''), html: k.id === 'del' ? Icons.get('backspace') : U.esc(k.label) });
+            self.el.appendChild(k.el);
+        });
+        return list;
+    });
+    this.r = 1;
+    this.i = 0;
+    this.active = false;
+}
+Keyboard.LAYOUT = [[['space', 'Spatie'], ['del', ''], ['clear', 'Wissen']], 'abcdef', 'ghijkl', 'mnopqr', 'stuvwx', 'yz1234', '567890'];
+Keyboard.prototype.setActive = function (b) { this.active = b; this.draw(); };
+Keyboard.prototype.draw = function () {
+    var self = this;
+    this.rows.forEach(function (row, r) {
+        row.forEach(function (k, i) { k.el.classList.toggle('focus', self.active && r === self.r && i === self.i); });
+    });
+};
+// Toets in een andere rij die onder/boven de huidige ligt
+Keyboard.prototype.below = function (r) {
+    var k = this.rows[this.r][this.i], mid = k.c + k.w / 2 - 0.5, row = this.rows[r];
+    for (var i = 0; i < row.length; i++) if (mid >= row[i].c && mid < row[i].c + row[i].w) return i;
+    return row.length - 1;
+};
+Keyboard.prototype.key = function (k) {
+    var row = this.rows[this.r];
+    switch (k) {
+        case 'left': if (this.i > 0) { this.i--; this.draw(); } return true;
+        case 'right': if (this.i < row.length - 1) { this.i++; this.draw(); return true; } return 'right';
+        case 'up': if (this.r === 0) return 'up'; this.i = this.below(this.r - 1); this.r--; this.draw(); return true;
+        case 'down': if (this.r < this.rows.length - 1) { this.i = this.below(this.r + 1); this.r++; this.draw(); return true; } return 'down';
+        case 'ok': this.onPress(row[this.i].id); return true;
+    }
+    return false;
+};
+
 /* Groot "hero"-blok bovenaan: backdrop, titel, gegevens en beschrijving van het geselecteerde item */
 function Hero(box) {
     this.box = box;
@@ -323,12 +371,21 @@ function Hero(box) {
     this.token = 0;
 }
 Hero.prototype.set = function (d) {
-    var bd = d.backdrop || '';
+    var bd = d.backdrop || '', self = this;
     if (bd !== this.curBg) {
         this.curBg = bd;
-        this.bg.style.opacity = '0';
         var bg = this.bg;
-        setTimeout(function () { bg.style.backgroundImage = bd ? 'url("' + bd.replace(/"/g, '%22') + '")' : 'none'; bg.style.opacity = bd ? '1' : '0'; }, 120);
+        var swap = function () {
+            if (self.curBg !== bd) return;
+            bg.style.opacity = '0';
+            setTimeout(function () {
+                if (self.curBg !== bd) return;
+                bg.style.backgroundImage = bd ? 'url("' + bd.replace(/"/g, '%22') + '")' : 'none';
+                bg.style.opacity = bd ? '1' : '0';
+            }, 120);
+        };
+        // Grote achtergrondfoto eerst op de achtergrond laden en decoderen, dan pas wisselen (geen hapering of leeg vlak)
+        if (bd) { var im = new Image(); im.decoding = 'async'; im.onload = swap; im.onerror = swap; im.src = bd; } else swap();
     }
     this.posterEl.innerHTML = '';
     this.posterEl.style.display = d.poster ? '' : 'none';

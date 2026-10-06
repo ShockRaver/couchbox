@@ -169,7 +169,7 @@ var Tmdb = (function () {
     function clear() { stop(); db = { m: {}, t: {} }; dirty = { m: 1, t: 1 }; flush('m'); flush('t'); Meta.clear(); state.done = 0; state.total = 0; state.phase = ''; }
 
     function status() {
-        if (!enabled()) return 'Uit (geen TMDB-sleutel)';
+        if (!enabled()) return 'Uit: druk op OK om een sleutel in te voeren';
         if (state.error) return 'Fout: ' + state.error;
         var pct = state.total ? Math.floor(state.done / state.total * 100) : 0;
         var n = state.done.toLocaleString('nl-NL') + ' / ' + state.total.toLocaleString('nl-NL');
