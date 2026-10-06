@@ -92,7 +92,7 @@ Screens.player = {
     hide: function () {
         if (!this.live) this.saveProgress();
         clearInterval(this.tickT); clearInterval(this.saveT); clearInterval(this.nextT);
-        clearTimeout(this.osdT); clearTimeout(this.zapT); clearTimeout(this.seekT); clearTimeout(this.numT); clearTimeout(this.subT); clearTimeout(this.leT);
+        clearTimeout(this.osdT); clearTimeout(this.zapT); clearTimeout(this.seekT); clearTimeout(this.numT); clearTimeout(this.subT); clearTimeout(this.leT); clearTimeout(this.preT);
         if (this.seekTarget != null) { Player.seek(this.seekTarget); this.seekTarget = null; }
         this.detach();
         this.hideOsd();
@@ -146,6 +146,7 @@ Screens.player = {
         EPG.request(ch.stream_id, 4, function () { if (!self.pendingCh) self.fillLive(); });
         this.fillLive();
         this.buildButtons();
+        this.prefetch();
     },
 
     zap: function (d) {
@@ -157,7 +158,21 @@ Screens.player = {
         this.showOsd('info');
         EPG.request(c.stream_id, 4, function () { if (self.pendingCh === c) self.fillLive(c); });
         clearTimeout(this.zapT);
-        this.zapT = setTimeout(function () { var x = self.pendingCh; self.pendingCh = null; if (x) self.tune(x); }, 450);
+        this.zapT = setTimeout(function () { var x = self.pendingCh; self.pendingCh = null; if (x) self.tune(x); }, 320);
+    },
+
+    // Gids van de zenders rond de huidige alvast ophalen: zappen en de zenderlijst tonen dan meteen wat er op is
+    prefetch: function () {
+        var self = this;
+        clearTimeout(this.preT);
+        this.preT = setTimeout(function () {
+            if (!self.live || !self.list) return;
+            var n = self.list.length;
+            [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6].forEach(function (d) {
+                var c = self.list[((self.idx + d) % n + n) % n];
+                if (c) EPG.request(c.stream_id, 4);
+            });
+        }, 1500);
     },
 
     fillLive: function (c) {
@@ -183,7 +198,8 @@ Screens.player = {
     startVod: function (startAt) {
         var it = this.item;
         var url = this.mode === 'movie' ? Api.movieUrl(it) : Api.episodeUrl(it);
-        Player.play(url, { live: false, startAt: startAt || 0, meta: it, uhd: /4k|uhd/i.test(it.name || '') });
+        var pref = this.seriesPrefs() || {};
+        Player.play(url, { live: false, startAt: startAt || 0, meta: it, uhd: /4k|uhd/i.test(it.name || ''), audioLang: pref.audio, subLang: pref.sub });
         if (this.mode === 'episode' && this.p.series) Follow.clear(this.p.series.id, it.id);
         this.fillVod();
     },
@@ -333,6 +349,8 @@ Screens.player = {
     buildButtons: function () {
         var b = [];
         if (this.live) b.push({ id: 'list', label: 'Zenderlijst', icon: 'list' });
+        // Vorige zender (de SolarCell-afstandsbediening heeft geen PRE-CH-knop)
+        if (this.live && this.prevCh) b.push({ id: 'prev', label: 'Vorige: ' + this.prevCh.name, icon: 'restart' });
         b.push({ id: 'audio', label: 'Audio', icon: 'audio' }, { id: 'subs', label: 'Ondertitels', icon: 'subs' });
         if (this.live) b.push({ id: 'fav', label: 'Favoriet', icon: 'star', on: !!(this.ch && Store.isFav('live', this.ch.stream_id)) });
         b.push({ id: 'aspect', label: this.ASPECT[Store.settings().aspect] || 'Beeld', icon: 'aspect' });
@@ -358,6 +376,7 @@ Screens.player = {
     pressButton: function (id) {
         switch (id) {
             case 'list': this.hideOsd(); this.showList(); break;
+            case 'prev': if (this.prevCh) { var pc = this.prevCh; this.idx = this.findIdx(pc); this.tune(pc); this.showOsd('info'); } break;
             case 'audio': this.audioMenu(); break;
             case 'subs': this.subsMenu(); break;
             case 'fav': this.toggleFav(); break;
@@ -367,12 +386,34 @@ Screens.player = {
         }
     },
 
+    // Gekozen audio/ondertitels per serie onthouden (geldt dan voor alle afleveringen van die serie)
+    seriesPrefs: function () {
+        var s = this.mode === 'episode' && this.p.series;
+        return s ? (Store.getP('seriesTracks', {}) || {})[String(s.id)] || null : null;
+    },
+    rememberTrack: function (kind, lang) {
+        var s = this.mode === 'episode' && this.p.series;
+        if (!s || !lang) return;
+        var all = Store.getP('seriesTracks', {}) || {}, id = String(s.id), p = all[id] || {};
+        p[kind] = lang;
+        p.t = Date.now();
+        all[id] = p;
+        // Alleen de 200 meest recente series bewaren
+        var keys = Object.keys(all);
+        if (keys.length > 200) keys.sort(function (a, b) { return (all[a].t || 0) - (all[b].t || 0); }).slice(0, keys.length - 200).forEach(function (k) { delete all[k]; });
+        Store.setP('seriesTracks', all);
+    },
+
     audioMenu: function () {
         var tr = Player.tracks('AUDIO');
         if (!tr.length) { Toast.show('Geen audiosporen gevonden in deze stream'); return; }
         var cur = Player.currentTrack('AUDIO');
-        Dialog.menu({ title: 'Audiospoor', items: tr.map(function (t) { return { id: t.index, label: t.label, checked: t.index === cur }; }) }, function (it) {
-            if (it && Player.selectTrack('AUDIO', it.id)) Toast.show('Audio: ' + it.label);
+        var self = this;
+        Dialog.menu({ title: 'Audiospoor', items: tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: t.index === cur }; }) }, function (it) {
+            if (it && Player.selectTrack('AUDIO', it.id)) {
+                Toast.show('Audio: ' + it.label + (self.p.series && self.mode === 'episode' ? ' (onthouden voor deze serie)' : ''));
+                self.rememberTrack('audio', it.lang);
+            }
         });
     },
 
@@ -380,11 +421,12 @@ Screens.player = {
         var tr = Player.tracks('TEXT');
         if (!tr.length) { Toast.show('Deze stream bevat geen ondertitels'); return; }
         var on = Player.subtitlesActive(), cur = on ? Player.currentTrack('TEXT') : -1;
-        var items = [{ id: -1, label: 'Uit', checked: !on }].concat(tr.map(function (t) { return { id: t.index, label: t.label, checked: on && t.index === cur }; }));
+        var self = this;
+        var items = [{ id: -1, label: 'Uit', lang: 'off', checked: !on }].concat(tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: on && t.index === cur }; }));
         Dialog.menu({ title: 'Ondertitels', items: items }, function (it) {
             if (!it) return;
-            if (it.id === -1) { Player.subtitlesOff(); Toast.show('Ondertitels uit'); }
-            else if (Player.selectTrack('TEXT', it.id)) Toast.show('Ondertitels: ' + it.label);
+            if (it.id === -1) { Player.subtitlesOff(); Toast.show('Ondertitels uit'); self.rememberTrack('sub', 'off'); }
+            else if (Player.selectTrack('TEXT', it.id)) { Toast.show('Ondertitels: ' + it.label); self.rememberTrack('sub', it.lang); }
         });
     },
 

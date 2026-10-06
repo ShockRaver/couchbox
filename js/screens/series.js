@@ -129,6 +129,7 @@ Screens.series = {
         b.push({ id: 'fav', icon: fav ? 'check' : 'plus', label: fav ? 'In Mijn lijst' : 'Mijn lijst', on: fav });
         if (this.det) b.push({ id: 'cast', icon: 'user', label: 'Cast & meer zoals dit' });
         else if (this.tmdbId && !this.detFailed) b.push({ id: 'cast', icon: 'user', label: 'Cast & meer zoals dit', loading: true });
+        if (this.det && this.det.trailer) b.push({ id: 'trailer', icon: 'film', label: 'Trailer' });
         this.btns = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
         this.btnBox.innerHTML = '';
@@ -193,6 +194,7 @@ Screens.series = {
                     if (b.loading) return true; // nog aan het laden
                     if (b.id === 'play') { var t = this.target(); if (t) this.playEp(t.ep, t.pos); }
                     else if (b.id === 'cast') App.go('credits', { type: 't', id: this.tmdbId, title: this.titleEl.textContent });
+                    else if (b.id === 'trailer') App.trailer(this.det.trailer, this.titleEl.textContent);
                     else if (b.id === 'fav') {
                         App.toggleMyList('series', App.favFromSeries(Object.assign({}, this.item, { cover: this.cover, tmdb: this.tmdbId || this.item.tmdb })), this.raw);
                         this.renderButtons();

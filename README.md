@@ -8,13 +8,15 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Live TV**: categories, a virtualised channel list (thousands of channels stay fast), now/next EPG with a progress bar, and a live preview window
 - **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
-- **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings
-- Number keys to jump to a channel, CH+/CH− to zap, ↩ PREV-CH, picture format (fit/stretch/auto), automatic reconnect when a stream drops
+- **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings; for series your choice is remembered for all episodes
+- **Trailers** open in the TV's YouTube app; movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
+- **4K/HDR labels** on posters and channels (recognised from the name)
+- Number keys to jump to a channel, CH+/CH− to zap, previous channel (PRE-CH, or the *Vorige* button in the player menu), picture format (fit/stretch/auto), automatic reconnect when a stream drops
 
 **Personal**
 - **Continue watching**: position saved every 10 s, one entry per series (up-next episode), watched checkmarks
 - **My list** for movies and series, **favourites** for channels (hold OK)
-- **New episodes**: series in My list are checked for new episodes, with a notification and a "New episodes" row
+- **New episodes**: series in My list are checked for new episodes, with a notification and a "New episodes" row; *Binnenkort* shows episodes announced for the next 3 weeks (TMDB)
 - **Recommendations** on Home and on the Movies/Series pages: *Because you watched X*, *Trending this week*, *&lt;genre&gt; for you*, *Highest rated* (weighted), *Dutch & Flemish films*, *Under 90 minutes*. Only titles that are in your own library are shown; anything already watched is skipped.
 - **Startup**: start screen, last channel, or ask
 - **Multiple profiles** (several servers/subscriptions), stored locally on the TV
@@ -93,7 +95,7 @@ Real Xtream servers usually won't work in a desktop browser because of CORS. On 
 scripts/deploy.sh <TV-IP> iptv
 ```
 
-The app then appears in the TV's app list. Your login details stay on the TV. After installing you don't need the Mac any more, not even to start the app. You only need it again for updates, or if the certificate expires or the TV is reset. The script checks that the profile uses the distributor certificate (a common cause of "Invalid certificate chain").
+The script stamps a version (1.&lt;commit count&gt;), date and commit into the app (*Instellingen → Over deze app*). The app then appears in the TV's app list. Your login details stay on the TV. After installing you don't need the Mac any more, not even to start the app. You only need it again for updates, or if the certificate expires or the TV is reset. The script checks that the profile uses the distributor certificate (a common cause of "Invalid certificate chain").
 
 ## Performance
 
@@ -110,6 +112,7 @@ index.html              entry point
 css/app.css             all styling (1920x1080), design tokens in :root
 DESIGN.md               design rules (colours, focus, navigation, icons, motion)
 js/config.js            settings (TMDB key goes in config.local.js, not in git)
+js/build.js             version info (overwritten by deploy.sh)
 js/api.js               Xtream Codes API, stream URLs, list cache (memory + IndexedDB)
 js/db.js                IndexedDB wrapper
 js/meta.js              metadata service (TMDB titles, details, people, library links)

@@ -293,14 +293,16 @@ var Player = (function () {
     }
 
     // Voorkeurstaal uit de instellingen toepassen
+    // Voorkeurstalen: per stream meegegeven (bv. onthouden per serie), anders uit de instellingen
     function applyTrackPrefs() {
-        var s = Store.settings();
-        if (s.audioLang && s.audioLang !== 'auto') {
-            var a = tracks('AUDIO').filter(function (t) { return t.lang === s.audioLang; })[0];
+        var s = Store.settings(), o = (cur && cur.opts) || {};
+        var aud = o.audioLang || s.audioLang, sub = o.subLang != null ? o.subLang : s.subLang;
+        if (aud && aud !== 'auto') {
+            var a = tracks('AUDIO').filter(function (t) { return t.lang === aud; })[0];
             if (a && a.index !== currentTrack('AUDIO')) selectTrack('AUDIO', a.index);
         }
-        if (s.subLang && s.subLang !== 'off') {
-            var t = tracks('TEXT').filter(function (x) { return x.lang === s.subLang; })[0];
+        if (sub && sub !== 'off') {
+            var t = tracks('TEXT').filter(function (x) { return x.lang === sub; })[0];
             if (t) selectTrack('TEXT', t.index); else subtitlesOff();
         } else subtitlesOff();
     }

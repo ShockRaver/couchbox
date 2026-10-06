@@ -104,18 +104,20 @@ var Meta = (function () {
         if (!id || !Tmdb.enabled()) return Promise.resolve(null);
         var key = k(type, id);
         return Db.get('details', key).catch(function () { return null; }).then(function (cached) {
-            if (cached && Date.now() - cached.at < FRESH) return cached;
+            // v2: ook de reeks (collectie) waar een film bij hoort; oudere bewaarde gegevens één keer opnieuw ophalen
+            if (cached && cached.v === 2 && Date.now() - cached.at < FRESH) return cached;
             var path = (type === 't' ? 'tv/' : 'movie/') + id;
             return Tmdb.api(path, 'language=nl-NL&append_to_response=credits,videos,recommendations&include_video_language=nl,en,null').then(function (d) {
                 if (!d) return null;
                 put(type, id, fromTmdb(type, d));
                 var det = {
-                    at: Date.now(), overview: d.overview || '', tagline: d.tagline || '',
+                    v: 2, at: Date.now(), overview: d.overview || '', tagline: d.tagline || '',
                     genres: (d.genres || []).map(function (g) { return g.name; }),
                     cast: ((d.credits && d.credits.cast) || []).slice(0, 15).map(function (c) { return { id: c.id, name: c.name, role: c.character || '', img: c.profile_path || '' }; }),
                     crew: crewOf(type, d),
                     trailer: trailerOf(d.videos),
-                    recs: ((d.recommendations && d.recommendations.results) || []).map(function (x) { return x.id; })
+                    recs: ((d.recommendations && d.recommendations.results) || []).map(function (x) { return x.id; }),
+                    coll: d.belongs_to_collection ? { id: d.belongs_to_collection.id, name: d.belongs_to_collection.name } : null
                 };
                 // Geen Nederlandse beschrijving? Dan de Engelse
                 var en = det.overview ? Promise.resolve(null) : Tmdb.api(path, 'language=en-US').catch(function () { return null; });
@@ -126,6 +128,23 @@ var Meta = (function () {
                     return det;
                 });
             }).catch(function (e) { console.warn('Details ophalen mislukt', e); return cached || null; });
+        });
+    }
+
+    // Reeks (bv. alle Harry Potter-films): delen op volgorde van verschijnen. Bewaard voor 30 dagen.
+    function collection(id) {
+        if (!id || !Tmdb.enabled()) return Promise.resolve(null);
+        var key = 'c:' + id;
+        return Db.get('details', key).catch(function () { return null; }).then(function (cached) {
+            if (cached && Date.now() - cached.at < FRESH) return cached;
+            return Tmdb.api('collection/' + id, 'language=nl-NL').then(function (d) {
+                if (!d) return null;
+                var c = { at: Date.now(), id: d.id, name: d.name || '', parts: (d.parts || []).map(function (x) {
+                    return { id: x.id, year: parseInt(String(x.release_date || '').slice(0, 4), 10) || 9999 };
+                }).sort(function (a, b) { return a.year - b.year; }) };
+                Db.put('details', key, c).catch(function () {});
+                return c;
+            }).catch(function () { return cached || null; });
         });
     }
 
@@ -206,7 +225,7 @@ var Meta = (function () {
 
     return {
         MISSING: MISSING, ready: ready, has: has, put: put, flush: flush, clear: clear, fromTmdb: fromTmdb,
-        info: info, byId: byId, img: img, rating: rating, poster: poster, details: details, person: person,
+        info: info, byId: byId, img: img, rating: rating, poster: poster, details: details, collection: collection, person: person,
         library: library, inLibrary: inLibrary, count: count, persistent: function () { return persist; }
     };
 })();

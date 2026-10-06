@@ -584,3 +584,11 @@ b { font-weight: 700; }
 .dlg-text .sk-key.focus { background: var(--focus); color: var(--focus-ink); }
 .dlg-query { margin-bottom: 18px; font-size: 32px; }
 .dlg-text .btn.focus { transform: none; }
+
+/* Beeldkwaliteit (4K/HDR) */
+.qtags { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; }
+.qtags.with-fav { right: 46px; }
+.qtags.on-logo { top: 10px; right: 10px; }
+.qtags.inline { position: static; display: inline-flex; margin-left: 12px; vertical-align: 3px; }
+.qtag { font-size: 15px; font-weight: 800; letter-spacing: .5px; padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, .72); color: #fff; border: 1px solid rgba(255, 255, 255, .5); }
+.ch-row.focus .qtag { background: var(--focus-ink); }

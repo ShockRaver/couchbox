@@ -145,7 +145,8 @@ Screens.live = {
     renderCh: function (s) {
         var nn = EPG.nowNext(s.stream_id), m = Player.meta();
         var playing = !!(m && Player.url() && String(m.stream_id) === String(s.stream_id));
-        var main = U.h('div', { class: 'ch-main' }, U.h('div', { class: 'ch-name', text: s.name }));
+        var q = UI.quality(s.name);
+        var main = U.h('div', { class: 'ch-main' }, U.h('div', { class: 'ch-name' }, [s.name, q.length ? UI.qualityTags(q, 'inline') : null]));
         if (nn && nn.cur) {
             main.appendChild(U.h('div', { class: 'ch-now', text: nn.cur.title }));
             main.appendChild(UI.pbar(UI.frac(nn.cur)));

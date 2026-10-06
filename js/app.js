@@ -1,6 +1,6 @@
 /* App-kern: navigatie tussen schermen, afstandsbediening en opstarten */
 var App = {
-    VERSION: '1.0.0',
+    VERSION: (window.BUILD && BUILD.version) || 'dev',
     stack: [],
 
     screen: function () { var t = this.stack[this.stack.length - 1]; return t ? Screens[t.name] : null; },
@@ -46,6 +46,29 @@ var App = {
             if (v == null) return;
             if (v === pin) open(); else Toast.show('Onjuiste pincode');
         });
+    },
+
+    // Trailer (YouTube-id van TMDB) openen in de YouTube-app van de TV; in een browser in een nieuw tabblad.
+    // Samsung gebruikt per TV-generatie een ander app-id; eerst met de video, anders alleen de app openen.
+    trailer: function (key, title) {
+        var url = 'https://www.youtube.com/watch?v=' + key;
+        if (!window.tizen || !tizen.application) { window.open(url, '_blank'); return; }
+        var ids = ['9Ur5IzDKqV.TizenYouTube', '111299001912'], i = 0;
+        var withVideo = function () {
+            if (i >= ids.length) { i = 0; plain(); return; }
+            var id = ids[i++];
+            try {
+                var data = [new tizen.ApplicationControlData('PAYLOAD', [JSON.stringify({ values: 'v=' + key })])];
+                tizen.application.launchAppControl(new tizen.ApplicationControl('http://tizen.org/appcontrol/operation/view', url, null, null, data), id,
+                    function () { /* gestart */ }, withVideo);
+            } catch (e) { withVideo(); }
+        };
+        var plain = function () {
+            if (i >= ids.length) { Toast.show('De YouTube-app is niet gevonden op deze TV'); return; }
+            var id = ids[i++];
+            try { tizen.application.launch(id, function () { Toast.show('Zoek in YouTube op: ' + (title || 'trailer'), 6000); }, plain); } catch (e) { plain(); }
+        };
+        withVideo();
     },
 
     // Onderdeel kiezen in het menu bovenaan

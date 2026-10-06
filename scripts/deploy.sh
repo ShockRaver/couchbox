@@ -31,6 +31,12 @@ rm -rf "$BUILD"
 mkdir -p "$BUILD"
 cp -R "$ROOT/config.xml" "$ROOT/index.html" "$ROOT/icon.png" "$ROOT/css" "$ROOT/js" "$BUILD/"
 
+# Versie, datum en commit in de app zetten (te zien in Instellingen → Over deze app); '+' = met niet-gecommitte wijzigingen
+COMMITS="$(git -C "$ROOT" rev-list --count HEAD 2>/dev/null || echo 0)"
+HASH="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo onbekend)"
+DIRTY=""; if [ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ]; then DIRTY="+"; fi
+printf "var BUILD = { version: '1.%s%s', date: '%s', commit: '%s' };\n" "$COMMITS" "$DIRTY" "$(date '+%Y-%m-%d %H:%M')" "$HASH" > "$BUILD/js/build.js"
+
 echo "» Verbinden met TV $TV_IP…"
 "$SDB" connect "$TV_IP:26101" >/dev/null
 SERIAL="$TV_IP:26101"

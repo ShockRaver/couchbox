@@ -101,6 +101,27 @@ Screens.movie = {
         });
         this.rows.restore(null);
         this.rows.setActive(this.zone === 'rows');
+        var addRow = function (o, at) {
+            if (self.item !== it) return;
+            var st = self.rows.state();
+            o.at = at;
+            self.rows.add(o);
+            self.rows.restore(st);
+            self.rows.setActive(self.zone === 'rows');
+        };
+        // Andere delen uit dezelfde reeks die jij hebt (direct onder de cast, vóór "Meer zoals dit")
+        if (det.coll) Meta.collection(det.coll.id).then(function (c) {
+            if (!c || !c.parts.length) return;
+            var me = String(self.tmdbId);
+            return Meta.inLibrary(c.parts.filter(function (x) { return String(x.id) !== me; }).map(function (x) { return { t: 'm', id: x.id }; })).then(function (list) {
+                if (!list.length) return;
+                addRow({
+                    id: 'coll', title: 'Uit de reeks: ' + (c.name || det.coll.name).replace(/\s*(-\s*)?(collectie|collection|filmreeks)$/i, ''), items: list, itemW: 200, itemH: 372,
+                    render: function (x) { return UI.libCard(x.type, x.item); },
+                    onSelect: function (x) { UI.openLib(x.type, x.item); }
+                }, self.rows.rows.filter(function (r) { return r.id === 'cast'; }).length);
+            });
+        }).catch(function () { /* geen reeks */ });
         // "Meer zoals dit": TMDB-aanbevelingen die jij ook hebt (heeft de volledige filmlijst nodig)
         if (det.recs.length) Meta.inLibrary(det.recs.map(function (id) { return { t: 'm', id: id }; })).then(function (list) {
             if (self.item !== it || !list.length) return;
@@ -123,6 +144,7 @@ Screens.movie = {
         } else b.push({ id: 'start', label: 'Afspelen', icon: 'play' });
         var fav = Store.isFav('movie', it.stream_id);
         b.push({ id: 'fav', label: fav ? 'In Mijn lijst' : 'Mijn lijst', icon: fav ? 'check' : 'plus', on: fav });
+        if (this.det && this.det.trailer) b.push({ id: 'trailer', label: 'Trailer', icon: 'film' });
         this.btns = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
         this.btnBox.innerHTML = '';
@@ -165,6 +187,7 @@ Screens.movie = {
                 var id = this.btns[this.bi].id;
                 if (id === 'resume') { h = Store.progress('movie:' + this.item.stream_id); this.play(h ? h.position : 0); }
                 else if (id === 'start') this.play(0);
+                else if (id === 'trailer') App.trailer(this.det.trailer, this.title.textContent);
                 else if (id === 'fav') {
                     App.toggleMyList('movie', App.favFromVod(Object.assign({}, this.item, { tmdb: this.tmdbId || this.item.tmdb })));
                     this.renderButtons();

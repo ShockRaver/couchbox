@@ -137,6 +137,39 @@ var Reco = (function () {
         return items.length >= 5 ? { id: 'short', title: 'Korter dan 90 minuten', items: byRank(items) } : null;
     }
 
+    // "Binnenkort": series uit Mijn lijst met een nieuwe aflevering in de komende 3 weken (TMDB, één keer per dag per serie)
+    var NEXT_TTL = 24 * 3600e3;
+    function upcoming() {
+        var favs = Store.favorites('series').filter(function (f) { return Tmdb.idOf(f); }).slice(-40);
+        if (!favs.length) return Promise.resolve(null);
+        var cache = Store.getGlobal('reco.next', {}) || {}, now = Date.now(), todo = favs.filter(function (f) {
+            var c = cache[Tmdb.idOf(f)]; return !c || now - c.at > NEXT_TTL;
+        }).slice(0, 15);
+        // Eén voor één ophalen (rustig voor TMDB en de TV)
+        var chain = todo.reduce(function (p, f) {
+            return p.then(function () {
+                var id = Tmdb.idOf(f);
+                return Tmdb.api('tv/' + id, 'language=nl-NL').then(function (d) {
+                    var n = d && d.next_episode_to_air;
+                    cache[id] = { at: Date.now(), n: n && n.air_date ? { date: n.air_date, s: n.season_number, e: n.episode_number } : null };
+                }).catch(function () { /* volgende keer */ });
+            });
+        }, Promise.resolve());
+        return chain.then(function () {
+            if (todo.length) Store.setGlobal('reco.next', cache);
+            var today = new Date(); today.setHours(0, 0, 0, 0);
+            var items = favs.map(function (f) {
+                var c = cache[Tmdb.idOf(f)], n = c && c.n;
+                if (!n) return null;
+                var p = n.date.split('-'), t = new Date(+p[0], +p[1] - 1, +p[2]).getTime();
+                if (t < today.getTime() || t > today.getTime() + 21 * 86400e3) return null;
+                var when = t === today.getTime() ? 'vandaag' : t === today.getTime() + 86400e3 ? 'morgen' : U.fmtDate(t);
+                return { type: 't', item: App.seriesFromFav(f), id: Tmdb.idOf(f), t: t, sub: 'S' + n.s + ' E' + n.e + ' · ' + when };
+            }).filter(Boolean).sort(function (a, b) { return a.t - b.t; });
+            return items.length ? { id: 'soon', title: 'Binnenkort', items: items } : null;
+        });
+    }
+
     // ---- Zonder TMDB (of als TMDB nog weinig oplevert): alleen gegevens van de provider ----
     // Rating van de provider (0-10), of 0
     function pRating(it) {
@@ -208,10 +241,12 @@ var Reco = (function () {
         // Geen TMDB: rijen op basis van de provider
         if (!Tmdb.enabled()) return basic(kind, w);
         return pool().then(function (list) {
-            return Promise.all([because(w, types, 2), trending(w, types)]).then(function (r) {
+            var soon = types.indexOf('t') >= 0 ? upcoming().catch(function () { return null; }) : Promise.resolve(null);
+            return Promise.all([because(w, types, 2), trending(w, types), soon]).then(function (r) {
                 var bc = r[0].filter(Boolean), out = [];
                 if (bc[0]) out.push(bc[0]);
                 if (r[1]) out.push(r[1]);
+                if (r[2]) out.push(r[2]);
                 if (bc[1]) out.push(bc[1]);
                 genreRows(list, w, types, 2).forEach(function (g) { if (g) out.push(g); });
                 out.push(topRated(list, w, types));

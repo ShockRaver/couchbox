@@ -62,6 +62,15 @@ var UI = {
         return { el: U.h('header', { class: 'hdr' }, [t, sub, right]), title: t, sub: sub, right: right };
     },
 
+    // Beeldkwaliteit uit de naam: ['4K', 'HDR'] (alleen wat opvalt; HD is te gewoon om te tonen)
+    quality: function (name) {
+        var n = ' ' + String(name || '').toLowerCase() + ' ', q = [];
+        if (/[^a-z0-9](4k|uhd|2160p?)[^a-z0-9]/.test(n)) q.push('4K');
+        if (/[^a-z0-9](hdr10\+?|hdr|dolby ?vision)[^a-z0-9]/.test(n)) q.push('HDR');
+        return q;
+    },
+    qualityTags: function (q, cls) { return q && q.length ? U.h('div', { class: 'qtags' + (cls ? ' ' + cls : '') }, q.map(function (x) { return U.h('span', { class: 'qtag', text: x }); })) : null; },
+
     // Waardering als ster-icoon met cijfer (0-10 of 0-100)
     rating: function (r) { return '<span class="rating">' + Icons.get('star') + (r > 10 ? r / 10 : r).toFixed(1) + '</span>'; },
 
@@ -84,6 +93,8 @@ var UI = {
         var r = parseFloat(o.rating);
         if (r > 0) card.appendChild(U.h('div', { class: 'badge', html: Icons.get('star') + (r > 10 ? r / 10 : r).toFixed(1) }));
         if (o.fav) card.appendChild(U.h('div', { class: 'card-fav', html: Icons.get('star') }));
+        var qt = UI.qualityTags(o.q, o.fav ? 'with-fav' : '');
+        if (qt) card.appendChild(qt);
         if (o.seen) card.appendChild(U.h('div', { class: 'card-seen', html: Icons.get('check') }));
         if (o.progress) { var pb = UI.pbar(o.progress); pb.classList.add('card-pbar'); card.appendChild(pb); }
         if (o.tag) card.appendChild(U.h('div', { class: 'card-tag', text: o.tag }));
@@ -103,7 +114,7 @@ var UI = {
     libCard: function (type, it, extra) {
         var movie = type === 'm', id = movie ? it.stream_id : it.series_id;
         return UI.posterCard(Object.assign({
-            name: it.name, icon: Meta.poster(type, it, movie ? it.stream_icon : it.cover), rating: Meta.rating(type, it),
+            name: it.name, icon: Meta.poster(type, it, movie ? it.stream_icon : it.cover), rating: Meta.rating(type, it), q: UI.quality(it.name),
             fav: Store.isFav(movie ? 'movie' : 'series', id)
         }, extra || {}));
     },
@@ -112,7 +123,7 @@ var UI = {
     recoRow: function (r, at) {
         return {
             id: r.id, title: r.title, items: r.items, itemW: 184, itemH: 320, at: at,
-            render: function (x) { return UI.libCard(x.type, x.item, { small: true }); },
+            render: function (x) { return UI.libCard(x.type, x.item, { small: true, sub: x.sub || '' }); },
             onSelect: function (x) { UI.openLib(x.type, x.item); }
         };
     },
@@ -129,7 +140,8 @@ var UI = {
             U.img(ch.stream_icon, 'lcard-logo', ch.name),
             U.h('div', { class: 'lcard-name', text: ch.name }),
             U.h('div', { class: 'lcard-now', text: nn && nn.cur ? nn.cur.title : '' }),
-            tag ? U.h('div', { class: 'lcard-tag', text: tag }) : null
+            tag ? U.h('div', { class: 'lcard-tag', text: tag }) : null,
+            UI.qualityTags(UI.quality(ch.name), 'on-logo')
         ]);
     }
 };

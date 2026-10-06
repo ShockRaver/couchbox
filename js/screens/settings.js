@@ -40,7 +40,7 @@ Screens.settings = {
             { id: 'account', label: 'Account', value: ui ? (ui.status || '') + ' · ' + App.expiryText() : 'Niet verbonden', action: true },
             { id: 'refresh', label: 'Zenders, films en gids vernieuwen', value: '', action: true },
             { id: 'history', label: 'Kijkgeschiedenis wissen', value: '', action: true },
-            { id: 'about', label: 'Over deze app', value: 'versie ' + App.VERSION, action: true }
+            { id: 'about', label: 'Over deze app', value: 'versie ' + App.VERSION + (BUILD.date ? '  ·  ' + BUILD.date : ''), action: true }
         ];
     },
 
@@ -104,7 +104,7 @@ Screens.settings = {
                 }, 'Wissen');
                 break;
             case 'about':
-                Dialog.alert('Kijkdoos ' + App.VERSION, 'Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.');
+                Dialog.alert('Kijkdoos ' + App.VERSION, (BUILD.date ? 'Geïnstalleerd op ' + BUILD.date + ' (commit ' + BUILD.commit + ')\n\n' : '') + 'Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.');
                 break;
         }
     },
