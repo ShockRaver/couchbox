@@ -100,7 +100,7 @@ The app then appears in the TV's app list. Your login details stay on the TV. Af
 ## Performance
 
 Large subscriptions (50,000+ titles) are handled without freezing the TV:
-- Full channel/movie/series lists are cached in IndexedDB; after a restart they're available immediately and refreshed in the background when older than 6 hours. *Settings → Refresh list* reloads everything from the provider.
+- Full channel/movie/series lists are cached in IndexedDB; after a restart they're available immediately and refreshed in the background when older than 6 hours. *Instellingen → Zenders, films en gids vernieuwen* reloads everything from the provider.
 - The genre index is built in small chunks (`U.each`) and prepared in the background after startup, so Movies/Series open instantly.
 - Screens draw first and load afterwards; lists are virtualised.
 
