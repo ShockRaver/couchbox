@@ -172,17 +172,22 @@ var Meta = (function () {
     }
 
     // ---- Jouw bibliotheek: TMDB-id -> IPTV-item (dubbelen al samengevoegd, voorkeurstaal wint) ----
-    var lib = { src: null, p: null };
+    var lib = { src: null, map: null, p: null };
     function library() {
-        var p = Promise.all([Api.vodStreams(null), Api.series(null), Api.vodCategories(), Api.seriesCategories()]);
+        // Lijsten zonder dubbelen komen uit de genre-index (in stukjes opgebouwd, dus de TV blijft reageren)
+        var p = Promise.all([Api.vodCategories(), Api.seriesCategories()]).then(function (c) {
+            return Promise.all([Genres.all('m', c[0]), Genres.all('t', c[1])]);
+        });
         return p.then(function (r) {
             if (lib.src && lib.src[0] === r[0] && lib.src[1] === r[1]) return lib.map;
+            if (lib.p && lib.p.src[0] === r[0] && lib.p.src[1] === r[1]) return lib.p;
             var map = { m: new Map(), t: new Map() };
-            Genres.best(r[0], r[2]).forEach(function (it) { var id = Tmdb.idOf(it); if (id) map.m.set(id, it); });
-            Genres.best(r[1], r[3]).forEach(function (it) { var id = Tmdb.idOf(it); if (id) map.t.set(id, it); });
-            lib.src = [r[0], r[1]];
-            lib.map = map;
-            return map;
+            var job = U.each(r[0], function (it) { var id = Tmdb.idOf(it); if (id) map.m.set(id, it); }, 5000)
+                .then(function () { return U.each(r[1], function (it) { var id = Tmdb.idOf(it); if (id) map.t.set(id, it); }, 5000); })
+                .then(function () { lib.src = [r[0], r[1]]; lib.map = map; lib.p = null; return map; });
+            job.src = [r[0], r[1]];
+            lib.p = job;
+            return job;
         });
     }
     // Welke van deze TMDB-titels heb jij? items: [{t:'m'|'t', id}] -> [{type, item}]

@@ -33,13 +33,18 @@ Screens.section = {
         else this.hero.message(movie ? 'Films' : 'Series', 'Genres worden geladen…');
         this.loading.lastChild.textContent = (movie ? 'Films' : 'Series') + ' laden bij je provider…';
         this.loading.style.display = '';
-        (movie ? Api.vodCategories() : Api.seriesCategories()).then(function (cats) {
+        // Eerst het scherm tekenen, dan pas laden (anders lijkt de knop even niets te doen)
+        setTimeout(function () {
             if (my !== self.token) return;
-            self.cats = cats;
-            return self.addGenres(cats, my);
-        }).catch(function (e) {
-            if (my === self.token) self.hero.message('Laden mislukt', e.message);
-        }).then(function () { if (my === self.token) self.loading.style.display = 'none'; });
+            self.addReco(my);
+            (movie ? Api.vodCategories() : Api.seriesCategories()).then(function (cats) {
+                if (my !== self.token) return;
+                self.cats = cats;
+                return self.addGenres(cats, my);
+            }).catch(function (e) {
+                if (my === self.token) self.hero.message('Laden mislukt', e.message);
+            }).then(function () { if (my === self.token) self.loading.style.display = 'none'; });
+        }, 30);
     },
 
     resume: function () { this.rows.rows.forEach(function (r) { r.list.refresh(); }); this.rows.draw(); this.showHero(); },
@@ -66,6 +71,25 @@ Screens.section = {
         });
     },
 
+    // Aanbevelingen voor films of series: direct uit het geheugen, daarna ververst en op de juiste plek ingevoegd
+    addReco: function (my) {
+        var self = this, kind = this.type;
+        var put = function (rows) {
+            if (my !== self.token || !rows.length) return;
+            var st = self.rows.state(), first = !self.rows.rows.length;
+            var at = self.rows.rows.filter(function (r) { return r.reco || r.id === 'hist' || r.id === 'fresh' || r.id === 'favs'; }).length;
+            rows.forEach(function (r) {
+                if (self.rows.rows.some(function (x) { return x.id === r.id; })) return;
+                self.rows.add(UI.recoRow(r, at++)).reco = true;
+            });
+            self.rows.restore(st);
+            self.rows.setActive(self.zone === 'rows');
+            if (first && self.rows.rows.length) { self.setZone('rows'); self.showHero(); }
+        };
+        put(Reco.cached(kind));
+        if (Reco.stale(kind)) Reco.refresh(kind).then(put);
+    },
+
     // Eén rij per genre (achter elkaar geladen, zodat de volgorde vast is); plus "Nieuw toegevoegd" als de volledige lijst er is
     addGenres: function (cats, my) {
         var self = this, movie = this.mode === 'movie', type = this.type;
@@ -83,13 +107,13 @@ Screens.section = {
             if (first) { self.setZone('rows'); self.showHero(); }
         };
         // Series: de volledige lijst is toch nodig voor de genres, dus ook "Nieuw toegevoegd"
-        var start = movie && !Api.loaded('vs:*') ? Promise.resolve() : (movie ? Api.vodStreams(null) : Api.series(null)).then(function (all) {
-            var field = movie ? 'added' : 'last_modified';
-            var list = Genres.best(all, cats).sort(function (a, b) { return (parseInt(b[field], 10) || 0) - (parseInt(a[field], 10) || 0); });
+        var start = movie && !Api.loaded('vs:*') ? Promise.resolve() : Genres.all(this.type, cats).then(function (list) {
             add('new', 'Nieuw toegevoegd', list);
         }).catch(function () { /* geen "nieuw" */ });
+        // Tussen de rijen even ruimte geven aan de TV (tekenen, toetsen), anders hapert het scherm
+        var pause = function () { return new Promise(function (r) { setTimeout(r, 0); }); };
         return genres.reduce(function (chain, g) {
-            return chain.then(function () {
+            return chain.then(pause).then(function () {
                 if (my !== self.token) return;
                 return (movie ? Genres.movieItems(g.id, cats) : Genres.seriesItems(g.id, cats))
                     .then(function (items) { add('g:' + g.id, g.name, items); })
@@ -103,6 +127,7 @@ Screens.section = {
         if (!it) return;
         if (r.id === 'hist') UI.heroHistory(this.hero, it);
         else if (r.id === 'fresh') this.hero.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
+        else if (it.item) this.hero.forItem(it.type, it.item);
         else this.hero.forItem(this.type, it);
     },
 
@@ -120,6 +145,7 @@ Screens.section = {
             var r = this.rows.rows[this.rows.cur], it = r && r.list.current();
             if (this.zone === 'rows' && it && r.id !== 'hist' && r.id !== 'fresh') {
                 var movie = this.mode === 'movie';
+                if (it.item) it = it.item;   // aanbevelingsrij
                 App.toggleMyList(this.mode, movie ? App.favFromVod(it) : App.favFromSeries(it));
                 r.list.refreshItem(r.list.index);
                 return true;

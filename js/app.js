@@ -69,6 +69,7 @@ var App = {
         Api.setProfile(p);
         EPG.reset();
         Screens.search.data = null;
+        Reco.reset();
         this.connect();
     },
 
@@ -86,6 +87,8 @@ var App = {
             setTimeout(Tmdb.start, 20000);
             // Gevolgde series controleren op nieuwe afleveringen
             setTimeout(function () { Follow.check(false); }, 8000);
+            // Genre-index alvast opbouwen, zodat Films/Series meteen open gaan
+            setTimeout(Genres.warm, 3000);
             if (autoplay) self.startupAction();
         }).catch(function (e) {
             Loader.hide();
@@ -105,6 +108,7 @@ var App = {
         Api.clearCache();
         EPG.reset();
         Genres.reset();
+        Reco.reset();
         Screens.search.data = null;
         Loader.show('Lijst vernieuwen bij je provider…');
         Promise.all([Api.login(), Api.vodCategories(), Api.seriesCategories(), Api.liveCategories()]).then(function () {

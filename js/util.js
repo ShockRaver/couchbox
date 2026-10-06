@@ -72,6 +72,18 @@ var U = (function () {
     function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
     // Normaliseren voor zoeken: kleine letters, zonder accenten
+    // Grote lijst in stukjes verwerken (geeft de TV tussendoor tijd om te tekenen en toetsen te verwerken)
+    function each(list, fn, chunk) {
+        var i = 0, n = list.length, size = chunk || 2000;
+        return new Promise(function (resolve) {
+            (function step() {
+                var end = Math.min(n, i + size);
+                for (; i < end; i++) fn(list[i], i);
+                if (i < n) setTimeout(step, 0); else resolve();
+            })();
+        });
+    }
+
     function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
 
     var LANGS = {
@@ -115,7 +127,7 @@ var U = (function () {
 
     return {
         h: h, esc: esc, pad: pad, clamp: clamp, fmtTime: fmtTime, fmtClock: fmtClock, fmtDate: fmtDate,
-        b64: b64, debounce: debounce, toArr: toArr, uid: uid, norm: norm, normLang: normLang,
+        b64: b64, each: each, debounce: debounce, toArr: toArr, uid: uid, norm: norm, normLang: normLang,
         langLabel: langLabel, initials: initials, img: img
     };
 })();

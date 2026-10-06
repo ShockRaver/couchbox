@@ -108,6 +108,15 @@ var UI = {
         }, extra || {}));
     },
 
+    // Aanbevelingsrij (Reco) als rij voor RowStack: items zijn { type: 'm'|'t', item }
+    recoRow: function (r, at) {
+        return {
+            id: r.id, title: r.title, items: r.items, itemW: 184, itemH: 320, at: at,
+            render: function (x) { return UI.libCard(x.type, x.item, { small: true }); },
+            onSelect: function (x) { UI.openLib(x.type, x.item); }
+        };
+    },
+
     // Film of serie uit de bibliotheek openen
     openLib: function (type, it) {
         if (type === 'm') App.go('movie', { item: it }); else App.go('series', { item: it });
@@ -143,11 +152,13 @@ RowStack.prototype.add = function (o) {
     var lb = U.h('div', { class: 'hrow-list' });
     lb.style.height = (o.itemH + 28) + 'px';
     el.appendChild(lb);
-    this.wrap.appendChild(el);
+    // o.at: rij op een bepaalde plek invoegen (bv. aanbevelingen die later binnenkomen)
+    var at = o.at != null && o.at < this.rows.length ? o.at : this.rows.length;
+    if (at < this.rows.length) this.wrap.insertBefore(el, this.rows[at].el); else this.wrap.appendChild(el);
     var list = new VList(lb, { horizontal: true, itemW: o.itemW, itemH: o.itemH, pad: 14, render: o.render });
     list.setItems(o.items, o.index || 0);
     var row = { id: o.id, el: el, list: list, o: o };
-    this.rows.push(row);
+    this.rows.splice(at, 0, row);
     return row;
 };
 RowStack.prototype.state = function () {

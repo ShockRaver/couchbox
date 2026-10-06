@@ -48,6 +48,10 @@ Screens.home = {
             onSelect: function (f) { App.go('series', { item: { series_id: f.id, name: f.name, cover: f.icon, tmdb: f.tmdb || '' } }); }
         });
 
+        // Aanbevelingen: de eerste direct na "Verder kijken", de rest na Mijn lijst en de zenders
+        var reco = Reco.cached('home');
+        if (reco[0]) R.add(UI.recoRow(reco[0]));
+
         var mine = Store.favorites('movie').map(function (f) { return Object.assign({ _type: 'movie' }, f); })
             .concat(Store.favorites('series').map(function (f) { return Object.assign({ _type: 'series' }, f); })).reverse();
         if (mine.length) R.add({
@@ -73,14 +77,30 @@ Screens.home = {
             onSelect: function (c, i, items) { App.go('player', { mode: 'live', channel: c, list: items }); }
         });
 
+        reco.slice(1).forEach(function (r) { R.add(UI.recoRow(r)); });
+
         R.restore(st);
+        var self = this;
+        setTimeout(function () { self.updateReco(); }, 300);
         if (R.rows.length) {
             this.setZone(this.zone === 'nav' && st ? 'nav' : 'rows');
             this.showHero();
         } else {
             this.setZone('nav');
-            this.hero.message('Welkom bij Kijkdoos', 'Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier.');
+            this.hero.message('Welkom bij Kijkdoos', 'Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.');
         }
+    },
+
+    // Aanbevelingen op de achtergrond verversen; daarna opnieuw tekenen met dezelfde cursorpositie
+    updateReco: function () {
+        var self = this;
+        // Alleen opnieuw tekenen als de rijen echt veranderd zijn (dus geen herhaling bij een mislukte poging)
+        if (!Reco.stale('home')) return;
+        var before = JSON.stringify(Reco.cached('home').map(function (r) { return [r.id, r.items.length]; }));
+        Reco.refresh('home').then(function (rows) {
+            var after = JSON.stringify(rows.map(function (r) { return [r.id, r.items.length]; }));
+            if (after !== before && App.screen() === self && !Dialog.isOpen()) self.render(self.rows.state());
+        });
     },
 
     // Hero toont het geselecteerde item (of het eerste item als de focus in het menu staat)
@@ -93,6 +113,7 @@ Screens.home = {
         } else if (r.id === 'fresh') H.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
         else if (r.id === 'favs') H.forItem(it._type === 'movie' ? 'm' : 't', it._type === 'movie' ? App.vodFromFav(it) : App.seriesFromFav(it));
         else if (r.id === 'chans') H.forChannel(it);
+        else if (it.item) H.forItem(it.type, it.item);
     },
 
     setZone: function (z) {

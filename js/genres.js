@@ -145,36 +145,56 @@ var Genres = (function () {
         return out;
     }
 
-    // Index per genre over de volledige lijst. type 'm' = films, 't' = series.
+    // Index per genre over de volledige lijst. type 'm' = films, 't' = series. '*' = alle titels (zonder dubbelen), nieuwste eerst.
     // Bronnen: genre van de provider (series), categorienaam, TMDB (als bekend), anders trefwoorden in titel/beschrijving.
+    // In stukjes, zodat de TV blijft reageren (tienduizenden titels).
     function build(type, all, info) {
-        var visible = all.filter(function (s) { return App.catIds(s).some(function (id) { return !info[id] || info[id].ok; }); });
-        var idx = {};
-        dedupe(visible, info).forEach(function (s) {
-            var gs = type === 't' ? match(String(s.genre || '').replace(/[,/|]/g, ' , ')) : [];
-            App.catIds(s).forEach(function (id) { if (info[id]) gs = gs.concat(info[id].genres); });
-            var tg = Tmdb.genres(type, s);
-            if (tg) gs = gs.concat(tg);
-            else if (type === 't') gs = gs.concat(byPlot(s, gs));
-            gs.filter(function (g, i) { return gs.indexOf(g) === i; }).forEach(function (g) { (idx[g] = idx[g] || []).push(s); });
-        });
+        var visible = [], best = {}, idx = {}, list;
         var field = type === 't' ? 'last_modified' : 'added';
-        Object.keys(idx).forEach(function (g) { idx[g].sort(newest(field)); });
-        return idx;
+        return U.each(all, function (s) {
+            if (App.catIds(s).some(function (id) { return !info[id] || info[id].ok; })) visible.push(s);
+        }, 5000).then(function () {
+            // Dubbelen samenvoegen: versie uit de categorie met de hoogste voorkeur wint
+            return U.each(visible, function (it) {
+                it._t = parseInt(it[field], 10) || 0;   // datum als getal: sorteren gaat dan veel sneller
+                var k = tmdbKey(it), r = Math.min.apply(null, App.catIds(it).map(function (id) { return info[id] ? info[id].rank : 1e9; }));
+                if (!best[k] || r < best[k].r) best[k] = { it: it, r: r };
+            }, 3000);
+        }).then(function () {
+            list = Object.keys(best).map(function (k) { return best[k].it; });
+            return U.each(list, function (s) {
+                var gs = type === 't' ? match(String(s.genre || '').replace(/[,/|]/g, ' , ')) : [];
+                App.catIds(s).forEach(function (id) { if (info[id]) gs = gs.concat(info[id].genres); });
+                var tg = Tmdb.genres(type, s);
+                if (tg) gs = gs.concat(tg);
+                else if (type === 't') gs = gs.concat(byPlot(s, gs));
+                gs.filter(function (g, i) { return gs.indexOf(g) === i; }).forEach(function (g) { (idx[g] = idx[g] || []).push(s); });
+            }, 1500);
+        }).then(function () {
+            idx['*'] = list;
+            var keys = Object.keys(idx);
+            return U.each(keys, function (g) { idx[g].sort(function (a, b) { return b._t - a._t; }); }, 1);
+        }).then(function () { return idx; });
     }
 
-    // Opnieuw opbouwen als de lijst (na vernieuwen/6 uur), de talen of de TMDB-gegevens veranderd zijn
+    // Opnieuw opbouwen als de lijst (na vernieuwen/6 uur), de talen of de TMDB-gegevens veranderd zijn.
+    // Alleen TMDB-gegevens veranderd? Dan op de achtergrond herbouwen en zolang de vorige index gebruiken.
     var built = { m: null, t: null };
-    function indexed(type, genreId, cats) {
+    function index(type, cats) {
         var info = catInfo(cats), key = JSON.stringify(activeLangs(cats));
         return (type === 't' ? Api.series(null) : Api.vodStreams(null)).then(function (all) {
-            var c = built[type], v = Tmdb.version();
-            if (!c || c.key !== key || c.src !== all || (c.v !== v && Date.now() - c.at > 60000)) {
-                c = built[type] = { idx: build(type, all, info), key: key, src: all, v: v, at: Date.now() };
+            var c = built[type], v = Tmdb.version(), old = null;
+            if (c && c.key === key && c.src === all) {
+                if (!c.idx) return c.old || c.p;                            // wordt opgebouwd: vorige index, of wachten
+                if (c.v === v || Date.now() - c.at < 60000) return c.idx;    // actueel genoeg
+                old = c.idx;                                                // TMDB-gegevens veranderd: op de achtergrond herbouwen
             }
-            return c.idx[genreId] || [];
+            var e = built[type] = { key: key, src: all, v: v, at: Date.now(), idx: null, old: old };
+            e.p = build(type, all, info).then(function (idx) { e.idx = idx; e.old = null; return idx; });
+            return old || e.p;
         });
     }
+    function indexed(type, genreId, cats) { return index(type, cats).then(function (idx) { return idx[genreId] || []; }); }
 
     function seriesItems(genreId, cats) { return indexed('t', genreId, cats); }
 
@@ -189,6 +209,14 @@ var Genres = (function () {
         best: function (items, cats) {
             var info = catInfo(cats);
             return dedupe(items.filter(function (s) { return App.catIds(s).some(function (id) { return !info[id] || info[id].ok; }); }), info);
+        },
+        // Alle titels in je gekozen talen, zonder dubbelen, nieuwste eerst (uit de genre-index, dus in stukjes opgebouwd)
+        all: function (type, cats) { return indexed(type, '*', cats); },
+        // Index alvast op de achtergrond opbouwen (na het opstarten), zodat Films/Series meteen open gaan
+        warm: function () {
+            return Promise.all([Api.vodCategories(), Api.seriesCategories()]).then(function (c) {
+                return index('m', c[0]).then(function () { return index('t', c[1]); });
+            }).catch(function () { /* later opnieuw */ });
         },
         // Dubbelen samenvoegen zonder taalfilter (zoeken: ook titels die alleen in een andere taal bestaan)
         unique: function (items, cats) { return dedupe(items, catInfo(cats)); }
