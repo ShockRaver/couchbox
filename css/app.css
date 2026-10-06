@@ -535,3 +535,26 @@ b { font-weight: 700; }
 .series3 .detail-bg { opacity: .6; }
 .series3 .detail-bg::after { background: linear-gradient(90deg, var(--bg) 8%, rgba(8, 9, 11, .88) 36%, rgba(8, 9, 11, .62) 100%), linear-gradient(0deg, var(--bg) 4%, transparent 50%); }
 .detail2 .detail-bg::after { background: linear-gradient(90deg, var(--bg) 22%, rgba(8, 9, 11, .7) 52%, rgba(8, 9, 11, .15)), linear-gradient(0deg, var(--bg) 8%, transparent 55%); }
+
+/* ===== Zoeken: toetsenbord links, resultaten rechts ===== */
+.sk { position: absolute; left: 80px; top: 124px; width: 548px; z-index: 2; }
+.sk-query { height: 76px; display: flex; align-items: center; gap: 16px; margin-bottom: 22px; padding: 0 6px; border-bottom: 2px solid rgba(255, 255, 255, .25); font-size: 36px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.sk-query .ic { width: 34px; height: 34px; color: var(--muted); }
+.sk-text.ph { color: var(--subtle); font-size: 26px; font-weight: 400; }
+.sk-caret { width: 3px; height: 40px; margin-left: -10px; background: var(--accent); animation: sk-blink 1.1s steps(1) infinite; }
+.sk-text.ph + .sk-caret { order: -1; margin: 0 -6px 0 0; }
+@keyframes sk-blink { 50% { opacity: 0; } }
+.sk-keys { display: grid; grid-template-columns: repeat(6, 84px); gap: 8px; }
+.sk-key { height: 70px; border-radius: 12px; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 600;
+    transition: background var(--t-fast), color var(--t-fast); }
+.sk-key.wide { grid-column: span 2; font-size: 23px; }
+.sk-key .ic { width: 34px; height: 34px; }
+.sk-key.focus { background: var(--focus); color: var(--focus-ink); }
+.sk-recent { margin-top: 26px; }
+.sk-recent h4 { font-size: 19px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--subtle); margin: 0 0 6px 14px; }
+.sk-ritem { height: 52px; padding: 0 14px; border-radius: 10px; display: flex; align-items: center; gap: 14px; font-size: 24px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.sk-ritem .ic { width: 22px; height: 22px; }
+.sk-ritem.focus { background: var(--focus); color: var(--focus-ink); }
+.search-res { left: 660px; top: 118px; }
+.search-res .hrow { padding: 0 40px 0 20px; }
+.search-msg { position: absolute; left: 700px; right: 80px; top: 42%; text-align: center; font-size: 28px; line-height: 1.6; color: var(--muted); white-space: pre-line; }

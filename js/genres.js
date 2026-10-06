@@ -189,6 +189,8 @@ var Genres = (function () {
         best: function (items, cats) {
             var info = catInfo(cats);
             return dedupe(items.filter(function (s) { return App.catIds(s).some(function (id) { return !info[id] || info[id].ok; }); }), info);
-        }
+        },
+        // Dubbelen samenvoegen zonder taalfilter (zoeken: ook titels die alleen in een andere taal bestaan)
+        unique: function (items, cats) { return dedupe(items, catInfo(cats)); }
     };
 })();

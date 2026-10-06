@@ -25,6 +25,7 @@ Geen losse hexwaarden in componenten; altijd een token.
 - Elk hoofdscherm heeft het menu bovenaan (`TopNav`; voor lijstschermen via `UI.addNav(scherm, id)`).
 - **Omhoog** bovenaan een lijst gaat naar het menu, **omlaag** of **Terug** gaat terug naar de inhoud.
 - Detailpagina's (film, serie, persoon) hebben geen menu; Terug gaat naar het vorige scherm.
+- Zoeken: eigen toetsenbord links (geen Samsung-toetsenbord), resultaten rechts; rechts vanaf de laatste toets gaat naar de resultaten, links vanaf de eerste kaart terug.
 
 ## Iconen en tekst
 - Alleen SVG-iconen uit `Icons` (lijnstijl 2px; ster/afspelen/pauze gevuld). **Geen emoji** als icoon.

@@ -21,6 +21,7 @@ var Icons = (function () {
         plus: '<path d="M12 5v14M5 12h14"/>',
         bookmark: '<path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/>',
         bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+        backspace: '<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
         lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
     };
     var FILLED = { star: 1, play: 1, pause: 1, next: 1 };

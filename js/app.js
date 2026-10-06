@@ -283,6 +283,14 @@ var App = {
             else if (code === 38 || code === 40) { e.preventDefault(); ae.blur(); dispatch(k); }
             return;
         }
+        // Gewoon toetsenbord (browser of USB aan de TV): letters en Backspace rechtstreeks naar een scherm met tekstinvoer
+        var sc = App.screen();
+        if (sc && sc.onChar && !Dialog.isOpen() && !Loader.active() && !e.ctrlKey && !e.metaKey && !e.altKey &&
+            (e.key === 'Backspace' || (e.key && e.key.length === 1 && !/[0-9]/.test(e.key)))) {
+            e.preventDefault();
+            sc.onChar(e.key === 'Backspace' ? '\b' : e.key);
+            return;
+        }
         if (!k) return;
         e.preventDefault();
         if (k === 'ok') {
