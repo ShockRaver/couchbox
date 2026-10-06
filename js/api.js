@@ -157,11 +157,31 @@ var Api = (function () {
         }
         return v.year + '-' + v.month + '-' + v.day + ':' + (v.hour === '24' ? '00' : v.hour) + '-' + v.minute;
     }
-    // Opname van een zender vanaf start (ms), voor een aantal minuten
-    function archiveUrl(ch, start, minutes) {
-        if (isDemo()) return Demo.src(ch.stream_id);
-        return base + '/timeshift/' + enc(prof.username) + '/' + enc(prof.password) + '/' + Math.max(1, Math.ceil(minutes)) + '/' +
-            serverTime(start) + '/' + ch.stream_id + '.ts';
+    // "2026-10-06 20:30:00" + offset (ms) -> "2026-10-06:20-30" (rekenen zonder tijdzone: het is al servertijd)
+    function shiftStr(str, offset) {
+        var m = String(str).match(/^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/);
+        if (!m) return '';
+        var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) + (offset || 0));
+        return d.getUTCFullYear() + '-' + U.pad(d.getUTCMonth() + 1) + '-' + U.pad(d.getUTCDate()) + ':' + U.pad(d.getUTCHours()) + '-' + U.pad(d.getUTCMinutes());
+    }
+    var ARC_FORMATS = ['ts', 'm3u8', 'php'];
+    // Opname van een zender: alle varianten die Xtream-providers gebruiken, de laatst werkende eerst.
+    // prog: { start, startStr }; offset: ms na de start; minutes: hoe lang
+    function archiveUrls(ch, prog, offset, minutes) {
+        if (isDemo()) return [{ url: Demo.src(ch.stream_id), fmt: 'ts' }];
+        var dur = Math.max(1, Math.ceil(minutes)), u = enc(prof.username), pw = enc(prof.password);
+        var times = [shiftStr(prog.startStr, offset), serverTime(prog.start + offset)].filter(function (t, i, a) { return t && a.indexOf(t) === i; });
+        var pref = Store.getP('arcFmt', ''), fmts = ARC_FORMATS.slice().sort(function (a, b) { return (b === pref) - (a === pref); });
+        var out = [];
+        times.forEach(function (t) {
+            fmts.forEach(function (f) {
+                var url = f === 'php'
+                    ? base + '/streaming/timeshift.php?username=' + u + '&password=' + pw + '&stream=' + ch.stream_id + '&start=' + t + '&duration=' + dur
+                    : base + '/timeshift/' + u + '/' + pw + '/' + dur + '/' + t + '/' + ch.stream_id + '.' + f;
+                out.push({ url: url, fmt: f });
+            });
+        });
+        return out;
     }
 
     function clearCache() { cache = {}; bypassBefore = Date.now(); }
@@ -172,6 +192,6 @@ var Api = (function () {
         liveCategories: liveCategories, liveStreams: liveStreams,
         vodCategories: vodCategories, vodStreams: vodStreams, vodInfo: vodInfo,
         seriesCategories: seriesCategories, series: series, seriesInfo: seriesInfo, shortEpg: shortEpg, fullEpg: fullEpg,
-        loaded: loaded, liveUrl: liveUrl, archiveUrl: archiveUrl, serverTime: serverTime, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
+        loaded: loaded, liveUrl: liveUrl, archiveUrls: archiveUrls, serverTime: serverTime, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
     };
 })();

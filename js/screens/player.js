@@ -129,7 +129,15 @@ Screens.player = {
     onState: function (s) {
         this.el.classList.toggle('paused', s === 'paused');
         this.el.classList.toggle('buffering', s === 'loading' || s === 'retry');
-        if (s === 'playing') { this.setMsg(''); if (this.osdMode) this.armOsd(); }
+        if (s === 'playing') {
+            this.setMsg('');
+            if (this.osdMode) this.armOsd();
+            // Terugkijken: onthouden welk archiefformaat bij deze provider werkt
+            if (this.mode === 'archive' && this.arcUrls) {
+                var u = Player.url(), hit = this.arcUrls.filter(function (x) { return x.url === u; })[0];
+                if (hit) Store.setP('arcFmt', hit.fmt);
+            }
+        }
         if (s === 'paused') { if (!this.osdMode) this.showOsd('info'); else clearTimeout(this.osdT); }
     },
 
@@ -194,8 +202,9 @@ Screens.player = {
         var it = this.item;
         if (this.mode === 'archive') {
             // Archief-URL vanaf het gekozen punt; doorspoelen = opnieuw starten vanaf de nieuwe minuut (werkt bij elke provider)
-            var pr = this.prog;
-            Player.play(Api.archiveUrl(this.ch, pr.start + this.arcBase, (pr.end - pr.start - this.arcBase) / 60000), { live: false, startAt: 0, meta: this.ch });
+            var pr = this.prog, urls = Api.archiveUrls(this.ch, pr, this.arcBase, (pr.end - pr.start - this.arcBase) / 60000);
+            this.arcUrls = urls;
+            Player.play(urls[0].url, { live: false, startAt: 0, meta: this.ch, retries: 0, alts: urls.slice(1).map(function (x) { return x.url; }) });
             this.fillVod();
             return;
         }

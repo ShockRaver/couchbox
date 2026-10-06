@@ -49,8 +49,8 @@ Screens.guide = {
     canReplay: function (ch, p) {
         var days = this.archDays(ch), now = Date.now();
         if (!p || p.start >= now) return false;
-        if (p.arc) return true;
-        // Niet elke provider vult has_archive in: dan afgaan op het archief van de zender
+        // De provider zegt het per programma: dat volgen. Zegt hij niets, dan afgaan op het archief van de zender.
+        if (p.arc !== null && p.arc !== undefined) return p.arc || (p.end > now && days > 0);
         return days > 0 && p.start > now - days * 86400e3;
     },
     replay: function (ch, p) { App.go('player', { mode: 'archive', channel: ch, prog: p }); },

@@ -14,17 +14,36 @@ var EPG = (function () {
     var FULL = 1000;
 
     function parse(res) {
-        var min = Date.now() - 4 * 3600e3, minArc = Date.now() - 7 * 86400e3, max = Date.now() + 7 * 86400e3, seen = {};
+        var min = Date.now() - 4 * 3600e3, minArc = Date.now() - 7 * 86400e3, max = Date.now() + 7 * 86400e3;
         var list = U.toArr(res && res.epg_listings).map(function (p) {
+            // arc: true/false volgens de provider, null als de provider het niet aangeeft; startStr = starttijd in servertijd
             return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end),
-                arc: String(p.has_archive) === '1' };
+                arc: p.has_archive == null ? null : String(p.has_archive) === '1', startStr: /^\d{4}-\d\d-\d\d \d\d:\d\d/.test(p.start || '') ? p.start : '' };
         });
-        // Alleen een bruikbaar tijdvak bewaren en dubbelen weghalen; terug te kijken programma's tot een week terug
-        return list.filter(function (p) {
-            if (!(p.end > p.start) || p.end < (p.arc ? minArc : min) || p.start > max || seen[p.start]) return false;
-            seen[p.start] = 1;
-            return true;
-        }).sort(function (a, b) { return a.start - b.start; });
+        // Alleen een bruikbaar tijdvak bewaren; terug te kijken programma's tot een week terug
+        list = list.filter(function (p) {
+            return p.end > p.start && p.end >= (p.arc !== false ? minArc : min) && p.start <= max;
+        }).sort(function (a, b) {
+            // Zelfde starttijd: de versie met archief en daarna de langste eerst (die blijft bewaard)
+            return a.start - b.start || (b.arc === true) - (a.arc === true) || (b.end - b.start) - (a.end - a.start);
+        });
+        return clean(list);
+    }
+
+    // Overlappende programma's opruimen (providers leveren soms dubbele of verschoven regels uit meerdere gidsbronnen):
+    // valt een programma binnen het vorige, dan weg; begint het eerder dan het vorige eindigt, dan het vorige inkorten.
+    function clean(list) {
+        var out = [];
+        list.forEach(function (p) {
+            var prev = out[out.length - 1];
+            if (prev && p.start < prev.end) {
+                if (p.start === prev.start || p.end <= prev.end) return;   // dubbel of er helemaal binnen
+                if (p.start - prev.start < 60e3) return;                     // nauwelijks verschoven dubbel
+                prev.end = p.start;                                          // vorige inkorten tot de start van deze
+            }
+            out.push(p);
+        });
+        return out;
     }
 
     // Volledige gids ophalen; valt terug op de korte EPG als de provider die niet (goed) levert
