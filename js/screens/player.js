@@ -1,4 +1,4 @@
-/* Volledig-scherm speler voor live TV, films en afleveringen */
+/* Volledig-scherm speler voor live TV, films, afleveringen en terugkijken (archief van een zender) */
 Screens.player = {
     keepVideo: true,
     ASPECT: { letterbox: 'Passend', fill: 'Uitrekken', auto: 'Automatisch' },
@@ -70,6 +70,13 @@ Screens.player = {
                 }).catch(function () { /* zappen blijft beperkt */ });
             }
             this.tune(p.channel);
+        } else if (this.mode === 'archive') {
+            // Terugkijken: een programma uit het archief van de zender; telt niet mee voor "Verder kijken"
+            this.ch = p.channel;
+            this.prog = p.prog;
+            this.item = { id: 'arc', name: p.prog.title, icon: p.channel.stream_icon };
+            this.arcBase = 0;
+            this.startVod(0);
         } else {
             this.item = p.item;
             this.episodes = p.episodes || null;
@@ -83,7 +90,8 @@ Screens.player = {
         }
         this.hintEl.innerHTML = this.live
             ? '▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer'
-            : '<b>OK</b> pauze · ◀▶ spoelen · ▼ menu (audio, ondertitels)';
+            : this.mode === 'archive' ? '<b>OK</b> pauze · ◀▶ minuut terug/verder · ▼ menu (audio, ondertitels)'
+                : '<b>OK</b> pauze · ◀▶ spoelen · ▼ menu (audio, ondertitels)';
         this.buildButtons();
         this.showOsd('info');
         this.tickT = setInterval(function () { self.updateOsd(); }, 500);
@@ -93,7 +101,7 @@ Screens.player = {
         if (!this.live) this.saveProgress();
         clearInterval(this.tickT); clearInterval(this.saveT); clearInterval(this.nextT);
         clearTimeout(this.osdT); clearTimeout(this.zapT); clearTimeout(this.seekT); clearTimeout(this.numT); clearTimeout(this.subT); clearTimeout(this.leT);
-        if (this.seekTarget != null) { Player.seek(this.seekTarget); this.seekTarget = null; }
+        if (this.seekTarget != null) { if (this.mode !== 'archive') Player.seek(this.seekTarget); this.seekTarget = null; }
         this.detach();
         this.hideOsd();
         this.numEl.classList.remove('show');
@@ -107,7 +115,9 @@ Screens.player = {
             Player.on('state', function (s) { self.onState(s); }),
             Player.on('buffering', function (b) { self.el.classList.toggle('buffering', !!b); }),
             Player.on('error', function (m) {
-                self.setMsg(self.live ? 'Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.' : 'Deze video kan niet worden afgespeeld.\n(' + m + ')');
+                self.setMsg(self.live ? 'Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.'
+                    : self.mode === 'archive' ? 'Dit programma kan niet worden teruggekeken.\nMisschien bewaart je provider het niet (meer).'
+                        : 'Deze video kan niet worden afgespeeld.\n(' + m + ')');
             }),
             Player.on('retry', function (n) { self.setMsg('Verbinding verbroken – opnieuw verbinden (' + n + ')…'); }),
             Player.on('ended', function () { self.onEnded(); }),
@@ -182,6 +192,13 @@ Screens.player = {
     // ---- Films/afleveringen ----
     startVod: function (startAt) {
         var it = this.item;
+        if (this.mode === 'archive') {
+            // Archief-URL vanaf het gekozen punt; doorspoelen = opnieuw starten vanaf de nieuwe minuut (werkt bij elke provider)
+            var pr = this.prog;
+            Player.play(Api.archiveUrl(this.ch, pr.start + this.arcBase, (pr.end - pr.start - this.arcBase) / 60000), { live: false, startAt: 0, meta: this.ch });
+            this.fillVod();
+            return;
+        }
         var url = this.mode === 'movie' ? Api.movieUrl(it) : Api.episodeUrl(it);
         Player.play(url, { live: false, startAt: startAt || 0, meta: it, uhd: /4k|uhd/i.test(it.name || '') });
         if (this.mode === 'episode' && this.p.series) Follow.clear(this.p.series.id, it.id);
@@ -191,6 +208,14 @@ Screens.player = {
     fillVod: function () {
         var it = this.item;
         this.oLogo.innerHTML = '';
+        if (this.mode === 'archive') {
+            var pr = this.prog;
+            this.oLogo.appendChild(U.img(this.ch.stream_icon, 'osd-logo', this.ch.name));
+            this.oTitle.textContent = pr.title;
+            this.oSub.textContent = this.ch.name + ' · ' + U.fmtDate(pr.start) + ' ' + U.fmtClock(pr.start) + ' – ' + U.fmtClock(pr.end) + ' · terugkijken';
+            this.oEpg.textContent = pr.desc || '';
+            return;
+        }
         this.oLogo.appendChild(U.img((this.p.series && this.p.series.icon) || it.icon, 'osd-poster', it.name));
         if (this.mode === 'episode' && this.p.series) {
             this.oTitle.textContent = this.p.series.name;
@@ -202,8 +227,17 @@ Screens.player = {
         this.oEpg.innerHTML = '';
     },
 
+    // Positie en duur; bij terugkijken telt de startminuut van de archief-URL mee
+    vodDur: function () { return this.mode === 'archive' ? this.prog.end - this.prog.start : Player.duration(); },
+    vodPos: function () { return this.mode === 'archive' ? this.arcBase + Player.time() : Player.time(); },
+    applySeek: function (t) {
+        if (this.mode !== 'archive') { Player.seek(t); return; }
+        this.arcBase = Math.floor(t / 60000) * 60000;
+        this.startVod(0);
+    },
+
     saveProgress: function () {
-        if (this.live || !this.item) return;
+        if (this.live || !this.item || this.mode === 'archive') return;
         var pos = this.seekTarget != null ? this.seekTarget : Player.time(), dur = Player.duration();
         if (!dur || pos < 5000) return;
         var key = this.mode + ':' + this.item.id, it = this.item;
@@ -216,6 +250,7 @@ Screens.player = {
 
     // Uitgekeken: als gezien markeren; bij series de volgende aflevering klaarzetten in "Verder kijken"
     markDone: function () {
+        if (this.mode === 'archive') return;
         var it = this.item, key = this.mode + ':' + it.id;
         if (this.doneKey === key) return;
         this.doneKey = key;
@@ -317,7 +352,7 @@ Screens.player = {
                 b = U.fmtClock(p.end);
             }
         } else {
-            var d = Player.duration(), t = this.seekTarget != null ? this.seekTarget : Player.time();
+            var d = this.vodDur(), t = this.seekTarget != null ? this.seekTarget : this.vodPos();
             frac = d ? t / d : 0;
             a = U.fmtTime(t);
             b = d ? '-' + U.fmtTime(d - t) + '   /   ' + U.fmtTime(d) : '';
@@ -336,8 +371,8 @@ Screens.player = {
         b.push({ id: 'audio', label: 'Audio', icon: 'audio' }, { id: 'subs', label: 'Ondertitels', icon: 'subs' });
         if (this.live) b.push({ id: 'fav', label: 'Favoriet', icon: 'star', on: !!(this.ch && Store.isFav('live', this.ch.stream_id)) });
         b.push({ id: 'aspect', label: this.ASPECT[Store.settings().aspect] || 'Beeld', icon: 'aspect' });
-        if (!this.live) {
-            var inList = this.listTarget() && Store.isFav(this.listTarget().type, this.listTarget().fav.id);
+        if (!this.live && this.listTarget()) {
+            var inList = Store.isFav(this.listTarget().type, this.listTarget().fav.id);
             b.push({ id: 'mylist', label: inList ? 'In Mijn lijst' : 'Mijn lijst', icon: inList ? 'check' : 'plus', on: inList });
         }
         if (this.nextEpisode()) b.push({ id: 'next', label: 'Volgende aflevering', icon: 'next' });
@@ -468,18 +503,18 @@ Screens.player = {
     },
 
     seekBy: function (dir, step) {
-        var self = this, d = Player.duration();
+        var self = this, d = this.vodDur();
         if (!d) return;
         var now = Date.now();
         // Ingedrukt houden of snel herhalen = steeds grotere sprongen
         this.seekN = now - (this.seekLast || 0) < 800 ? (this.seekN || 0) + 1 : 0;
         this.seekLast = now;
         var mult = this.seekN > 8 ? 6 : this.seekN > 3 ? 3 : 1;
-        var base = this.seekTarget != null ? this.seekTarget : Player.time();
+        var base = this.seekTarget != null ? this.seekTarget : this.vodPos();
         this.seekTarget = U.clamp(base + dir * step * mult, 0, Math.max(0, d - 5000));
         if (this.osdMode !== 'menu') this.showOsd('info'); else this.updateOsd();
         clearTimeout(this.seekT);
-        this.seekT = setTimeout(function () { Player.seek(self.seekTarget); self.seekTarget = null; self.updateOsd(); }, 800);
+        this.seekT = setTimeout(function () { self.applySeek(self.seekTarget); self.seekTarget = null; self.updateOsd(); }, 800);
     },
 
     // ---- Toetsen ----
@@ -529,10 +564,11 @@ Screens.player = {
             case 'ok': case 'playpause': Player.toggle(); this.showOsd('info'); return true;
             case 'play': Player.resume(); this.showOsd('info'); return true;
             case 'pause': Player.pause(); this.showOsd('info'); return true;
-            case 'left': this.seekBy(-1, 10000); return true;
-            case 'right': this.seekBy(1, 10000); return true;
-            case 'rw': this.seekBy(-1, 60000); return true;
-            case 'ff': this.seekBy(1, 60000); return true;
+            // Terugkijken: het archief start per minuut, dus daar springen we per minuut (⏪⏩ per 5 minuten)
+            case 'left': this.seekBy(-1, this.mode === 'archive' ? 60000 : 10000); return true;
+            case 'right': this.seekBy(1, this.mode === 'archive' ? 60000 : 10000); return true;
+            case 'rw': this.seekBy(-1, this.mode === 'archive' ? 300000 : 60000); return true;
+            case 'ff': this.seekBy(1, this.mode === 'archive' ? 300000 : 60000); return true;
             case 'up': case 'info': this.showOsd('info'); return true;
             case 'down': this.showOsd('menu'); return true;
             case 'yellow': this.audioMenu(); return true;

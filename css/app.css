@@ -573,3 +573,13 @@ b { font-weight: 700; }
 .has-nav .g-rows { top: 376px; }
 .g-t .ic { width: 20px; height: 20px; margin: -3px 6px 0 0; color: var(--accent); }
 .g-prog.focus .g-t .ic { color: #b7790f; }
+
+/* TV-gids: verleden en terugkijken */
+.g-prog.g-past { background: rgba(255, 255, 255, .03); color: var(--subtle); }
+.g-prog.g-past .g-tm { color: #5d6068; }
+.g-prog.g-past.g-arc { background: rgba(255, 255, 255, .06); color: var(--text2); }
+.g-prog.g-past.g-arc .g-tm { color: var(--subtle); }
+.g-prog.g-past.focus { background: var(--focus); color: var(--focus-ink); }
+.g-prog.g-past.focus .g-tm { color: var(--focus-sub); }
+.g-archic { display: flex; color: var(--accent); flex-shrink: 0; }
+.g-archic .ic { width: 22px; height: 22px; }

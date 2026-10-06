@@ -7,6 +7,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 **Watching**
 - **Live TV**: categories, a virtualised channel list (thousands of channels stay fast), now/next EPG with a progress bar, and a live preview window
 - **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
+- **Catch-up** (provider archive / timeshift): on channels with an archive (↺) you can scroll back in the guide and press OK on a past programme to watch it, or choose *Watch from the beginning* for a programme that's on now. ◀▶ jump a minute, ⏪⏩ five minutes
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
 - **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings
 - Number keys to jump to a channel, CH+/CH− to zap, ↩ PREV-CH, picture format (fit/stretch/auto), automatic reconnect when a stream drops
@@ -137,6 +138,6 @@ scripts/make-icon.js    generates icon.png
 
 - **Multiview** (several streams at once) isn't possible: AVPlay allows one video player per app.
 - **Subtitles** only appear when they are embedded in the stream (e.g. MKV/HLS). Xtream servers rarely provide separate .srt files. DVB bitmap subtitles are not supported.
-- **Catch-up / timeshift** (tv_archive) is not built in yet.
+- **Catch-up** depends on the provider: only channels with `tv_archive` work, for as many days as the provider keeps. Seeking restarts the archive stream at the chosen minute.
 - EPG quality depends on the provider; providers with poor EPG data show empty programmes.
 - Only Xtream Codes is supported as a source (M3U/other sources are on the roadmap).

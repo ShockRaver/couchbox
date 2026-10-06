@@ -37,6 +37,23 @@ Screens.guide = {
     },
 
     px: function () { return this.AREA_W / this.WIN; },
+
+    // ---- Terugkijken ----
+    archDays: function (ch) { return ch && String(ch.tv_archive) === '1' ? Math.min(7, parseInt(ch.tv_archive_duration, 10) || 1) : 0; },
+    // Vroegste tijdstip in de gids: zonder archief "nu", anders zo ver terug als de langste archiefduur in deze groep
+    minTime: function () {
+        var self = this, days = (this.items || []).reduce(function (m, c) { return Math.max(m, self.archDays(c)); }, 0);
+        return days ? this.floor30(Date.now() - days * 86400e3) : this.floor30(Date.now());
+    },
+    // Is dit programma terug te kijken? (al begonnen, en volgens de EPG of binnen de archiefduur van de zender)
+    canReplay: function (ch, p) {
+        var days = this.archDays(ch), now = Date.now();
+        if (!p || p.start >= now) return false;
+        if (p.arc) return true;
+        // Niet elke provider vult has_archive in: dan afgaan op het archief van de zender
+        return days > 0 && p.start > now - days * 86400e3;
+    },
+    replay: function (ch, p) { App.go('player', { mode: 'archive', channel: ch, prog: p }); },
     floor30: function (t) { var d = new Date(t); d.setMinutes(d.getMinutes() < 30 ? 0 : 30, 0, 0); return d.getTime(); },
 
     show: function (p) {
@@ -123,10 +140,11 @@ Screens.guide = {
             l.forEach(function (p, j) {
                 if (p.end <= ws || p.start >= we) return;
                 var a = Math.max(p.start, ws), b = Math.min(p.end, we);
-                var cls = 'g-prog' + (p.start <= now && p.end > now ? ' g-live' : '') + (focusRow && j === self.pi ? ' focus' : '');
+                var past = p.end <= now, replay = past && self.canReplay(ch, p);
+                var cls = 'g-prog' + (p.start <= now && p.end > now ? ' g-live' : '') + (past ? ' g-past' : '') + (replay ? ' g-arc' : '') + (focusRow && j === self.pi ? ' focus' : '');
                 var rem = p.start > now && Remind.has(ch, p);
                 area.appendChild(U.h('div', { class: cls, style: { left: ((a - ws) / 60000 * px) + 'px', width: Math.max(2, (b - a) / 60000 * px - 4) + 'px' } }, [
-                    U.h('div', { class: 'g-t', html: (rem ? Icons.get('bell') : '') + U.esc(p.title) }),
+                    U.h('div', { class: 'g-t', html: (rem ? Icons.get('bell') : replay ? Icons.get('restart') : '') + U.esc(p.title) }),
                     U.h('div', { class: 'g-tm', text: U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) })
                 ]));
             });
@@ -135,7 +153,8 @@ Screens.guide = {
             U.h('div', { class: 'g-ch' }, [
                 U.h('span', { class: 'g-num', text: ch.num != null ? String(ch.num) : '' }),
                 U.img(ch.stream_icon, 'g-logo', ch.name),
-                U.h('span', { class: 'g-name', text: ch.name })
+                U.h('span', { class: 'g-name', text: ch.name }),
+                this.archDays(ch) ? U.h('span', { class: 'g-archic', html: Icons.get('restart') }) : null
             ]),
             area
         ]);
@@ -164,12 +183,13 @@ Screens.guide = {
         this.dTitle.textContent = p ? p.title : (l ? 'Geen programmagegevens' : 'Laden…');
         this.dDesc.textContent = p ? p.desc : '';
         if (p && p.start > Date.now() && Remind.has(ch, p)) this.dMeta.textContent += '  ·  herinnering staat aan';
+        else if (p && p.end <= Date.now()) this.dMeta.textContent += this.canReplay(ch, p) ? '  ·  terugkijken: druk op OK' : '  ·  niet terug te kijken';
     },
 
     // Naar een tijdstip springen (venster begint een half uur ervoor, nooit in het verleden)
     jump: function (t) {
-        var min = this.floor30(Date.now());
-        this.ft = Math.max(t, Date.now());
+        var min = this.minTime();
+        this.ft = Math.max(t, min);
         this.win = Math.max(min, this.floor30(this.ft) - 30 * 60000);
         this.syncProg();
         this.draw();
@@ -177,12 +197,13 @@ Screens.guide = {
     },
     tonight: function () { var d = new Date(); d.setHours(20, 0, 0, 0); if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1); return d.getTime(); },
     pickDay: function () {
-        var self = this, items = [], cur = new Date(this.ft);
-        for (var i = 0; i < 7; i++) {
+        var self = this, items = [], cur = new Date(this.ft), back = Math.round((Date.now() - this.minTime()) / 86400e3);
+        for (var i = -back; i < 7; i++) {
             var d = new Date(); d.setDate(d.getDate() + i); d.setHours(cur.getHours(), cur.getMinutes(), 0, 0);
-            items.push({ id: i, label: i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : U.fmtDate(d.getTime()), t: d.getTime(), checked: d.toDateString() === cur.toDateString() });
+            var label = i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : i === -1 ? 'Gisteren' : U.fmtDate(d.getTime());
+            items.push({ id: i, label: label, hint: i < 0 ? 'terugkijken' : '', t: d.getTime(), checked: d.toDateString() === cur.toDateString() });
         }
-        Dialog.menu({ title: 'Andere dag', text: 'Zelfde tijdstip (' + U.fmtClock(this.ft) + '), andere dag. Hoe ver vooruit hangt af van je provider.', items: items }, function (it) {
+        Dialog.menu({ title: 'Andere dag', text: 'Zelfde tijdstip (' + U.fmtClock(this.ft) + '), andere dag. Hoe ver vooruit (en terug) hangt af van je provider.', items: items }, function (it) {
             if (it) self.jump(it.t);
         });
     },
@@ -208,13 +229,16 @@ Screens.guide = {
         var self = this, ch = this.list.current(), l = this.progs(ch), p = l && this.pi >= 0 ? l[this.pi] : null, now = Date.now();
         if (!ch) return;
         var fav = Store.isFav('live', ch.stream_id), items = [];
-        var live = !p || (p.start <= now && p.end > now);
+        var live = !p || (p.start <= now && p.end > now), replay = this.canReplay(ch, p);
+        if (p && p.end <= now && replay) items.push({ id: 'replay', label: 'Terugkijken' });
+        if (p && live && replay) items.push({ id: 'replay', label: 'Vanaf het begin kijken' });
         if (p && p.start > now) items.push({ id: 'rem', label: Remind.has(ch, p) ? 'Herinnering verwijderen' : 'Herinner me (' + U.fmtClock(p.start) + ')' });
         items.push({ id: 'watch', label: live ? 'Nu kijken' : 'Zender nu kijken' });
         items.push({ id: 'fav', label: fav ? 'Zender verwijderen uit favorieten' : 'Zender toevoegen aan favorieten' });
         Dialog.menu({ title: p ? p.title : ch.name, text: ch.name + (p ? '  ·  ' + U.fmtDate(p.start) + ' ' + U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) : ''), items: items }, function (it) {
             if (!it) return;
             if (it.id === 'watch') App.go('player', { mode: 'live', channel: ch, list: self.items });
+            else if (it.id === 'replay') self.replay(ch, p);
             else if (it.id === 'rem') {
                 var on = Remind.toggle(ch, p);
                 Toast.show(on ? 'Herinnering ingesteld voor ' + U.fmtClock(p.start) : 'Herinnering verwijderd');
@@ -243,7 +267,7 @@ Screens.guide = {
     },
 
     stepProg: function (d) {
-        var l = this.progs(this.list.current()), half = 30 * 60000, min = this.floor30(Date.now());
+        var l = this.progs(this.list.current()), half = 30 * 60000, min = this.minTime();
         if (!l || !l.length || this.pi < 0) {
             this.win = Math.max(min, this.win + d * half);
             this.ft = Math.max(this.win, Date.now());
@@ -294,6 +318,11 @@ Screens.guide = {
                 // Programma dat nog moet beginnen: opties (herinnering); anders meteen kijken
                 var ch = this.list.current(), l = this.progs(ch), p = l && this.pi >= 0 ? l[this.pi] : null;
                 if (k === 'ok' && p && p.start > Date.now()) { this.progMenu(); return true; }
+                // Afgelopen programma: terugkijken als het kan
+                if (k === 'ok' && p && p.end <= Date.now()) {
+                    if (this.canReplay(ch, p)) this.replay(ch, p); else Toast.show('Dit programma is niet terug te kijken');
+                    return true;
+                }
                 if (ch) App.go('player', { mode: 'live', channel: ch, list: this.items });
                 return true;
         }

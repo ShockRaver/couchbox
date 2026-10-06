@@ -14,13 +14,14 @@ var EPG = (function () {
     var FULL = 1000;
 
     function parse(res) {
-        var min = Date.now() - 4 * 3600e3, max = Date.now() + 4 * 86400e3, seen = {};
+        var min = Date.now() - 4 * 3600e3, minArc = Date.now() - 7 * 86400e3, max = Date.now() + 7 * 86400e3, seen = {};
         var list = U.toArr(res && res.epg_listings).map(function (p) {
-            return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end) };
+            return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end),
+                arc: String(p.has_archive) === '1' };
         });
-        // Alleen een bruikbaar tijdvak bewaren (volledige tabellen kunnen dagen terug gaan) en dubbelen weghalen
+        // Alleen een bruikbaar tijdvak bewaren en dubbelen weghalen; terug te kijken programma's tot een week terug
         return list.filter(function (p) {
-            if (!(p.end > p.start) || p.end < min || p.start > max || seen[p.start]) return false;
+            if (!(p.end > p.start) || p.end < (p.arc ? minArc : min) || p.start > max || seen[p.start]) return false;
             seen[p.start] = 1;
             return true;
         }).sort(function (a, b) { return a.start - b.start; });
