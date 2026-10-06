@@ -7,3 +7,4 @@ build/
 js/config.local.js
 .claude/settings.local.json
 __pycache__/
+.claude/skills/
