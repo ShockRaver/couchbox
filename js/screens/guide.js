@@ -1,5 +1,8 @@
-/* TV-gids: tijdlijn per zender (EPG-raster) */
+/* TV-gids: tijdlijn per zender (EPG-raster).
+   Bovenaan: groep kiezen (favorieten, alle zenders of een categorie) en springen in de tijd (nu, vanavond, andere dag).
+   OK op een programma dat nog moet beginnen of OK ingedrukt houden: opties (kijken, herinnering, favoriet). */
 Screens.guide = {
+    longOk: true,
     WIN: 180,              // minuten zichtbaar in het venster
     CH_W: 340,             // breedte zenderkolom (px, incl. marge)
     AREA_W: 1500,          // breedte van het tijdvak (px)
@@ -9,6 +12,15 @@ Screens.guide = {
         this.el = UI.screen('guide');
         this.hdr = UI.header('TV-gids');
         this.el.appendChild(this.hdr.el);
+        // Balk met keuzes boven de gids
+        this.chips = [
+            { id: 'group', el: U.h('div', { class: 'g-chip' }) },
+            { id: 'now', el: U.h('div', { class: 'g-chip', text: 'Nu' }) },
+            { id: 'tonight', el: U.h('div', { class: 'g-chip', text: 'Vanavond' }) },
+            { id: 'day', el: U.h('div', { class: 'g-chip', html: Icons.get('guide') + '<span>Andere dag</span>' }) }
+        ];
+        this.el.appendChild(U.h('div', { class: 'g-bar' }, this.chips.map(function (c) { return c.el; })));
+        this.ci = 0;
         this.dTitle = U.h('div', { class: 'g-dtitle' });
         this.dMeta = U.h('div', { class: 'g-dmeta' });
         this.dDesc = U.h('div', { class: 'g-ddesc' });
@@ -30,35 +42,55 @@ Screens.guide = {
     show: function (p) {
         var self = this;
         this.list.setItems([]);
-        if (p.items) return this.setup(p.items, p.index || 0, p.catName);
-        // Vanaf het startscherm: favorieten, anders de laatst gekozen categorie
+        this.items = null;
+        this.setZone('grid');
         Loader.show('TV-gids laden…');
-        Promise.all([Api.liveCategories(), Api.liveStreams()]).then(function (r) {
+        this.loadGroups().then(function () {
             Loader.hide();
-            var adult = App.adultIds(r[0]);
-            var all = adult ? r[1].filter(function (s) { return !App.inCats(s, adult); }) : r[1];
-            var favs = Store.favorites('live');
-            if (favs.length) {
-                var byId = {};
-                all.forEach(function (s) { byId[s.stream_id] = s; });
-                return self.setup(favs.map(function (f) { return byId[f.id] || App.chFromFav(f); }), 0, 'Favorieten');
-            }
-            var cat = Store.liveCat(), catObj = r[0].filter(function (c) { return String(c.category_id) === cat; })[0];
-            var items = catObj ? all.filter(function (s) { return App.catIds(s).indexOf(cat) >= 0; }) : all;
-            self.setup(items, 0, catObj ? catObj.category_name : 'Alle zenders');
+            // Vanuit Live TV: die categorie; anders de laatst gekozen groep (standaard favorieten, of alle zenders)
+            if (p.items) return self.setup(p.items, p.index || 0, p.catId === 'all' || p.catId === 'fav' ? p.catId : 'c:' + p.catId, p.catName);
+            var saved = Store.getP('guideGroup', null);
+            var g = self.groups.filter(function (x) { return x.id === saved; })[0] || self.groups[0];
+            self.useGroup(g);
         }).catch(function (e) {
             Loader.hide();
             Dialog.alert('TV-gids laden mislukt', e.message, function () { App.back(); });
         });
     },
 
-    setup: function (items, index, catName) {
+    // Groepen: favorieten (als je die hebt), alle zenders, en elke categorie (zonder 18+)
+    loadGroups: function () {
+        var self = this;
+        return Promise.all([Api.liveCategories(), Api.liveStreams()]).then(function (r) {
+            var adult = App.adultIds(r[0]);
+            var all = adult ? r[1].filter(function (s) { return !App.inCats(s, adult); }) : r[1];
+            var byId = {}, count = {};
+            all.forEach(function (s) { byId[s.stream_id] = s; App.catIds(s).forEach(function (c) { count[c] = (count[c] || 0) + 1; }); });
+            var favs = Store.favorites('live');
+            self.groups = [];
+            if (favs.length) self.groups.push({ id: 'fav', name: 'Favorieten', items: function () { return Store.favorites('live').map(function (f) { return byId[f.id] || App.chFromFav(f); }); }, n: favs.length });
+            self.groups.push({ id: 'all', name: 'Alle zenders', items: function () { return all; }, n: all.length });
+            r[0].forEach(function (c) {
+                var id = String(c.category_id);
+                if ((adult && adult[id]) || !count[id]) return;
+                self.groups.push({ id: 'c:' + id, name: c.category_name, n: count[id], items: function () { return all.filter(function (s) { return App.catIds(s).indexOf(id) >= 0; }); } });
+            });
+        });
+    },
+
+    useGroup: function (g) {
+        Store.setP('guideGroup', g.id);
+        this.setup(g.items(), 0, g.id, g.name);
+    },
+
+    setup: function (items, index, groupId, groupName) {
         var self = this;
         this.items = items;
+        this.groupId = groupId;
         this.win = this.floor30(Date.now());
         this.ft = Date.now();
-        this.hdr.sub.textContent = (catName || '') + ' · ' + items.length + ' zenders';
-        this.list.setActive(true);
+        this.chips[0].el.innerHTML = Icons.get('list') + '<span>' + U.esc(groupName || 'Zenders') + '</span><span class="g-cnt">' + items.length + '</span>';
+        this.list.setActive(this.zone === 'grid');
         this.list.setItems(items, index);
         this.syncProg();
         this.draw();
@@ -92,8 +124,9 @@ Screens.guide = {
                 if (p.end <= ws || p.start >= we) return;
                 var a = Math.max(p.start, ws), b = Math.min(p.end, we);
                 var cls = 'g-prog' + (p.start <= now && p.end > now ? ' g-live' : '') + (focusRow && j === self.pi ? ' focus' : '');
+                var rem = p.start > now && Remind.has(ch, p);
                 area.appendChild(U.h('div', { class: cls, style: { left: ((a - ws) / 60000 * px) + 'px', width: Math.max(2, (b - a) / 60000 * px - 4) + 'px' } }, [
-                    U.h('div', { class: 'g-t', text: p.title }),
+                    U.h('div', { class: 'g-t', html: (rem ? Icons.get('bell') : '') + U.esc(p.title) }),
                     U.h('div', { class: 'g-tm', text: U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) })
                 ]));
             });
@@ -130,6 +163,68 @@ Screens.guide = {
         this.dMeta.textContent = ch.name + (p ? '  ·  ' + U.fmtDate(p.start) + ' ' + U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) : '');
         this.dTitle.textContent = p ? p.title : (l ? 'Geen programmagegevens' : 'Laden…');
         this.dDesc.textContent = p ? p.desc : '';
+        if (p && p.start > Date.now() && Remind.has(ch, p)) this.dMeta.textContent += '  ·  herinnering staat aan';
+    },
+
+    // Naar een tijdstip springen (venster begint een half uur ervoor, nooit in het verleden)
+    jump: function (t) {
+        var min = this.floor30(Date.now());
+        this.ft = Math.max(t, Date.now());
+        this.win = Math.max(min, this.floor30(this.ft) - 30 * 60000);
+        this.syncProg();
+        this.draw();
+        this.requestEpg();
+    },
+    tonight: function () { var d = new Date(); d.setHours(20, 0, 0, 0); if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1); return d.getTime(); },
+    pickDay: function () {
+        var self = this, items = [], cur = new Date(this.ft);
+        for (var i = 0; i < 7; i++) {
+            var d = new Date(); d.setDate(d.getDate() + i); d.setHours(cur.getHours(), cur.getMinutes(), 0, 0);
+            items.push({ id: i, label: i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : U.fmtDate(d.getTime()), t: d.getTime(), checked: d.toDateString() === cur.toDateString() });
+        }
+        Dialog.menu({ title: 'Andere dag', text: 'Zelfde tijdstip (' + U.fmtClock(this.ft) + '), andere dag. Hoe ver vooruit hangt af van je provider.', items: items }, function (it) {
+            if (it) self.jump(it.t);
+        });
+    },
+    pickGroup: function () {
+        var self = this;
+        Dialog.menu({
+            title: 'Welke zenders?',
+            items: this.groups.map(function (g) { return { id: g.id, label: g.name, hint: String(g.n), checked: g.id === self.groupId, g: g }; })
+        }, function (it) { if (it) { self.useGroup(it.g); self.setZone('grid'); } });
+    },
+
+    // ---- Zones: balk bovenaan of het raster ----
+    setZone: function (z) {
+        var self = this;
+        this.zone = z;
+        this.chips.forEach(function (c, i) { c.el.classList.toggle('focus', z === 'bar' && i === self.ci); });
+        this.list.setActive(z === 'grid');
+        if (this.items) this.list.refresh();
+    },
+
+    // Opties voor het programma onder de cursor
+    progMenu: function () {
+        var self = this, ch = this.list.current(), l = this.progs(ch), p = l && this.pi >= 0 ? l[this.pi] : null, now = Date.now();
+        if (!ch) return;
+        var fav = Store.isFav('live', ch.stream_id), items = [];
+        var live = !p || (p.start <= now && p.end > now);
+        if (p && p.start > now) items.push({ id: 'rem', label: Remind.has(ch, p) ? 'Herinnering verwijderen' : 'Herinner me (' + U.fmtClock(p.start) + ')' });
+        items.push({ id: 'watch', label: live ? 'Nu kijken' : 'Zender nu kijken' });
+        items.push({ id: 'fav', label: fav ? 'Zender verwijderen uit favorieten' : 'Zender toevoegen aan favorieten' });
+        Dialog.menu({ title: p ? p.title : ch.name, text: ch.name + (p ? '  ·  ' + U.fmtDate(p.start) + ' ' + U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) : ''), items: items }, function (it) {
+            if (!it) return;
+            if (it.id === 'watch') App.go('player', { mode: 'live', channel: ch, list: self.items });
+            else if (it.id === 'rem') {
+                var on = Remind.toggle(ch, p);
+                Toast.show(on ? 'Herinnering ingesteld voor ' + U.fmtClock(p.start) : 'Herinnering verwijderd');
+                self.list.refresh(); self.updateDetail();
+            } else if (it.id === 'fav') {
+                var added = Store.toggleFav('live', App.favFromCh(ch));
+                Toast.show(added ? ch.name + ' toegevoegd aan favorieten' : ch.name + ' verwijderd uit favorieten');
+                self.loadGroups();
+            }
+        });
     },
 
     requestEpg: function () {
@@ -169,18 +264,36 @@ Screens.guide = {
 
     onKey: function (k) {
         if (!this.items) return false;
+        if (this.zone === 'bar') {
+            switch (k) {
+                case 'left': case 'right': this.ci = U.clamp(this.ci + (k === 'left' ? -1 : 1), 0, this.chips.length - 1); this.setZone('bar'); return true;
+                case 'up': this.navFocus(true); return true;
+                case 'down': case 'back': this.setZone('grid'); return true;
+                case 'ok': case 'longok':
+                    var id = this.chips[this.ci].id;
+                    if (id === 'group') this.pickGroup();
+                    else if (id === 'now') { this.jump(Date.now()); this.setZone('grid'); }
+                    else if (id === 'tonight') { this.jump(this.tonight()); this.setZone('grid'); }
+                    else this.pickDay();
+                    return true;
+            }
+            return false;
+        }
         switch (k) {
             case 'up': case 'down':
                 if (this.list.move(k)) { this.syncProg(); this.list.refresh(); this.updateDetail(); this.requestEpg(); }
-                else if (k === 'up') this.navFocus(true);
+                else if (k === 'up') this.setZone('bar');
                 return true;
+            case 'longok': this.progMenu(); return true;
             case 'chup': case 'chdown':
                 this.list.page(k === 'chup' ? -1 : 1); this.syncProg(); this.list.refresh(); this.updateDetail(); this.requestEpg();
                 return true;
             case 'left': this.stepProg(-1); return true;
             case 'right': this.stepProg(1); return true;
             case 'ok': case 'play':
-                var ch = this.list.current();
+                // Programma dat nog moet beginnen: opties (herinnering); anders meteen kijken
+                var ch = this.list.current(), l = this.progs(ch), p = l && this.pi >= 0 ? l[this.pi] : null;
+                if (k === 'ok' && p && p.start > Date.now()) { this.progMenu(); return true; }
                 if (ch) App.go('player', { mode: 'live', channel: ch, list: this.items });
                 return true;
         }

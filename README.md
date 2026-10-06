@@ -6,7 +6,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 
 **Watching**
 - **Live TV**: categories, a virtualised channel list (thousands of channels stay fast), now/next EPG with a progress bar, and a live preview window
-- **TV guide**: timeline grid per channel, several days ahead (◀▶ through time, ▲▼ through channels)
+- **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
 - **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings
 - Number keys to jump to a channel, CH+/CH− to zap, ↩ PREV-CH, picture format (fit/stretch/auto), automatic reconnect when a stream drops
@@ -120,6 +120,7 @@ js/genres.js            genre index for movies and series (chunked)
 js/find.js              search index (TMDB titles, typo tolerance, ranking)
 js/reco.js              recommendation rows
 js/follow.js            new-episode detection for series in My list
+js/remind.js            reminders for programmes in the TV guide
 js/player.js            AVPlay (TV) / HTML5 video (browser), audio/subtitle tracks, reconnect
 js/epg.js               EPG cache + queue (only fetches visible channels)
 js/vlist.js             virtual list/grid with focus handling

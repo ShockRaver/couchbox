@@ -302,7 +302,7 @@ Screens.live = {
     },
 
     openGuide: function () {
-        App.go('guide', { items: this.items, index: this.chans.index, catName: this.cat.name });
+        App.go('guide', { items: this.items, index: this.chans.index, catId: this.cat.id, catName: this.cat.name });
     },
 
     // Zendernummer intypen met de cijfertoetsen

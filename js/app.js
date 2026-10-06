@@ -365,6 +365,7 @@ var App = {
         });
         clock();
         setInterval(clock, 10000);
+        Remind.start(); // herinneringen uit de TV-gids
         if (!Store.activeProfile()) App.reset('login', {});
         else App.connect(true);
     });
