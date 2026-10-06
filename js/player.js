@@ -147,14 +147,7 @@ var Player = (function () {
         var keepAt = lastTime;
         halt();
         lastTime = keepAt;
-        // Alternatieven (bv. ander archiefformaat): meteen de volgende proberen, zonder "verbinding verbroken"
-        if (cur.opts.alts && cur.opts.alts.length) {
-            cur.url = cur.opts.alts.shift();
-            retries = 0;
-            retryTimer = setTimeout(start, 600);
-            return;
-        }
-        var max = cur.opts.retries != null ? cur.opts.retries : cur.opts.live ? 5 : 2;
+        var max = cur.opts.live ? 5 : 2;
         if (cur.url && retries < max) {
             retries++;
             setState('retry');

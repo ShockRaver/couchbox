@@ -14,18 +14,16 @@ var EPG = (function () {
     var FULL = 1000;
 
     function parse(res) {
-        var min = Date.now() - 4 * 3600e3, minArc = Date.now() - 7 * 86400e3, max = Date.now() + 7 * 86400e3;
+        var min = Date.now() - 4 * 3600e3, max = Date.now() + 7 * 86400e3;
         var list = U.toArr(res && res.epg_listings).map(function (p) {
-            // arc: true/false volgens de provider, null als de provider het niet aangeeft; startStr = starttijd in servertijd
-            return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end),
-                arc: p.has_archive == null ? null : String(p.has_archive) === '1', startStr: /^\d{4}-\d\d-\d\d \d\d:\d\d/.test(p.start || '') ? p.start : '' };
+            return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end) };
         });
-        // Alleen een bruikbaar tijdvak bewaren; terug te kijken programma's tot een week terug
+        // Alleen een bruikbaar tijdvak bewaren (volledige tabellen kunnen dagen terug gaan)
         list = list.filter(function (p) {
-            return p.end > p.start && p.end >= (p.arc !== false ? minArc : min) && p.start <= max;
+            return p.end > p.start && p.end >= min && p.start <= max;
         }).sort(function (a, b) {
-            // Zelfde starttijd: de versie met archief en daarna de langste eerst (die blijft bewaard)
-            return a.start - b.start || (b.arc === true) - (a.arc === true) || (b.end - b.start) - (a.end - a.start);
+            // Zelfde starttijd: de langste eerst (die blijft bewaard)
+            return a.start - b.start || (b.end - b.start) - (a.end - a.start);
         });
         return clean(list);
     }

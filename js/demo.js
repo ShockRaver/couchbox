@@ -23,23 +23,19 @@ var Demo = (function () {
     var live = [];
     for (var i = 1; i <= 60; i++) {
         var c = liveCats[i % 5];
-        live.push({ num: i, name: c.category_name.replace(/^.*\| /, '') + ' ' + i + (i % 7 === 0 ? ' HD' : ''), stream_type: 'live', stream_id: 1000 + i, stream_icon: '', category_id: c.category_id, epg_channel_id: 'demo' + i,
-            tv_archive: (i % 3 === 0) ? 1 : 0, tv_archive_duration: (i % 3 === 0) ? '3' : '0' });
+        live.push({ num: i, name: c.category_name.replace(/^.*\| /, '') + ' ' + i + (i % 7 === 0 ? ' HD' : ''), stream_type: 'live', stream_id: 1000 + i, stream_icon: '', category_id: c.category_id, epg_channel_id: 'demo' + i });
     }
 
     var SHOWS = ['Journaal', 'Weerbericht', 'Talkshow', 'Voetbal live', 'Natuurdocumentaire', 'Quiz', 'Film: De Reis',
         'Kookprogramma', 'Tekenfilms', 'Nieuwsuur', 'Reisprogramma', 'Muziekspecial', 'Formule 1', 'Wetenschap'];
-    // Elke derde zender heeft een archief van 3 dagen (terugkijken); de korte EPG begint bij nu
-    function hasArc(id) { return (id - 1000) % 3 === 0; }
-    function epg(id, limit, full) {
+    function epg(id, limit) {
         var day = new Date(); day.setHours(0, 0, 0, 0);
-        var t = day.getTime() - (full ? 2 * 86400e3 : 0), now = Date.now(), out = [], n = 0;
+        var t = day.getTime(), now = Date.now(), out = [], n = 0;
         while (t < now + 36 * 3600e3 && out.length < limit) {
             var dur = (30 + Math.floor(rnd(id * 31 + n) * 5) * 15) * 60e3;
-            if (full || t + dur > now) {
+            if (t + dur > now) {
                 var title = SHOWS[Math.floor(rnd(id * 7 + n) * SHOWS.length)];
-                out.push({ title: enc(title), description: enc('Dit is demo-programma-informatie voor "' + title + '". Hier staat normaal de beschrijving uit de EPG van je provider.'),
-                    start_timestamp: String(t / 1000), stop_timestamp: String((t + dur) / 1000), has_archive: hasArc(id) && t + dur <= now ? 1 : 0 });
+                out.push({ title: enc(title), description: enc('Dit is demo-programma-informatie voor "' + title + '". Hier staat normaal de beschrijving uit de EPG van je provider.'), start_timestamp: String(t / 1000), stop_timestamp: String((t + dur) / 1000) });
             }
             t += dur; n++;
         }
@@ -81,7 +77,7 @@ var Demo = (function () {
             case 'get_live_streams': res = byCat(live, p.category_id); break;
             // Zoals veel echte providers: de korte EPG geeft er hooguit 4, de volledige tabel alles
             case 'get_short_epg': res = epg(+p.stream_id, Math.min(+p.limit || 4, 4)); break;
-            case 'get_simple_data_table': res = epg(+p.stream_id, 400, true); break;
+            case 'get_simple_data_table': res = epg(+p.stream_id, 200); break;
             case 'get_vod_categories': res = vodCats; break;
             case 'get_vod_streams': res = byCat(vod, p.category_id); break;
             case 'get_vod_info':

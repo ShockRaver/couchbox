@@ -125,7 +125,7 @@ var Api = (function () {
     function seriesInfo(id) { return cached('si:' + id, { action: 'get_series_info', series_id: id }); }
 
     function shortEpg(id, limit) { return request({ action: 'get_short_epg', stream_id: id, limit: limit || 4 }, 15000); }
-    // Volledige gids van één zender (meerdere dagen, incl. has_archive voor terugkijken)
+    // Volledige gids van één zender (meerdere dagen vooruit)
     function fullEpg(id) { return request({ action: 'get_simple_data_table', stream_id: id }, 20000); }
 
     // ---- Stream-URL's ----
@@ -140,50 +140,6 @@ var Api = (function () {
     function episodeUrl(item) { return isDemo() ? Demo.src(item.id) : path('series', item.id, item.ext || 'mp4'); }
 
     // Vernieuwen: ook de lokaal bewaarde lijsten negeren, alles opnieuw bij de provider ophalen
-    // ---- Terugkijken (Xtream "timeshift") ----
-    // Starttijd als JJJJ-MM-DD:UU-MM in de tijdzone van de server (die staat in server_info), anders lokale tijd
-    function serverTime(t) {
-        var tz = account && account.server_info && account.server_info.timezone, v = null;
-        try {
-            if (tz && window.Intl) {
-                v = {};
-                new Intl.DateTimeFormat('en-GB', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-                    .formatToParts(new Date(t)).forEach(function (p) { v[p.type] = p.value; });
-            }
-        } catch (e) { v = null; }
-        if (!v || !v.year) {
-            var d = new Date(t);
-            v = { year: d.getFullYear(), month: U.pad(d.getMonth() + 1), day: U.pad(d.getDate()), hour: U.pad(d.getHours()), minute: U.pad(d.getMinutes()) };
-        }
-        return v.year + '-' + v.month + '-' + v.day + ':' + (v.hour === '24' ? '00' : v.hour) + '-' + v.minute;
-    }
-    // "2026-10-06 20:30:00" + offset (ms) -> "2026-10-06:20-30" (rekenen zonder tijdzone: het is al servertijd)
-    function shiftStr(str, offset) {
-        var m = String(str).match(/^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/);
-        if (!m) return '';
-        var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) + (offset || 0));
-        return d.getUTCFullYear() + '-' + U.pad(d.getUTCMonth() + 1) + '-' + U.pad(d.getUTCDate()) + ':' + U.pad(d.getUTCHours()) + '-' + U.pad(d.getUTCMinutes());
-    }
-    var ARC_FORMATS = ['ts', 'm3u8', 'php'];
-    // Opname van een zender: alle varianten die Xtream-providers gebruiken, de laatst werkende eerst.
-    // prog: { start, startStr }; offset: ms na de start; minutes: hoe lang
-    function archiveUrls(ch, prog, offset, minutes) {
-        if (isDemo()) return [{ url: Demo.src(ch.stream_id), fmt: 'ts' }];
-        var dur = Math.max(1, Math.ceil(minutes)), u = enc(prof.username), pw = enc(prof.password);
-        var times = [shiftStr(prog.startStr, offset), serverTime(prog.start + offset)].filter(function (t, i, a) { return t && a.indexOf(t) === i; });
-        var pref = Store.getP('arcFmt', ''), fmts = ARC_FORMATS.slice().sort(function (a, b) { return (b === pref) - (a === pref); });
-        var out = [];
-        times.forEach(function (t) {
-            fmts.forEach(function (f) {
-                var url = f === 'php'
-                    ? base + '/streaming/timeshift.php?username=' + u + '&password=' + pw + '&stream=' + ch.stream_id + '&start=' + t + '&duration=' + dur
-                    : base + '/timeshift/' + u + '/' + pw + '/' + dur + '/' + t + '/' + ch.stream_id + '.' + f;
-                out.push({ url: url, fmt: f });
-            });
-        });
-        return out;
-    }
-
     function clearCache() { cache = {}; bypassBefore = Date.now(); }
 
     return {
@@ -192,6 +148,6 @@ var Api = (function () {
         liveCategories: liveCategories, liveStreams: liveStreams,
         vodCategories: vodCategories, vodStreams: vodStreams, vodInfo: vodInfo,
         seriesCategories: seriesCategories, series: series, seriesInfo: seriesInfo, shortEpg: shortEpg, fullEpg: fullEpg,
-        loaded: loaded, liveUrl: liveUrl, archiveUrls: archiveUrls, serverTime: serverTime, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
+        loaded: loaded, liveUrl: liveUrl, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
     };
 })();
