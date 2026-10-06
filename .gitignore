@@ -1,0 +1,9 @@
+build/
+.buildResult/
+*.wgt
+.DS_Store
+*.p12
+*.pwd
+js/config.local.js
+.claude/settings.local.json
+__pycache__/
