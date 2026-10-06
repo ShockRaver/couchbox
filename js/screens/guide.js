@@ -4,8 +4,8 @@
 Screens.guide = {
     longOk: true,
     WIN: 180,              // minuten zichtbaar in het venster
-    CH_W: 340,             // breedte zenderkolom (px, incl. marge)
-    AREA_W: 1500,          // breedte van het tijdvak (px)
+    CH_W: 470,             // breedte zenderkolom (px, incl. marge)
+    AREA_W: 1370,          // breedte van het tijdvak (px)
 
     build: function () {
         var self = this;
