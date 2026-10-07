@@ -25,11 +25,12 @@ function VList(box, opts) {
     box.appendChild(this.emptyEl);
 }
 
-VList.prototype.setItems = function (items, index) {
+// keep: scrollpositie laten staan (bij bijwerken op de achtergrond, zodat de lijst niet verspringt)
+VList.prototype.setItems = function (items, index, keep) {
     var self = this;
     this.items = items || [];
     this.index = U.clamp(index || 0, 0, Math.max(0, this.items.length - 1));
-    this.offset = 0;
+    if (!keep) this.offset = 0;
     this.inner.innerHTML = '';
     this.nodes = {};
     this.inner.classList.add('no-anim');

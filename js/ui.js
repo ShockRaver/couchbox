@@ -189,6 +189,41 @@ RowStack.prototype.restore = function (st) {
     }
     this.draw();
 };
+// Rijen bijwerken zonder alles opnieuw op te bouwen (voor gegevens die op de achtergrond binnenkomen):
+// ongewijzigde rijen blijven staan, de focus blijft op dezelfde rij en hetzelfde item. keyOf(item) = vaste sleutel.
+RowStack.prototype.sync = function (specs, keyOf) {
+    var self = this, curRow = this.rows[this.cur], curAt = this.cur;
+    var ids = specs.map(function (o) { return o.id; });
+    var keys = function (items) { return items.map(keyOf).join('|'); };
+    // Verdwenen rijen weghalen
+    this.rows = this.rows.filter(function (r) {
+        if (ids.indexOf(r.id) >= 0) return true;
+        r.el.parentNode.removeChild(r.el);
+        return false;
+    });
+    specs.forEach(function (o, i) {
+        var r = self.rows.filter(function (x) { return x.id === o.id; })[0];
+        if (!r) { o.at = i; self.add(o); return; }
+        // Op de juiste plek zetten
+        var at = self.rows.indexOf(r);
+        if (at !== i) {
+            self.rows.splice(at, 1);
+            self.rows.splice(i, 0, r);
+            self.wrap.insertBefore(r.el, self.rows[i + 1] ? self.rows[i + 1].el : null);
+        }
+        var h = r.el.querySelector('h3');
+        if (h && o.title && h.textContent !== o.title) h.textContent = o.title;
+        r.o = o;
+        r.list.render = o.render;
+        if (keys(r.list.items) === keys(o.items)) return;
+        // Andere inhoud: focus op hetzelfde item houden (of op dezelfde plek als het weg is)
+        var cur = r.list.current(), idx = cur ? o.items.map(keyOf).indexOf(keyOf(cur)) : -1;
+        r.list.setItems(o.items, idx >= 0 ? idx : r.list.index, true);
+    });
+    var n = curRow ? this.rows.indexOf(curRow) : -1;
+    this.cur = n >= 0 ? n : U.clamp(curAt, 0, Math.max(0, this.rows.length - 1));
+    this.draw();
+};
 RowStack.prototype.setActive = function (b) { this.active = b; this.draw(); };
 RowStack.prototype.draw = function () {
     var self = this;

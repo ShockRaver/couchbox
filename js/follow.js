@@ -79,7 +79,7 @@ var Follow = (function () {
             Toast.show(T('Nieuwe aflevering: {title} S{season} E{episode}', { title: fr.name, season: U.pad(+e.season), episode: U.pad(+e.episode) }), 6000);
         } else Toast.show(T('Nieuwe afleveringen in {n} series', { n: ids.length }), 6000);
         var s = App.screen();
-        if (s === Screens.home) Screens.home.render(Screens.home.rows.state());
+        if (s === Screens.home) Screens.home.update();
     }
 
     // Series met nieuwe afleveringen, nieuwste eerst

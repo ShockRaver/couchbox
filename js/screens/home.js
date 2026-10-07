@@ -27,6 +27,36 @@ Screens.home = {
     render: function (st) {
         var R = this.rows;
         R.clear();
+        this.specs().forEach(function (o) { R.add(o); });
+        R.restore(st);
+        var self = this;
+        setTimeout(function () { self.updateReco(); }, 300);
+        if (R.rows.length) {
+            this.setZone(this.zone === 'nav' && st ? 'nav' : 'rows');
+            this.showHero();
+        } else {
+            this.setZone('nav');
+            this.hero.message(T('Welkom bij Kijkdoos'), T('Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.'));
+        }
+    },
+
+    // Bijwerken met gegevens die op de achtergrond binnenkomen (aanbevelingen, nieuwe afleveringen),
+    // zonder het scherm opnieuw op te bouwen: de focus blijft staan waar je was
+    update: function () {
+        var R = this.rows, specs = this.specs();
+        if (!R.rows.length || !specs.length) { this.render(R.state()); return; }
+        var before = R.current();
+        R.sync(specs, Screens.home.keyOf);
+        if (R.current() !== before) this.showHero();
+    },
+    keyOf: function (x) {
+        var it = x.item || x;
+        return (x._type || x.type || '') + ':' + (x.key || it.stream_id || it.series_id || x.id || it.name);
+    },
+
+    // De rijen van het startscherm (zonder ze te tekenen)
+    specs: function () {
+        var R = { list: [], add: function (o) { this.list.push(o); } };
 
         var hist = Store.history();
         if (hist.length) R.add({
@@ -79,28 +109,15 @@ Screens.home = {
         });
 
         reco.slice(1).forEach(function (r) { R.add(UI.recoRow(r)); });
-
-        R.restore(st);
-        var self = this;
-        setTimeout(function () { self.updateReco(); }, 300);
-        if (R.rows.length) {
-            this.setZone(this.zone === 'nav' && st ? 'nav' : 'rows');
-            this.showHero();
-        } else {
-            this.setZone('nav');
-            this.hero.message(T('Welkom bij Kijkdoos'), T('Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.'));
-        }
+        return R.list;
     },
 
-    // Aanbevelingen op de achtergrond verversen; daarna opnieuw tekenen met dezelfde cursorpositie
+    // Aanbevelingen op de achtergrond verversen; daarna alleen de rijen bijwerken die veranderd zijn
     updateReco: function () {
         var self = this;
-        // Alleen opnieuw tekenen als de rijen echt veranderd zijn (dus geen herhaling bij een mislukte poging)
         if (!Reco.stale('home')) return;
-        var before = JSON.stringify(Reco.cached('home').map(function (r) { return [r.id, r.items.length]; }));
-        Reco.refresh('home').then(function (rows) {
-            var after = JSON.stringify(rows.map(function (r) { return [r.id, r.items.length]; }));
-            if (after !== before && App.screen() === self && !Dialog.isOpen()) self.render(self.rows.state());
+        Reco.refresh('home').then(function () {
+            if (App.screen() === self && !Dialog.isOpen()) self.update();
         });
     },
 
