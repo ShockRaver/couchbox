@@ -109,5 +109,5 @@ var EPG = (function () {
 
     function reset() { cache = {}; queue = []; waiting = {}; }
 
-    return { request: request, get: get, nowNext: nowNext, reset: reset, FULL: FULL };
+    return { request: request, get: get, nowNext: nowNext, reset: reset, clean: clean, FULL: FULL };
 })();

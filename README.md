@@ -74,6 +74,22 @@ Open http://127.0.0.1:8765 and enter **`demo`** as the server URL. Keys: arrows,
 `serve.py` disables browser caching, so you never get a mix of old and new files after a change.
 Real Xtream servers usually won't work in a desktop browser because of CORS. On the TV that restriction doesn't apply.
 
+## Tests
+
+```bash
+node tests/run.mjs            # everything
+node tests/run.mjs gids       # only tests whose name or file contains "gids"
+```
+
+The runner needs Node 22+ and Google Chrome (or Chromium; set `CHROME=/path` if it isn't found). It runs:
+- **Checks**: syntax of all JS files, the scripts in `index.html` exist, and translations are complete (`scripts/i18n-check.js`).
+- **Screen tests** in headless Chrome against the demo server (`tests/specs/*.mjs`): login, Home (including "focus stays put while rows load"), the top menu, Movies/Series, detail pages, My list, trailers, Live TV, TV guide, search with typos, settings, switching language, plus some units (EPG clean-up, recommendations, 4K/HDR labels).
+- Any error in the browser console fails a test. On failure a screenshot is saved in `build/test-out/run`.
+- Tests marked `tmdb` only run when `js/config.local.js` has a TMDB key; otherwise they're skipped.
+
+**GitHub Actions** (`.github/workflows/test.yml`) runs the same tests on every push and pull request. Results are shown in the run's summary, and screenshots are attached as an artifact. To include the TMDB tests, add the repository secret `TMDB_KEY` (*Settings → Secrets and variables → Actions*).
+`scripts/deploy.sh` checks the GitHub result for the current commit and refuses to install if the tests failed (override with `SKIP_TESTS=1`).
+
 ## Installing on the TV
 
 **One-time setup**
@@ -137,7 +153,11 @@ js/demo.js              demo server ("demo") for testing without a subscription
 scripts/deploy.sh       package + sign + install on the TV
 scripts/serve.py        local test server without caching
 scripts/i18n-check.js   checks translations
-tests/drive.mjs         headless Chrome test runner (steps in JSON, screenshots); tests/setup-demo.js = demo profile with history
+tests/run.mjs           test runner (checks + screen tests); tests/specs/*.mjs = the tests
+tests/lib/              headless Chrome via CDP (no npm packages) and a small test web server
+tests/setup-demo.js     demo profile with history, My list and a favourite channel
+tests/drive.mjs         ad-hoc: run JSON steps in headless Chrome and take screenshots
+.github/workflows/      GitHub Actions: tests on every push
 scripts/make-icon.js    generates icon.png
 ```
 

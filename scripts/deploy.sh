@@ -17,6 +17,21 @@ BUILD="$ROOT/build/src"
 if [ -z "$TV_IP" ]; then echo "Gebruik: $0 <TV-IP> [certificaatprofiel]"; exit 1; fi
 [ -x "$TIZEN" ] || { echo "Tizen CLI niet gevonden in $TIZEN_HOME"; exit 1; }
 
+# Testresultaat op GitHub voor deze commit: mislukt = niet installeren (toch doen: SKIP_TESTS=1 scripts/deploy.sh …)
+if [ -z "${SKIP_TESTS:-}" ] && command -v gh >/dev/null 2>&1; then
+    RUN="$(cd "$ROOT" && gh run list --workflow test.yml --commit "$(git rev-parse HEAD)" --limit 1 \
+        --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"' 2>/dev/null || true)"
+    case "$RUN" in
+        "completed success") echo "» Tests op GitHub: geslaagd" ;;
+        "completed failure"|"completed timed_out")
+            echo "De tests op GitHub zijn mislukt voor deze commit. Bekijk ze met: gh run view --web"
+            echo "Toch installeren: SKIP_TESTS=1 $0 $*"
+            exit 1 ;;
+        "") echo "» Tests op GitHub: nog geen resultaat voor deze commit (nog niet gepusht?)" ;;
+        *) echo "» Tests op GitHub: nog bezig of afgebroken ($RUN), installeren gaat door" ;;
+    esac
+fi
+
 # Controle: Certificate Manager zet soms het author-certificaat in het distributor-vak (TV-fout 118)
 PROFILES="$HOME/tizen-studio-data/profile/profiles.xml"
 DIST_KEY="$(grep 'distributor="1"' "$PROFILES" | sed -n 's/.*key="\([^"]*\)".*/\1/p')"

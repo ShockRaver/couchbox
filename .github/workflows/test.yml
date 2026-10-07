@@ -1,0 +1,45 @@
+# Tests bij elke push en pull request: syntax, vertalingen en schermtests in headless Chrome (demo-server).
+# Optioneel: repository-secret TMDB_KEY, dan draaien ook de TMDB-tests (anders overgeslagen).
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: TMDB-sleutel (optioneel)
+        env:
+          TMDB_KEY: ${{ secrets.TMDB_KEY }}
+        run: |
+          if [ -n "$TMDB_KEY" ]; then
+            echo "CONFIG.tmdbKey = '$TMDB_KEY';" > js/config.local.js
+            echo "TMDB-tests aan"
+          else
+            echo "Geen TMDB_KEY-secret: TMDB-tests worden overgeslagen"
+          fi
+
+      - name: Tests
+        run: node tests/run.mjs
+
+      - name: Screenshots en resultaten bewaren
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-resultaten
+          path: build/test-out/run
+          retention-days: 14
