@@ -2,11 +2,10 @@
 Screens.settings = {
     // Labels blijven hier Nederlands (de taal is bij het laden nog niet bekend); T() pas bij het tonen
     OPTS: {
-        lang: [['en', 'English'], ['nl', 'Nederlands']],
         startup: [['none', 'Startscherm'], ['live', 'Laatste zender afspelen'], ['ask', 'Vragen: verder kijken?']],
         liveFormat: [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']],
-        audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels']],
-        subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels']],
+        audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks']],
+        subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks']],
         aspect: [['letterbox', 'Passend (zwarte balken)'], ['fill', 'Uitrekken tot volledig scherm'], ['auto', 'Automatisch']],
         hideAdult: [[false, 'Uit'], [true, 'Aan']],
         trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']],
@@ -31,7 +30,7 @@ Screens.settings = {
     rows: function () {
         var s = Store.settings(), p = Store.activeProfile(), a = Api.account(), ui = a && a.user_info;
         return [
-            { id: 'lang', label: T('Taal') },
+            { id: 'lang', label: T('Taal'), value: I18N.LANGS[I18N.lang()], action: true },
             { id: 'profile', label: T('Profiel'), value: p ? p.name : '–', action: true },
             { id: 'startup', label: T('Bij opstarten') },
             { id: 'liveFormat', label: T('Live-streamformaat') },
@@ -62,8 +61,7 @@ Screens.settings = {
         var v = Store.settings()[id], o = this.OPTS[id];
         var hit = o.filter(function (x) { return x[0] === v; })[0];
         if (!hit) return String(v);
-        // Taalnamen altijd in hun eigen taal tonen
-        return id === 'lang' ? hit[1] : T(hit[1]);
+        return T(hit[1]);
     },
 
     renderRow: function (r) {
@@ -83,12 +81,6 @@ Screens.settings = {
         var i = o.findIndex(function (x) { return x[0] === v; });
         var n = o[(i + d + o.length) % o.length][0];
         Store.setSetting(id, n);
-        // Andere taal: app herstarten, zodat alle schermen in de nieuwe taal worden opgebouwd
-        if (id === 'lang') {
-            Loader.show(T('Taal wijzigen…'));
-            setTimeout(function () { location.reload(); }, 300);
-            return;
-        }
         if (id === 'aspect') Player.applyAspect();
         this.list.refreshItem(this.list.index);
     },
@@ -115,6 +107,7 @@ Screens.settings = {
             case 'refresh': App.refreshCatalog(); break;
             case 'genreLangs': this.langMenu(); break;
             case 'lineup': this.lineupMenu(); break;
+            case 'lang': I18N.choose(); break;
             case 'epgSrc': this.epgMenu(); break;
             case 'tmdb': this.tmdbMenu(); break;
             case 'history':

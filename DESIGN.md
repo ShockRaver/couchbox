@@ -36,7 +36,8 @@ Geen losse hexwaarden in componenten; altijd een token.
 - Alleen focus, panelen en achtergrondbeelden animeren; `prefers-reduced-motion` zet overgangen uit.
 
 ## Taal
-- Elke tekst die je ziet loopt via `T('Nederlandse tekst')`; de Engelse vertaling staat in `js/lang/en.js`. Standaard is de app Engels.
+- Elke tekst die je ziet loopt via `T('Nederlandse tekst')`; de vertalingen staan per taal in `js/lang/<code>.js` (en, de, fr, es, el). Standaard is de app Engels.
+- Houd teksten kort: Duits is vaak 30% langer dan Engels en moet ook in knoppen en smalle kolommen passen.
 - Zinnen met variabelen als één sjabloon: `T('Omdat je {title} keek', { title: x })`, nooit in stukjes.
 - Nooit `T()` aanroepen bij het laden van een script (de taal is pas bekend na `I18N.init()`); vaste lijsten houden Nederlandse tekst en vertalen bij het tonen.
-- Na nieuwe teksten: `node scripts/i18n-check.js`.
+- Na nieuwe teksten: vertaling in élke taal toevoegen en `node scripts/i18n-check.js` draaien (de tests falen anders).

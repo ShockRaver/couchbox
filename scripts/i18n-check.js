@@ -1,18 +1,20 @@
 #!/usr/bin/env node
-// Controle van de vertalingen: elke T('…')-sleutel moet in js/lang/en.js staan, en er mogen geen
-// Nederlandse teksten meer buiten T() staan. Gebruik: node scripts/i18n-check.js [bestand…]
+// Controle van de vertalingen: elke T('…')-sleutel moet in elk woordenboek (js/lang/*.js) staan, met dezelfde
+// {variabelen}, en er mogen geen Nederlandse teksten meer buiten T() staan. Gebruik: node scripts/i18n-check.js [bestand…]
 'use strict';
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 
-// Woordenboek inlezen
-const dict = {};
-global.I18N = { add: (l, o) => Object.assign(dict, o) };
-eval(fs.readFileSync(path.join(root, 'js/lang/en.js'), 'utf8'));
-// Extra (nog niet samengevoegde) vertalingen: I18N_EXTRA=build/i18n/a.json,build/i18n/b.json
+// Woordenboeken inlezen (één per taal); 'dict' = Engels, de basis voor de rest
+const dicts = {};
+global.I18N = { add: (l, o) => { dicts[l] = Object.assign(dicts[l] || {}, o); } };
+const langFiles = fs.readdirSync(path.join(root, 'js/lang')).filter(f => f.endsWith('.js'));
+langFiles.forEach(f => eval(fs.readFileSync(path.join(root, 'js/lang', f), 'utf8')));
+const dict = dicts.en || {};
+// Extra (nog niet samengevoegde) Engelse vertalingen: I18N_EXTRA=build/i18n/a.json,build/i18n/b.json
 (process.env.I18N_EXTRA || '').split(',').filter(Boolean).forEach(f => { if (fs.existsSync(f)) Object.assign(dict, JSON.parse(fs.readFileSync(f, 'utf8'))); });
 
-const SKIP = ['js/config.js', 'js/config.local.js', 'js/build.js', 'js/lang/en.js', 'js/i18n.js', 'js/demo.js'];
+const SKIP = ['js/config.js', 'js/config.local.js', 'js/build.js', 'js/i18n.js', 'js/demo.js'];
 const files = process.argv.slice(2).length ? process.argv.slice(2) : [
     ...fs.readdirSync(path.join(root, 'js')).filter(f => f.endsWith('.js')).map(f => 'js/' + f),
     ...fs.readdirSync(path.join(root, 'js/screens')).map(f => 'js/screens/' + f)
@@ -64,8 +66,18 @@ for (const f of files) {
         if (NL.test(s) || /[éëèêïöüó]/.test(s)) loose.push(`${f}: ${JSON.stringify(s)}`);
     }
 }
+// Andere talen: elke gebruikte sleutel aanwezig, met dezelfde {variabelen} als de Nederlandse tekst
+const vars = s => (s.match(/\{\w+\}/g) || []).sort().join();
+const other = Object.keys(dicts).filter(l => l !== 'en');
+for (const l of other) {
+    const d = dicts[l];
+    [...used].forEach(k => {
+        if (!(k in d)) missing.push(`${l}: ${JSON.stringify(k)}`);
+        else if (vars(d[k]) !== vars(k)) missing.push(`${l}: andere {variabelen} in ${JSON.stringify(k)}`);
+    });
+}
 const unused = Object.keys(dict).filter(k => !used.has(k));
-console.log(`Sleutels in code: ${used.size}, in woordenboek: ${Object.keys(dict).length}`);
+console.log(`Sleutels in code: ${used.size}, woordenboeken: ${Object.keys(dicts).map(l => l + ' ' + Object.keys(dicts[l]).length).join(', ')}`);
 if (missing.length) console.log(`\nZonder Engelse vertaling (${missing.length}):\n  ` + missing.join('\n  '));
 if (loose.length) console.log(`\nMogelijk nog niet vertaalbaar (buiten T()) (${loose.length}):\n  ` + loose.join('\n  '));
 if (unused.length && !process.argv.slice(2).length) console.log(`\nOngebruikt in woordenboek (${unused.length}):\n  ` + unused.slice(0, 50).join('\n  '));

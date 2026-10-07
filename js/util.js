@@ -91,10 +91,11 @@ var U = (function () {
         de: ['de', 'deu', 'ger', 'german', 'deutsch'],
         fr: ['fr', 'fra', 'fre', 'french', 'francais'],
         es: ['es', 'spa', 'spanish'], it: ['it', 'ita', 'italian'], tr: ['tr', 'tur', 'turkish'],
-        ar: ['ar', 'ara', 'arabic'], pl: ['pl', 'pol', 'polish'], pt: ['pt', 'por', 'portuguese']
+        ar: ['ar', 'ara', 'arabic'], pl: ['pl', 'pol', 'polish'], pt: ['pt', 'por', 'portuguese'],
+        el: ['el', 'ell', 'gre', 'greek', 'ελληνικά']
     };
     // Namen blijven Nederlands (sleutels voor de vertaling); langLabel vertaalt bij het tonen
-    var LABELS = { nl: 'Nederlands', en: 'Engels', de: 'Duits', fr: 'Frans', es: 'Spaans', it: 'Italiaans', tr: 'Turks', ar: 'Arabisch', pl: 'Pools', pt: 'Portugees' };
+    var LABELS = { nl: 'Nederlands', en: 'Engels', de: 'Duits', fr: 'Frans', es: 'Spaans', it: 'Italiaans', tr: 'Turks', ar: 'Arabisch', pl: 'Pools', pt: 'Portugees', el: 'Grieks' };
     function normLang(code) {
         var c = String(code || '').toLowerCase().trim();
         for (var k in LANGS) if (LANGS[k].indexOf(c) >= 0) return k;

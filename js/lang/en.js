@@ -477,5 +477,14 @@ I18N.add('en', {
     "{name} verwijderd uit {list}": "{name} removed from {list}",
     "{n} van {total} zenders": "{n} of {total} channels",
     "{n} verborgen": "{n} hidden",
-    "▲▼ verplaatsen · OK klaar": "▲▼ move · OK done"
+    "▲▼ verplaatsen · OK klaar": "▲▼ move · OK done",
+    // Taal kiezen, films in eigen taal
+    "Taal wijzigen naar {lang}?": "Change language to {lang}?",
+    "Kijkdoos start opnieuw op om alles in de nieuwe taal te tonen. Titels en beschrijvingen van TMDB worden daarna op de achtergrond bijgewerkt.": "Kijkdoos restarts to show everything in the new language. TMDB titles and descriptions are then updated in the background.",
+    "Opnieuw starten": "Restart",
+    "Duitstalige films": "German-language films",
+    "Franstalige films": "French-language films",
+    // Taal kiezen, films in eigen taal
+    "Spaanstalige films": "Spanish-language films",
+    "Griekse films": "Greek films"
 });

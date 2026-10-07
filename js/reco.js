@@ -125,11 +125,20 @@ var Reco = (function () {
         var items = pick(list.filter(function (x) { return x.m.votes >= 300; }).sort(function (a, b) { return b.q - a.q; }), w, types);
         return items.length >= 5 ? { id: 'top', title: T('Hoogst gewaardeerd'), items: byRank(items) } : null;
     }
+    // Films in de taal van de app (bij Engels: Nederlandse en Vlaamse, zoals voorheen)
+    var LOCAL = {
+        nl: { lang: 'nl', countries: ['NL', 'BE'], title: 'Nederlandse en Vlaamse films' },
+        de: { lang: 'de', countries: ['DE', 'AT'], title: 'Duitstalige films' },
+        fr: { lang: 'fr', countries: ['FR'], title: 'Franstalige films' },
+        es: { lang: 'es', countries: ['ES', 'MX', 'AR'], title: 'Spaanstalige films' },
+        el: { lang: 'el', countries: ['GR', 'CY'], title: 'Griekse films' }
+    };
     function dutch(list, w) {
+        var L = LOCAL[I18N.lang()] || LOCAL.nl;
         var items = pick(list.filter(function (x) {
-            return x.type === 'm' && (x.m.lang === 'nl' || x.m.countries.indexOf('NL') >= 0 || x.m.countries.indexOf('BE') >= 0);
+            return x.type === 'm' && (x.m.lang === L.lang || L.countries.some(function (c) { return x.m.countries.indexOf(c) >= 0; }));
         }).sort(function (a, b) { return b.m.pop - a.m.pop; }), w, ['m']);
-        return items.length >= 5 ? { id: 'nl', title: T('Nederlandse en Vlaamse films'), items: byRank(items) } : null;
+        return items.length >= 5 ? { id: 'local', title: T(L.title), items: byRank(items) } : null;
     }
     function short(list, w) {
         var items = pick(list.filter(function (x) { return x.type === 'm' && x.m.runtime > 0 && x.m.runtime <= 90 && x.q >= 6.3; })

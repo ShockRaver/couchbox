@@ -1,6 +1,6 @@
 # Kijkdoos for Samsung Tizen TV
 
-A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a streaming service. It was built for the Samsung QE50QN90DATXXN (2024, now on Tizen 9) and should run on any Samsung TV from 2021 onward. The app UI is in Dutch.
+A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a streaming service. It was built for the Samsung QE50QN90DATXXN (2024, now on Tizen 9) and should run on any Samsung TV from 2021 onward. The app is available in English, Dutch, German, French, Spanish and Greek.
 
 ## Features
 
@@ -27,8 +27,10 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **PIN lock** for settings, and a filter that hides 18+ categories
 
 **Languages**
-- English (default) and Dutch, chosen under *Settings → Language*. TMDB data (descriptions, titles, genres, biographies, collections, search) follows the same language; after switching, titles are refreshed in the background.
-- In the code the Dutch text is the key: `T('Verder kijken')`, with the English in `js/lang/en.js`. Check with `node scripts/i18n-check.js` (missing translations and texts outside `T()`).
+- English (default), Dutch, German, French, Spanish and Greek, chosen under *Settings → Language* (a confirmation, then the app restarts so every screen is built in the new language). TMDB data (descriptions, titles, genres, biographies, collections, search) follows the same language; after switching, titles are refreshed in the background. The "films in your language" row follows the app language too.
+- In the code the Dutch text is the key: `T('Verder kijken')`, with one dictionary per language in `js/lang/<code>.js`. Check with `node scripts/i18n-check.js` (missing translations or `{variables}` in any language, and texts outside `T()`).
+- Adding a language: an entry in `CONF` in `js/i18n.js` (name, TMDB code, locale, day/month names), a `js/lang/<code>.js`, a script tag in `index.html`.
+- Greek: the on-screen search keyboard only has Latin letters, so Greek TMDB titles can't be typed; provider names and original titles can.
 
 **Search**
 - Own on-screen keyboard on the left, results on the right (no Samsung keyboard pop-up)
@@ -154,7 +156,7 @@ js/lineup.js            channel management: hidden channels/groups, group order,
 js/vlist.js             virtual list/grid with focus handling
 js/ui.js                icons, cards, rows, top menu, hero banner
 js/storage.js           localStorage: profiles, settings, favourites, history
-js/i18n.js              translations (T()), dates and numbers per language; js/lang/en.js = English dictionary
+js/i18n.js              translations (T()), dates and numbers per language; js/lang/*.js = dictionaries (en, de, fr, es, el)
 js/screens/*.js         screens (home, section, live, guide, catalog, movie, series, person, search, settings, player, …)
 js/demo.js              demo server ("demo") for testing without a subscription
 scripts/deploy.sh       package + sign + install on the TV
