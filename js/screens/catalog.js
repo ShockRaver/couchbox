@@ -8,7 +8,7 @@ Screens.catalog = {
     build: function () {
         var self = this;
         this.el = UI.screen('catalog');
-        this.hdr = UI.header('Films');
+        this.hdr = UI.header(T('Films'));
         this.el.appendChild(this.hdr.el);
         this.catBox = U.h('div', { class: 'col col-cats' });
         this.gridBox = U.h('div', { class: 'grid-box' });
@@ -35,7 +35,7 @@ Screens.catalog = {
         var self = this;
         this.mode = p.mode;
         var movie = this.mode === 'movie';
-        this.hdr.title.textContent = (movie ? 'Films' : 'Series') + ': categorieën';
+        this.hdr.title.textContent = movie ? T('Films: categorieën') : T('Series: categorieën');
         this.nav.active = this.mode;
         this.nav.draw();
         this.hdr.sub.textContent = '';
@@ -43,23 +43,23 @@ Screens.catalog = {
         this.cats.setItems([]);
         this.grid.setItems([]);
         this.setStatus('');
-        Loader.show('Categorieën laden…');
+        Loader.show(T('Categorieën laden…'));
         (movie ? Api.vodCategories() : Api.seriesCategories()).then(function (cats) {
             Loader.hide();
             var adult = App.adultIds(cats);
             self.adult = adult;
             self.cats_raw = cats;
-            var list = [{ id: 'fav', name: 'Mijn lijst' }];
-            if (movie) list.push({ id: 'cont', name: 'Verder kijken' });
-            list.push({ id: 'all', name: movie ? 'Alle films' : 'Alle series' });
-            list.push({ id: 'refresh', name: 'Lijst vernieuwen', action: true });
+            var list = [{ id: 'fav', name: T('Mijn lijst') }];
+            if (movie) list.push({ id: 'cont', name: T('Verder kijken') });
+            list.push({ id: 'all', name: movie ? T('Alle films') : T('Alle series') });
+            list.push({ id: 'refresh', name: T('Lijst vernieuwen'), action: true });
             // Genres over alle categorieën heen (films: via categorienamen, series: via genre per serie)
             var genres = movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return self.SERIES_GENRES.indexOf(g.id) >= 0; });
             if (genres.length) {
-                list.push({ header: true, name: 'Genres' });
-                genres.forEach(function (g) { list.push({ id: 'g:' + g.id, name: g.name, genre: g.id }); });
+                list.push({ header: true, name: T('Genres') });
+                genres.forEach(function (g) { list.push({ id: 'g:' + g.id, name: T(g.name), genre: g.id }); });
             }
-            list.push({ header: true, name: 'Categorieën van provider' });
+            list.push({ header: true, name: T('Categorieën van provider') });
             cats.forEach(function (c) {
                 var id = String(c.category_id);
                 if (!(adult && adult[id])) list.push({ id: id, name: c.category_name });
@@ -74,7 +74,7 @@ Screens.catalog = {
             self.loadCat(list[start]);
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert('Laden mislukt', e.message, function () { App.back(); });
+            Dialog.alert(T('Laden mislukt'), e.message, function () { App.back(); });
         });
     },
 
@@ -93,14 +93,14 @@ Screens.catalog = {
         this.cat = cat;
         this.lastCat[this.mode] = cat.id;
         this.grid.setItems([]);
-        this.setStatus('Laden…');
+        this.setStatus(T('Laden…'));
         if (cat.id === 'fav') p = Promise.resolve(Store.favorites(this.mode).map(movie ? App.vodFromFav : App.seriesFromFav));
         else if (cat.id === 'cont') p = Promise.resolve(Store.history().filter(function (h) { return h.mode === 'movie'; }).map(function (h) {
             return { stream_id: h.id, name: h.name, stream_icon: h.icon, container_extension: h.ext };
         }));
         else if (cat.genre) {
             // Series-genres hebben de volledige serielijst nodig; de eerste keer duurt dat even
-            this.setStatus(movie && !Tmdb.hasData('m') ? 'Laden…' : 'Genres opbouwen… (de eerste keer kan dit even duren)');
+            this.setStatus(movie && !Tmdb.hasData('m') ? T('Laden…') : T('Genres opbouwen… (de eerste keer kan dit even duren)'));
             p = movie ? Genres.movieItems(cat.genre, this.cats_raw) : Genres.seriesItems(cat.genre, this.cats_raw);
         }
         else p = movie ? Api.vodStreams(cat.id === 'all' ? null : cat.id) : Api.series(cat.id === 'all' ? null : cat.id);
@@ -110,18 +110,18 @@ Screens.catalog = {
             if (Store.settings().hideAdult) items = items.filter(function (x) { return String(x.is_adult) !== '1'; });
             self.items = items;
             self.grid.setItems(items, keepIndex || 0);
-            self.setStatus(items.length ? '' : cat.id === 'fav' ? 'Je lijst is nog leeg. Houd OK ingedrukt op een poster om hem toe te voegen.'
-                : cat.genre ? 'Geen ' + (movie ? 'films' : 'series') + ' gevonden in dit genre' : 'Geen items in deze categorie');
+            self.setStatus(items.length ? '' : cat.id === 'fav' ? T('Je lijst is nog leeg. Houd OK ingedrukt op een poster om hem toe te voegen.')
+                : cat.genre ? (movie ? T('Geen films gevonden in dit genre') : T('Geen series gevonden in dit genre')) : T('Geen items in deze categorie'));
             self.hdr.sub.textContent = cat.name + ' · ' + items.length;
             // Filmgenre getoond op basis van categorieën: zodra de volledige lijst binnen is, aanvullen met TMDB
             if (cat.genre && movie && Tmdb.hasData('m') && !Api.loaded('vs:*')) {
-                self.hdr.sub.textContent += ' · meer titels worden geladen…';
+                self.hdr.sub.textContent += ' · ' + T('meer titels worden geladen…');
                 Api.vodStreams(null).then(function () {
                     if (my === self.token && self.cat === cat) self.loadCat(cat, self.grid.index);
                 }).catch(function () { if (my === self.token) self.hdr.sub.textContent = cat.name + ' · ' + items.length; });
             }
         }).catch(function (e) {
-            if (my === self.token) self.setStatus('Laden mislukt: ' + e.message);
+            if (my === self.token) self.setStatus(T('Laden mislukt: {error}', { error: e.message }));
         });
     },
 
@@ -207,7 +207,7 @@ Screens.catalog = {
             case 'longok':
                 if (!it) return true;
                 var fav = Store.isFav(this.mode, this.mode === 'movie' ? it.stream_id : it.series_id);
-                Dialog.menu({ title: it.name, items: [{ id: 'open', label: 'Openen' }, { id: 'fav', label: fav ? 'Verwijderen uit Mijn lijst' : '＋ Mijn lijst' }] }, function (x) {
+                Dialog.menu({ title: it.name, items: [{ id: 'open', label: T('Openen') }, { id: 'fav', label: fav ? T('Verwijderen uit Mijn lijst') : '＋ ' + T('Mijn lijst') }] }, function (x) {
                     if (x && x.id === 'open') self.open(it);
                     else if (x && x.id === 'fav') self.toggleFav(it);
                 });

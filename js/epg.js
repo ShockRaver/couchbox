@@ -16,7 +16,7 @@ var EPG = (function () {
     function parse(res) {
         var min = Date.now() - 4 * 3600e3, max = Date.now() + 7 * 86400e3;
         var list = U.toArr(res && res.epg_listings).map(function (p) {
-            return { title: U.b64(p.title) || 'Onbekend programma', desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end) };
+            return { title: U.b64(p.title) || T('Onbekend programma'), desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end) };
         });
         // Alleen een bruikbaar tijdvak bewaren (volledige tabellen kunnen dagen terug gaan)
         list = list.filter(function (p) {

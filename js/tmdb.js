@@ -38,7 +38,7 @@ var Tmdb = (function () {
         if (!dirty[t]) return;
         dirty[t] = 0;
         version++;
-        if (!Store.setGlobal('tmdb.' + t, db[t])) state.error = 'Opslag op de TV is vol';
+        if (!Store.setGlobal('tmdb.' + t, db[t])) state.error = T('Opslag op de TV is vol');
     }
 
     function idOf(it) {
@@ -72,23 +72,23 @@ var Tmdb = (function () {
         return gs.length ? gs.map(function (g) { return CODE[g]; }).join('') : NONE;
     }
 
-    // Algemeen TMDB-verzoek. path bv. 'movie/550', query bv. 'language=nl-NL'. Geeft null bij 404.
+    // Algemeen TMDB-verzoek. path bv. 'movie/550', query bv. 'language=en-US'. Geeft null bij 404.
     function api(path, query) {
         var ctrl = window.AbortController ? new AbortController() : null;
         var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 12000);
         var url = API + path + '?api_key=' + encodeURIComponent(key()) + (query ? '&' + query : '');
         return fetch(url, ctrl ? { signal: ctrl.signal } : {}).then(function (r) {
             if (r.status === 404) return null;
-            if (r.status === 401) { var e = new Error('Ongeldige TMDB-sleutel'); e.fatal = true; throw e; }
-            if (r.status === 429) { var e2 = new Error('Te veel verzoeken'); e2.retry = 10000; throw e2; }
-            if (!r.ok) throw new Error('TMDB-fout ' + r.status);
+            if (r.status === 401) { var e = new Error(T('Ongeldige TMDB-sleutel')); e.fatal = true; throw e; }
+            if (r.status === 429) { var e2 = new Error(T('Te veel verzoeken')); e2.retry = 10000; throw e2; }
+            if (!r.ok) throw new Error(T('TMDB-fout {code}', { code: r.status }));
             return r.json();
         }).finally(function () { clearTimeout(timer); });
     }
 
     // Eén titel: genrecode teruggeven en basisgegevens in de metadata-service zetten
     function lookup(type, id) {
-        return api((type === 't' ? 'tv/' : 'movie/') + id, 'language=nl-NL&append_to_response=keywords').then(function (d) {
+        return api((type === 't' ? 'tv/' : 'movie/') + id, 'language=' + I18N.tmdb() + '&append_to_response=keywords').then(function (d) {
             if (!d) { Meta.put(type, id, Meta.MISSING); return NOTFOUND; }
             Meta.put(type, id, Meta.fromTmdb(type, d));
             return encode(type, d);
@@ -130,7 +130,8 @@ var Tmdb = (function () {
             var id = idOf(it);
             if (!id || seen[id]) return;
             seen[id] = 1;
-            if (d[id] == null || !Meta.has(type, id)) q.push(id); else known++;
+            // Ook opnieuw ophalen als de titel in een andere taal is opgeslagen (na het wisselen van taal)
+            if (d[id] == null || !Meta.has(type, id) || Meta.langOf(type, id) !== I18N.lang()) q.push(id); else known++;
         });
         return { q: q, known: known };
     }
@@ -169,14 +170,14 @@ var Tmdb = (function () {
     function clear() { stop(); db = { m: {}, t: {} }; dirty = { m: 1, t: 1 }; flush('m'); flush('t'); Meta.clear(); state.done = 0; state.total = 0; state.phase = ''; }
 
     function status() {
-        if (!enabled()) return 'Uit: druk op OK om een sleutel in te voeren';
-        if (state.error) return 'Fout: ' + state.error;
+        if (!enabled()) return T('Uit: druk op OK om een sleutel in te voeren');
+        if (state.error) return T('Fout: {error}', { error: state.error });
         var pct = state.total ? Math.floor(state.done / state.total * 100) : 0;
-        var n = state.done.toLocaleString('nl-NL') + ' / ' + state.total.toLocaleString('nl-NL');
-        if (state.running) return 'Bezig met ' + state.phase + ': ' + pct + '% (' + n + ')';
-        if (state.phase === 'klaar') return 'Bijgewerkt: ' + state.total.toLocaleString('nl-NL') + ' titels';
+        var n = I18N.num(state.done) + ' / ' + I18N.num(state.total);
+        if (state.running) return state.phase === 'films' ? T('Bezig met films: {pct}% ({n})', { pct: pct, n: n }) : T('Bezig met series: {pct}% ({n})', { pct: pct, n: n });
+        if (state.phase === 'klaar') return T('Bijgewerkt: {n} titels', { n: I18N.num(state.total) });
         var known = Object.keys(load('t')).length + Object.keys(load('m')).length;
-        return known ? known.toLocaleString('nl-NL') + ' titels bekend' : 'Nog niet gestart';
+        return known ? T('{n} titels bekend', { n: I18N.num(known) }) : T('Nog niet gestart');
     }
 
     return {

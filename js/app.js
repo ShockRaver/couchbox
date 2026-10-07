@@ -31,20 +31,20 @@ var App = {
 
     exitPrompt: function () {
         var self = this;
-        Dialog.confirm('Afsluiten', 'Wil je Kijkdoos afsluiten?', function (yes) { if (yes) self.exit(); }, 'Afsluiten');
+        Dialog.confirm(T('Afsluiten'), T('Wil je Kijkdoos afsluiten?'), function (yes) { if (yes) self.exit(); }, T('Afsluiten'));
     },
     exit: function () {
         Player.stop();
-        try { tizen.application.getCurrentApplication().exit(); } catch (e) { Toast.show('Afsluiten werkt alleen op de TV'); }
+        try { tizen.application.getCurrentApplication().exit(); } catch (e) { Toast.show(T('Afsluiten werkt alleen op de TV')); }
     },
 
     goSettings: function (asRoot) {
         var pin = Store.settings().pin, self = this;
         var open = function () { if (asRoot) self.reset('settings', {}); else self.go('settings', {}); };
         if (!pin) { open(); return; }
-        Dialog.pin('Voer je pincode in', function (v) {
+        Dialog.pin(T('Voer je pincode in'), function (v) {
             if (v == null) return;
-            if (v === pin) open(); else Toast.show('Onjuiste pincode');
+            if (v === pin) open(); else Toast.show(T('Onjuiste pincode'));
         });
     },
 
@@ -64,9 +64,9 @@ var App = {
             } catch (e) { withVideo(); }
         };
         var plain = function () {
-            if (i >= ids.length) { Toast.show('De YouTube-app is niet gevonden op deze TV'); return; }
+            if (i >= ids.length) { Toast.show(T('De YouTube-app is niet gevonden op deze TV')); return; }
             var id = ids[i++];
-            try { tizen.application.launch(id, function () { Toast.show('Zoek in YouTube op: ' + (title || 'trailer'), 6000); }, plain); } catch (e) { plain(); }
+            try { tizen.application.launch(id, function () { Toast.show(T('Zoek in YouTube op: {title}', { title: title || 'trailer' }), 6000); }, plain); } catch (e) { plain(); }
         };
         withVideo();
     },
@@ -101,7 +101,7 @@ var App = {
         var self = this, p = Store.activeProfile();
         if (!p) { this.reset('login', {}); return; }
         Api.setProfile(p);
-        Loader.show('Verbinden met ' + p.name + '…');
+        Loader.show(T('Verbinden met {name}…', { name: p.name }));
         Api.login().then(function () {
             Loader.hide();
             self.reset('home');
@@ -117,8 +117,8 @@ var App = {
             Loader.hide();
             self.reset('home');
             Dialog.menu({
-                title: 'Verbinding mislukt', text: e.message,
-                items: [{ id: 'retry', label: 'Opnieuw proberen' }, { id: 'profiles', label: 'Profielen beheren' }, { id: 'close', label: 'Sluiten' }]
+                title: T('Verbinding mislukt'), text: e.message,
+                items: [{ id: 'retry', label: T('Opnieuw proberen') }, { id: 'profiles', label: T('Profielen beheren') }, { id: 'close', label: T('Sluiten') }]
             }, function (it) {
                 if (it && it.id === 'retry') self.connect(autoplay);
                 else if (it && it.id === 'profiles') self.go('profiles', {});
@@ -133,10 +133,10 @@ var App = {
         Genres.reset();
         Reco.reset();
         Screens.search.data = null;
-        Loader.show('Lijst vernieuwen bij je provider…');
+        Loader.show(T('Lijst vernieuwen bij je provider…'));
         Promise.all([Api.login(), Api.vodCategories(), Api.seriesCategories(), Api.liveCategories()]).then(function () {
             Loader.hide();
-            Toast.show('Lijst vernieuwd (' + U.fmtClock(Date.now()) + ')');
+            Toast.show(T('Lijst vernieuwd ({time})', { time: U.fmtClock(Date.now()) }));
             if (done) done();
             // Nieuwe titels ook bij TMDB opzoeken, en gevolgde series op nieuwe afleveringen controleren
             Tmdb.stop();
@@ -144,7 +144,7 @@ var App = {
             Follow.check(true);
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert('Vernieuwen mislukt', e.message);
+            Dialog.alert(T('Vernieuwen mislukt'), e.message);
         });
     },
 
@@ -152,7 +152,7 @@ var App = {
     // seriesInfo (optioneel): al geladen afleveringen, voor de nulmeting van nieuwe afleveringen
     toggleMyList: function (type, fav, seriesInfo) {
         var added = Store.toggleFav(type, fav);
-        Toast.show(added ? '＋ ' + fav.name + ' staat in Mijn lijst' : fav.name + ' verwijderd uit Mijn lijst');
+        Toast.show(added ? T('＋ {name} staat in Mijn lijst', { name: fav.name }) : T('{name} verwijderd uit Mijn lijst', { name: fav.name }));
         if (type === 'series' && added) Follow.track(fav, seriesInfo);
         return added;
     },
@@ -181,12 +181,12 @@ var App = {
         if (!h || Date.now() - (h.t || 0) > 14 * 86400e3) return;
         var ep = h.mode === 'episode' && h.series;
         Dialog.menu({
-            title: 'Verder kijken?',
+            title: T('Verder kijken?'),
             image: ep ? Meta.poster('t', { tmdb: h.series.tmdb }, h.series.icon) : Meta.poster('m', { tmdb: h.tmdb }, h.icon),
             imageName: ep ? h.series.name : h.name,
             text: (ep ? h.series.name : h.name) + '\n' + this.historyLabel(h, true),
             progress: h.duration ? h.position / h.duration : 0,
-            items: [{ id: 'play', label: h.upNext ? 'Afspelen' : 'Verder kijken' }, { id: 'home', label: 'Naar het startscherm' }]
+            items: [{ id: 'play', label: h.upNext ? T('Afspelen') : T('Verder kijken') }, { id: 'home', label: T('Naar het startscherm') }]
         }, function (it) {
             if (it && it.id === 'play') self.playHistory(h, h.position);
         });
@@ -203,10 +203,10 @@ var App = {
         var pct = h.duration ? Math.round(h.position / h.duration * 100) : 0;
         if (h.mode === 'episode') {
             var se = 'S' + U.pad(+h.season || 0) + ' E' + U.pad(+h.episode || 0);
-            if (h.upNext) return 'Volgende: ' + se + (long && h.name ? ' · ' + h.name : '');
+            if (h.upNext) return T('Volgende: {episode}', { episode: se }) + (long && h.name ? ' · ' + h.name : '');
             return se + (long && h.name ? ' · ' + h.name : '') + ' · ' + pct + '%';
         }
-        return pct + '% · nog ' + Math.max(1, Math.round((h.duration - h.position) / 60000)) + ' min';
+        return T('{pct}% · nog {min} min', { pct: pct, min: Math.max(1, Math.round((h.duration - h.position) / 60000)) });
     },
 
     playHistory: function (h, startAt) {
@@ -245,9 +245,11 @@ var App = {
         var a = Api.account(), ui = a && a.user_info;
         if (!ui) return '';
         var exp = parseInt(ui.exp_date, 10);
-        if (!exp) return 'Abonnement zonder einddatum';
+        if (!exp) return T('Abonnement zonder einddatum');
         var days = Math.ceil((exp * 1000 - Date.now()) / 86400000);
-        return 'Geldig tot ' + U.fmtDate(exp * 1000, true) + (days <= 14 ? ' (nog ' + Math.max(0, days) + ' dagen)' : '');
+        var date = U.fmtDate(exp * 1000, true);
+        if (days > 14) return T('Geldig tot {date}', { date: date });
+        return days === 1 ? T('Geldig tot {date} (nog 1 dag)', { date: date }) : T('Geldig tot {date} (nog {days} dagen)', { date: date, days: Math.max(0, days) });
     },
 
     durText: function (secs, str) {
@@ -255,7 +257,7 @@ var App = {
         if (!s && str) { var m = String(str).match(/(\d+):(\d+)(?::(\d+))?/); if (m) s = m[3] != null ? +m[1] * 3600 + +m[2] * 60 + +m[3] : +m[1] * 60 + +m[2]; }
         if (!s) return '';
         var h = Math.floor(s / 3600), mm = Math.round((s % 3600) / 60);
-        return h ? h + 'u ' + mm + 'm' : mm + ' min';
+        return h ? T('{h}u {m}m', { h: h, m: mm }) : T('{m} min', { m: mm });
     },
 
     // Xtream get_series_info -> seizoenen + platte lijst van afleveringen
@@ -271,12 +273,12 @@ var App = {
             var list = groups[sn].map(function (e) {
                 var inf = e.info && !Array.isArray(e.info) ? e.info : {};
                 return {
-                    id: String(e.id), name: e.title || ('Aflevering ' + e.episode_num), icon: inf.movie_image || inf.cover_big || '',
+                    id: String(e.id), name: e.title || T('Aflevering {num}', { num: e.episode_num }), icon: inf.movie_image || inf.cover_big || '',
                     ext: e.container_extension || 'mp4', season: +sn, episode: +e.episode_num || 0,
                     plot: inf.plot || '', dur: +inf.duration_secs || 0, durText: inf.duration || ''
                 };
             }).sort(function (a, b) { return a.episode - b.episode; });
-            return { num: +sn, name: (meta && meta.name) || (+sn === 0 ? 'Specials' : 'Seizoen ' + sn), eps: list };
+            return { num: +sn, name: (meta && meta.name) || (+sn === 0 ? T('Specials') : T('Seizoen {num}', { num: sn })), eps: list };
         });
         var flat = [];
         seasons.forEach(function (s) { flat.push.apply(flat, s.eps); });
@@ -378,6 +380,7 @@ var App = {
     window.addEventListener('load', function () {
         Player.init();
         document.documentElement.classList.add(Player.isNative() ? 'tv' : 'browser');
+        I18N.init();   // taal (standaard Engels) vóór er schermen worden opgebouwd
         Keys.register();
         Dialog.init();
         Meta.ready(); // basisgegevens (posters, ratings) uit de lokale database laden

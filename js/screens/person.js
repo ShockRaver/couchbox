@@ -23,25 +23,25 @@ Screens.person = {
         this.bioEl.textContent = '';
         this.photo.innerHTML = '';
         this.photo.appendChild(U.img('', 'person-photo', p.name));
-        this.setStatus('Laden…');
+        this.setStatus(T('Laden…'));
         Meta.person(id).then(function (pers) {
             if (self.pid !== id) return;
-            if (!pers) { self.setStatus('Geen gegevens gevonden'); return; }
+            if (!pers) { self.setStatus(T('Geen gegevens gevonden')); return; }
             self.photo.innerHTML = '';
             self.photo.appendChild(U.img(Meta.img(pers.img, 'w342'), 'person-photo', pers.name));
             self.nameEl.textContent = pers.name;
             var meta = [];
-            var DEPT = { Acting: 'Acteur', Directing: 'Regisseur', Writing: 'Schrijver', Production: 'Producent' };
+            var DEPT = { Acting: T('Acteur'), Directing: T('Regisseur'), Writing: T('Schrijver'), Production: T('Producent') };
             if (pers.dept) meta.push(DEPT[pers.dept] || pers.dept);
-            if (pers.born) meta.push('Geboren ' + pers.born.slice(0, 4));
+            if (pers.born) meta.push(T('Geboren {year}', { year: pers.born.slice(0, 4) }));
             self.metaEl.textContent = meta.join('  ·  ');
             self.bioEl.textContent = pers.bio;
-            self.setStatus('Je bibliotheek doorzoeken…');
+            self.setStatus(T('Je bibliotheek doorzoeken…'));
             return Meta.inLibrary(pers.credits.sort(function (a, b) { return b.pop - a.pop; })).then(function (list) {
                 if (self.pid !== id) return;
                 self.fill(pers, list);
             });
-        }).catch(function (e) { if (self.pid === id) self.setStatus('Laden mislukt: ' + e.message); });
+        }).catch(function (e) { if (self.pid === id) self.setStatus(T('Laden mislukt: {error}', { error: e.message })); });
     },
 
     resume: function () { this.rows.rows.forEach(function (r) { r.list.refresh(); }); this.rows.draw(); },
@@ -53,9 +53,9 @@ Screens.person = {
         var card = function (x) { return UI.libCard(x.type, x.item, { sub: x.role }); };
         var open = function (x) { UI.openLib(x.type, x.item); };
         this.rows.clear();
-        if (movies.length) this.rows.add({ id: 'm', title: 'Films in je bibliotheek (' + movies.length + ')', items: movies, itemW: 200, itemH: 372, render: card, onSelect: open });
-        if (series.length) this.rows.add({ id: 't', title: 'Series in je bibliotheek (' + series.length + ')', items: series, itemW: 200, itemH: 372, render: card, onSelect: open });
-        this.setStatus(list.length ? '' : 'Niets van ' + pers.name + ' in je bibliotheek');
+        if (movies.length) this.rows.add({ id: 'm', title: T('Films in je bibliotheek ({n})', { n: movies.length }), items: movies, itemW: 200, itemH: 372, render: card, onSelect: open });
+        if (series.length) this.rows.add({ id: 't', title: T('Series in je bibliotheek ({n})', { n: series.length }), items: series, itemW: 200, itemH: 372, render: card, onSelect: open });
+        this.setStatus(list.length ? '' : T('Niets van {name} in je bibliotheek', { name: pers.name }));
         this.rows.restore(null);
         this.rows.setActive(true);
     },

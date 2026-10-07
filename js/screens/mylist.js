@@ -11,7 +11,7 @@ Screens.mylist = {
         var body = U.h('div', { class: 'home-body nf-body' });
         this.el.appendChild(body);
         this.rows = new RowStack(body);
-        this.empty = U.h('div', { class: 'ml-empty', html: 'Je lijst is nog leeg.<br>Kies bij een film of serie <b>＋ Mijn lijst</b>, of houd OK ingedrukt op een poster.' });
+        this.empty = U.h('div', { class: 'ml-empty', html: T('Je lijst is nog leeg.<br>Kies bij een film of serie <b>＋ Mijn lijst</b>, of houd OK ingedrukt op een poster.') });
         this.el.appendChild(this.empty);
     },
 
@@ -25,12 +25,12 @@ Screens.mylist = {
         // Series met nieuwe afleveringen eerst
         series.sort(function (a, b) { return (Follow.hasFresh(b.id) ? 1 : 0) - (Follow.hasFresh(a.id) ? 1 : 0); });
         if (series.length) R.add({
-            id: 'series', title: 'Series (' + series.length + ')', items: series, itemW: 200, itemH: 372,
-            render: function (f) { return UI.posterCard({ name: f.name, icon: f.icon, rating: f.rating, tag: Follow.hasFresh(f.id) ? 'Nieuw' : '' }); },
+            id: 'series', title: T('Series ({n})', { n: series.length }), items: series, itemW: 200, itemH: 372,
+            render: function (f) { return UI.posterCard({ name: f.name, icon: f.icon, rating: f.rating, tag: Follow.hasFresh(f.id) ? T('Nieuw') : '' }); },
             onSelect: function (f) { App.go('series', { item: App.seriesFromFav(f) }); }
         });
         if (movies.length) R.add({
-            id: 'movies', title: 'Films (' + movies.length + ')', items: movies, itemW: 200, itemH: 372,
+            id: 'movies', title: T('Films ({n})', { n: movies.length }), items: movies, itemW: 200, itemH: 372,
             render: function (f) {
                 var h = Store.progress('movie:' + f.id);
                 return UI.posterCard({ name: f.name, icon: f.icon, rating: f.rating, progress: h && h.duration ? h.position / h.duration : 0, seen: Store.isSeen('movie:' + f.id) });
@@ -38,7 +38,7 @@ Screens.mylist = {
             onSelect: function (f) { App.go('movie', { item: App.vodFromFav(f) }); }
         });
         this.empty.style.display = R.rows.length ? 'none' : '';
-        this.hint.textContent = R.rows.length ? 'OK ingedrukt houden: verwijderen uit Mijn lijst' : '';
+        this.hint.textContent = R.rows.length ? T('OK ingedrukt houden: verwijderen uit Mijn lijst') : '';
         R.restore(st);
         this.setZone(R.rows.length ? (this.zone || 'rows') : 'nav');
     },
@@ -60,7 +60,7 @@ Screens.mylist = {
             var r = this.rows.rows[this.rows.cur], f = r && r.list.current();
             if (!f) return true;
             var type = r.id === 'movies' ? 'movie' : 'series';
-            Dialog.menu({ title: f.name, items: [{ id: 'open', label: 'Openen' }, { id: 'del', label: 'Verwijderen uit Mijn lijst', danger: true }] }, function (it) {
+            Dialog.menu({ title: f.name, items: [{ id: 'open', label: T('Openen') }, { id: 'del', label: T('Verwijderen uit Mijn lijst'), danger: true }] }, function (it) {
                 if (!it) return;
                 if (it.id === 'open') self.rows.select();
                 else { App.toggleMyList(type, f); self.render(self.rows.state()); }

@@ -67,7 +67,7 @@ Screens.movie = {
         this.title.textContent = (m && m.title) || it.name;
         var subs = [];
         if (m && m.otitle && U.norm(m.otitle) !== U.norm(m.title)) subs.push(m.otitle);
-        if (m && m.title && U.norm(m.title) !== U.norm(it.name)) subs.push('In je lijst als: ' + it.name);
+        if (m && m.title && U.norm(m.title) !== U.norm(it.name)) subs.push(T('In je lijst als: {name}', { name: it.name }));
         this.sub.textContent = subs.join('  ·  ');
 
         var meta = [], r = Meta.rating('m', it) || parseFloat(inf.rating) || 0;
@@ -84,8 +84,8 @@ Screens.movie = {
         var cr = [];
         var dirs = det ? det.crew.filter(function (c) { return c.role === 'Regie'; }).map(function (c) { return c.name; }).join(', ') : inf.director;
         var cast = det ? det.cast.slice(0, 4).map(function (c) { return c.name; }).join(', ') : (inf.cast || inf.actors);
-        if (dirs) cr.push('<b>Regie</b> ' + U.esc(dirs));
-        if (cast) cr.push('<b>Met</b> ' + U.esc(cast));
+        if (dirs) cr.push(T('<b>Regie</b> {names}', { names: U.esc(dirs) }));
+        if (cast) cr.push(T('<b>Met</b> {names}', { names: U.esc(cast) }));
         this.credits.innerHTML = cr.join('<br>');
         this.renderButtons();
     },
@@ -95,7 +95,7 @@ Screens.movie = {
         this.rows.clear();
         var people = det.crew.filter(function (c) { return c.role === 'Regie'; }).concat(det.cast);
         if (people.length) this.rows.add({
-            id: 'cast', title: 'Cast & regie', items: people, itemW: 190, itemH: 250,
+            id: 'cast', title: T('Cast & regie'), items: people, itemW: 190, itemH: 250,
             render: UI.personCard,
             onSelect: function (p) { App.go('person', { id: p.id, name: p.name }); }
         });
@@ -116,7 +116,7 @@ Screens.movie = {
             return Meta.inLibrary(c.parts.filter(function (x) { return String(x.id) !== me; }).map(function (x) { return { t: 'm', id: x.id }; })).then(function (list) {
                 if (!list.length) return;
                 addRow({
-                    id: 'coll', title: 'Uit de reeks: ' + (c.name || det.coll.name).replace(/\s*(-\s*)?(collectie|collection|filmreeks)$/i, ''), items: list, itemW: 200, itemH: 372,
+                    id: 'coll', title: T('Uit de reeks: {name}', { name: (c.name || det.coll.name).replace(/\s*(-\s*)?(collectie|collection|filmreeks)$/i, '') }), items: list, itemW: 200, itemH: 372,
                     render: function (x) { return UI.libCard(x.type, x.item); },
                     onSelect: function (x) { UI.openLib(x.type, x.item); }
                 }, self.rows.rows.filter(function (r) { return r.id === 'cast'; }).length);
@@ -127,7 +127,7 @@ Screens.movie = {
             if (self.item !== it || !list.length) return;
             var st = self.rows.state();
             self.rows.add({
-                id: 'recs', title: 'Meer zoals dit', items: list.slice(0, 30), itemW: 200, itemH: 372,
+                id: 'recs', title: T('Meer zoals dit'), items: list.slice(0, 30), itemW: 200, itemH: 372,
                 render: function (x) { return UI.libCard(x.type, x.item); },
                 onSelect: function (x) { UI.openLib(x.type, x.item); }
             });
@@ -139,12 +139,12 @@ Screens.movie = {
     renderButtons: function () {
         var self = this, it = this.item, h = Store.progress('movie:' + it.stream_id), b = [];
         if (h && h.position > 30000) {
-            b.push({ id: 'resume', label: 'Verder kijken vanaf ' + U.fmtTime(h.position), icon: 'play' });
-            b.push({ id: 'start', label: 'Vanaf begin', icon: 'restart' });
-        } else b.push({ id: 'start', label: 'Afspelen', icon: 'play' });
+            b.push({ id: 'resume', label: T('Verder kijken vanaf {time}', { time: U.fmtTime(h.position) }), icon: 'play' });
+            b.push({ id: 'start', label: T('Vanaf begin'), icon: 'restart' });
+        } else b.push({ id: 'start', label: T('Afspelen'), icon: 'play' });
         var fav = Store.isFav('movie', it.stream_id);
-        b.push({ id: 'fav', label: fav ? 'In Mijn lijst' : 'Mijn lijst', icon: fav ? 'check' : 'plus', on: fav });
-        if (this.det && this.det.trailer) b.push({ id: 'trailer', label: 'Trailer', icon: 'film' });
+        b.push({ id: 'fav', label: fav ? T('In Mijn lijst') : T('Mijn lijst'), icon: fav ? 'check' : 'plus', on: fav });
+        if (this.det && this.det.trailer) b.push({ id: 'trailer', label: T('Trailer'), icon: 'film' });
         this.btns = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
         this.btnBox.innerHTML = '';

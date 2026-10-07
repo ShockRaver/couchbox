@@ -10,7 +10,7 @@ Screens.section = {
         this.heroBox = U.h('div');
         this.hero = new Hero(this.heroBox);
         this.nav = new TopNav('movie');
-        this.chip = U.h('div', { class: 'sec-chip', html: Icons.get('list') + '<span>Categorieën</span>' });
+        this.chip = U.h('div', { class: 'sec-chip', html: Icons.get('list') + '<span>' + T('Categorieën') + '</span>' });
         this.rowsBox = U.h('div', { class: 'nf-rows' });
         this.loading = U.h('div', { class: 'sec-loading', html: '<span class="spinner sm"></span><span></span>' });
         [this.heroBox, this.rowsBox, this.chip, this.loading, this.nav.el].forEach(function (e) { self.el.appendChild(e); });
@@ -31,8 +31,8 @@ Screens.section = {
         this.rows.restore(null);
         this.setZone(this.rows.rows.length ? 'rows' : 'nav');
         if (this.rows.rows.length) this.showHero();
-        else this.hero.message(movie ? 'Films' : 'Series', 'Genres worden geladen…');
-        this.loading.lastChild.textContent = (movie ? 'Films' : 'Series') + ' laden bij je provider…';
+        else this.hero.message(movie ? T('Films') : T('Series'), T('Genres worden geladen…'));
+        this.loading.lastChild.textContent = movie ? T('Films laden bij je provider…') : T('Series laden bij je provider…');
         this.loading.style.display = '';
         // Eerst het scherm tekenen, dan pas laden (anders lijkt de knop even niets te doen)
         setTimeout(function () {
@@ -43,7 +43,7 @@ Screens.section = {
                 self.cats = cats;
                 return self.addGenres(cats, my);
             }).catch(function (e) {
-                if (my === self.token) self.hero.message('Laden mislukt', e.message);
+                if (my === self.token) self.hero.message(T('Laden mislukt'), e.message);
             }).then(function () { if (my === self.token) self.loading.style.display = 'none'; });
         }, 30);
     },
@@ -55,18 +55,18 @@ Screens.section = {
     addPersonal: function () {
         var movie = this.mode === 'movie', type = this.type, R = this.rows;
         var hist = Store.history().filter(function (h) { return movie ? h.mode === 'movie' : h.mode === 'episode'; });
-        if (hist.length) R.add({ id: 'hist', title: 'Verder kijken', items: hist, itemW: 400, itemH: 290, render: UI.histCard, onSelect: function (h) { App.playHistory(h, h.position); } });
+        if (hist.length) R.add({ id: 'hist', title: T('Verder kijken'), items: hist, itemW: 400, itemH: 290, render: UI.histCard, onSelect: function (h) { App.playHistory(h, h.position); } });
         if (!movie) {
             var fresh = Follow.fresh();
             if (fresh.length) R.add({
-                id: 'fresh', title: 'Nieuwe afleveringen', items: fresh, itemW: 184, itemH: 320,
-                render: function (f) { return UI.posterCard({ small: true, name: f.name, icon: Meta.poster('t', f, f.icon), tag: 'Nieuw' }); },
+                id: 'fresh', title: T('Nieuwe afleveringen'), items: fresh, itemW: 184, itemH: 320,
+                render: function (f) { return UI.posterCard({ small: true, name: f.name, icon: Meta.poster('t', f, f.icon), tag: T('Nieuw') }); },
                 onSelect: function (f) { App.go('series', { item: { series_id: f.id, name: f.name, cover: f.icon, tmdb: f.tmdb || '' } }); }
             });
         }
         var mine = Store.favorites(this.mode).reverse().map(movie ? App.vodFromFav : App.seriesFromFav);
         if (mine.length) R.add({
-            id: 'favs', title: 'Mijn lijst', items: mine, itemW: 184, itemH: 320,
+            id: 'favs', title: T('Mijn lijst'), items: mine, itemW: 184, itemH: 320,
             render: function (it) { return UI.libCard(type, it, { small: true }); },
             onSelect: function (it) { UI.openLib(type, it); }
         });
@@ -109,7 +109,7 @@ Screens.section = {
         };
         // Series: de volledige lijst is toch nodig voor de genres, dus ook "Nieuw toegevoegd"
         var start = movie && !Api.loaded('vs:*') ? Promise.resolve() : Genres.all(this.type, cats).then(function (list) {
-            add('new', 'Nieuw toegevoegd', list);
+            add('new', T('Nieuw toegevoegd'), list);
         }).catch(function () { /* geen "nieuw" */ });
         // Tussen de rijen even ruimte geven aan de TV (tekenen, toetsen), anders hapert het scherm
         var pause = function () { return new Promise(function (r) { setTimeout(r, 0); }); };
@@ -117,7 +117,7 @@ Screens.section = {
             return chain.then(pause).then(function () {
                 if (my !== self.token) return;
                 return (movie ? Genres.movieItems(g.id, cats) : Genres.seriesItems(g.id, cats))
-                    .then(function (items) { add('g:' + g.id, g.name, items); })
+                    .then(function (items) { add('g:' + g.id, T(g.name), items); })
                     .catch(function () { /* genre overslaan */ });
             });
         }, start);
@@ -127,7 +127,7 @@ Screens.section = {
         var r = this.rows.rows[this.rows.cur], it = r && r.list.current();
         if (!it) return;
         if (r.id === 'hist') UI.heroHistory(this.hero, it);
-        else if (r.id === 'fresh') this.hero.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
+        else if (r.id === 'fresh') this.hero.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>' + T('Nieuw') + '</b>');
         else if (it.item) this.hero.forItem(it.type, it.item);
         else this.hero.forItem(this.type, it);
     },

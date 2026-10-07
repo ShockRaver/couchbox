@@ -30,7 +30,7 @@ Screens.home = {
 
         var hist = Store.history();
         if (hist.length) R.add({
-            id: 'hist', title: 'Verder kijken', items: hist, itemW: 400, itemH: 290,
+            id: 'hist', title: T('Verder kijken'), items: hist, itemW: 400, itemH: 290,
             render: UI.histCard,
             // Eén druk op OK = direct verder kijken; OK ingedrukt houden = opties
             onSelect: function (h) { App.playHistory(h, h.position); }
@@ -38,12 +38,12 @@ Screens.home = {
 
         var fresh = Follow.fresh();
         if (fresh.length) R.add({
-            id: 'fresh', title: 'Nieuwe afleveringen', items: fresh, itemW: 184, itemH: 320,
+            id: 'fresh', title: T('Nieuwe afleveringen'), items: fresh, itemW: 184, itemH: 320,
             render: function (f) {
                 var e = f.eps[f.eps.length - 1];
                 return UI.posterCard({
-                    small: true, name: f.name, icon: Meta.poster('t', f, f.icon), tag: 'Nieuw',
-                    sub: f.eps.length > 1 ? f.eps.length + ' nieuwe afleveringen' : 'S' + U.pad(+e.season) + ' E' + U.pad(+e.episode) + ' nieuw'
+                    small: true, name: f.name, icon: Meta.poster('t', f, f.icon), tag: T('Nieuw'),
+                    sub: f.eps.length > 1 ? T('{n} nieuwe afleveringen', { n: f.eps.length }) : T('S{season} E{episode} nieuw', { season: U.pad(+e.season), episode: U.pad(+e.episode) })
                 });
             },
             onSelect: function (f) { App.go('series', { item: { series_id: f.id, name: f.name, cover: f.icon, tmdb: f.tmdb || '' } }); }
@@ -56,10 +56,10 @@ Screens.home = {
         var mine = Store.favorites('movie').map(function (f) { return Object.assign({ _type: 'movie' }, f); })
             .concat(Store.favorites('series').map(function (f) { return Object.assign({ _type: 'series' }, f); })).reverse();
         if (mine.length) R.add({
-            id: 'favs', title: 'Mijn lijst', items: mine, itemW: 184, itemH: 320,
+            id: 'favs', title: T('Mijn lijst'), items: mine, itemW: 184, itemH: 320,
             render: function (f) {
                 var t = f._type === 'movie' ? 'm' : 't', isNew = t === 't' && Follow.hasFresh(f.id);
-                return UI.posterCard({ small: true, name: f.name, icon: Meta.poster(t, f, f.icon), rating: Meta.rating(t, f), tag: isNew ? 'Nieuw' : '' });
+                return UI.posterCard({ small: true, name: f.name, icon: Meta.poster(t, f, f.icon), rating: Meta.rating(t, f), tag: isNew ? T('Nieuw') : '' });
             },
             onSelect: function (f) {
                 if (f._type === 'movie') App.go('movie', { item: App.vodFromFav(f) });
@@ -73,8 +73,8 @@ Screens.home = {
             chans.unshift(Object.assign({ _last: true }, last));
         }
         if (chans.length) R.add({
-            id: 'chans', title: favs.length ? 'Favoriete zenders' : 'Laatst bekeken zender', items: chans, itemW: 250, itemH: 214,
-            render: function (c) { return UI.logoCard(c, c._last ? 'Laatst bekeken' : ''); },
+            id: 'chans', title: favs.length ? T('Favoriete zenders') : T('Laatst bekeken zender'), items: chans, itemW: 250, itemH: 214,
+            render: function (c) { return UI.logoCard(c, c._last ? T('Laatst bekeken') : ''); },
             onSelect: function (c, i, items) { App.go('player', { mode: 'live', channel: c, list: items }); }
         });
 
@@ -88,7 +88,7 @@ Screens.home = {
             this.showHero();
         } else {
             this.setZone('nav');
-            this.hero.message('Welkom bij Kijkdoos', 'Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.');
+            this.hero.message(T('Welkom bij Kijkdoos'), T('Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.'));
         }
     },
 
@@ -111,7 +111,7 @@ Screens.home = {
         var H = this.hero;
         if (r.id === 'hist') {
             UI.heroHistory(H, it);
-        } else if (r.id === 'fresh') H.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>Nieuw</b>');
+        } else if (r.id === 'fresh') H.forItem('t', { series_id: it.id, name: it.name, tmdb: it.tmdb }, Icons.get('bell') + '<b>' + T('Nieuw') + '</b>');
         else if (r.id === 'favs') H.forItem(it._type === 'movie' ? 'm' : 't', it._type === 'movie' ? App.vodFromFav(it) : App.seriesFromFav(it));
         else if (r.id === 'chans') H.forChannel(it);
         else if (it.item) H.forItem(it.type, it.item);
@@ -132,10 +132,10 @@ Screens.home = {
             image: ep ? Meta.poster('t', { tmdb: h.series.tmdb }, h.series.icon) : Meta.poster('m', { tmdb: h.tmdb }, h.icon), imageName: ep ? h.series.name : h.name,
             progress: h.duration ? h.position / h.duration : 0,
             items: [
-                { id: 'resume', label: h.upNext || !h.position ? 'Afspelen' : 'Verder kijken vanaf ' + U.fmtTime(h.position) },
-                { id: 'start', label: 'Vanaf het begin' },
-                { id: 'info', label: ep ? 'Naar de serie' : 'Filminformatie' },
-                { id: 'del', label: 'Verwijderen uit Verder kijken', danger: true }
+                { id: 'resume', label: h.upNext || !h.position ? T('Afspelen') : T('Verder kijken vanaf {time}', { time: U.fmtTime(h.position) }) },
+                { id: 'start', label: T('Vanaf het begin') },
+                { id: 'info', label: ep ? T('Naar de serie') : T('Filminformatie') },
+                { id: 'del', label: T('Verwijderen uit Verder kijken'), danger: true }
             ]
         }, function (it) {
             if (!it) return;

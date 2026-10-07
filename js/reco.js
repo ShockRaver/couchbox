@@ -69,7 +69,7 @@ var Reco = (function () {
                 return Meta.inLibrary(det.recs.map(function (id) { return { t: s.t, id: id }; })).then(function (found) {
                     var list = pick(found.map(function (f) { return { type: f.type, item: f.item, id: Tmdb.idOf(f.item) }; }), w, types);
                     var m = Meta.byId(s.t, s.id);
-                    return list.length >= 3 ? { id: 'bc:' + s.t + s.id, title: 'Omdat je ' + ((m && m.title) || s.name) + ' keek', items: list } : null;
+                    return list.length >= 3 ? { id: 'bc:' + s.t + s.id, title: T('Omdat je {title} keek', { title: (m && m.title) || s.name }), items: list } : null;
                 });
             }).catch(function () { return null; });
         }));
@@ -78,9 +78,9 @@ var Reco = (function () {
     // Trending deze week (TMDB), alleen wat jij hebt
     function trending(w, types) {
         var kind = types.length > 1 ? 'all' : types[0] === 'm' ? 'movie' : 'tv';
-        var key = 'reco.trend.' + kind, c = Store.getGlobal(key, null);
+        var key = 'reco.trend.' + kind + '.' + I18N.lang(), c = Store.getGlobal(key, null);
         var get = c && Date.now() - c.at < TREND_TTL ? Promise.resolve(c.ids) : Promise.all([1, 2, 3].map(function (p) {
-            return Tmdb.api('trending/' + kind + '/week', 'language=nl-NL&page=' + p).catch(function () { return null; });
+            return Tmdb.api('trending/' + kind + '/week', 'language=' + I18N.tmdb() + '&page=' + p).catch(function () { return null; });
         })).then(function (pages) {
             var ids = [];
             pages.forEach(function (d) {
@@ -95,7 +95,7 @@ var Reco = (function () {
         });
         return get.then(function (ids) { return Meta.inLibrary(ids); }).then(function (found) {
             var list = pick(found.map(function (f) { return { type: f.type, item: f.item, id: Tmdb.idOf(f.item) }; }), w, types);
-            return list.length >= 3 ? { id: 'trend', title: 'Trending deze week', items: list } : null;
+            return list.length >= 3 ? { id: 'trend', title: T('Trending deze week'), items: list } : null;
         }).catch(function () { return null; });
     }
 
@@ -117,24 +117,24 @@ var Reco = (function () {
             var items = list.filter(function (x) { var gs = Tmdb.genres(x.type, x.item); return gs && gs.indexOf(g) >= 0; })
                 .sort(function (a, b) { return (b.q + Math.log(1 + b.m.pop) / 3) - (a.q + Math.log(1 + a.m.pop) / 3); });
             items = pick(items, w, types);
-            return items.length >= 5 ? { id: 'g:' + g, title: Genres.byId(g).name + ' voor jou', items: byRank(items) } : null;
+            return items.length >= 5 ? { id: 'g:' + g, title: T('{genre} voor jou', { genre: T(Genres.byId(g).name) }), items: byRank(items) } : null;
         });
     }
 
     function topRated(list, w, types) {
         var items = pick(list.filter(function (x) { return x.m.votes >= 300; }).sort(function (a, b) { return b.q - a.q; }), w, types);
-        return items.length >= 5 ? { id: 'top', title: 'Hoogst gewaardeerd', items: byRank(items) } : null;
+        return items.length >= 5 ? { id: 'top', title: T('Hoogst gewaardeerd'), items: byRank(items) } : null;
     }
     function dutch(list, w) {
         var items = pick(list.filter(function (x) {
             return x.type === 'm' && (x.m.lang === 'nl' || x.m.countries.indexOf('NL') >= 0 || x.m.countries.indexOf('BE') >= 0);
         }).sort(function (a, b) { return b.m.pop - a.m.pop; }), w, ['m']);
-        return items.length >= 5 ? { id: 'nl', title: 'Nederlandse en Vlaamse films', items: byRank(items) } : null;
+        return items.length >= 5 ? { id: 'nl', title: T('Nederlandse en Vlaamse films'), items: byRank(items) } : null;
     }
     function short(list, w) {
         var items = pick(list.filter(function (x) { return x.type === 'm' && x.m.runtime > 0 && x.m.runtime <= 90 && x.q >= 6.3; })
             .sort(function (a, b) { return b.m.pop - a.m.pop; }), w, ['m']);
-        return items.length >= 5 ? { id: 'short', title: 'Korter dan 90 minuten', items: byRank(items) } : null;
+        return items.length >= 5 ? { id: 'short', title: T('Korter dan 90 minuten'), items: byRank(items) } : null;
     }
 
     // "Binnenkort": series uit Mijn lijst met een nieuwe aflevering in de komende 3 weken (TMDB, één keer per dag per serie)
@@ -149,7 +149,7 @@ var Reco = (function () {
         var chain = todo.reduce(function (p, f) {
             return p.then(function () {
                 var id = Tmdb.idOf(f);
-                return Tmdb.api('tv/' + id, 'language=nl-NL').then(function (d) {
+                return Tmdb.api('tv/' + id, 'language=' + I18N.tmdb()).then(function (d) {
                     var n = d && d.next_episode_to_air;
                     cache[id] = { at: Date.now(), n: n && n.air_date ? { date: n.air_date, s: n.season_number, e: n.episode_number } : null };
                 }).catch(function () { /* volgende keer */ });
@@ -163,10 +163,10 @@ var Reco = (function () {
                 if (!n) return null;
                 var p = n.date.split('-'), t = new Date(+p[0], +p[1] - 1, +p[2]).getTime();
                 if (t < today.getTime() || t > today.getTime() + 21 * 86400e3) return null;
-                var when = t === today.getTime() ? 'vandaag' : t === today.getTime() + 86400e3 ? 'morgen' : U.fmtDate(t);
+                var when = t === today.getTime() ? T('vandaag') : t === today.getTime() + 86400e3 ? T('morgen') : U.fmtDate(t);
                 return { type: 't', item: App.seriesFromFav(f), id: Tmdb.idOf(f), t: t, sub: 'S' + n.s + ' E' + n.e + ' · ' + when };
             }).filter(Boolean).sort(function (a, b) { return a.t - b.t; });
-            return items.length ? { id: 'soon', title: 'Binnenkort', items: items } : null;
+            return items.length ? { id: 'soon', title: T('Binnenkort'), items: items } : null;
         });
     }
 
@@ -209,7 +209,7 @@ var Reco = (function () {
                 var g = (s.genres || [])[0];
                 if (!g) return;
                 var items = pick(best(idx[s.t][g], s.t).filter(function (x) { return keyOf(s.t, x.item) !== s.id; }), w, [s.t]);
-                if (items.length >= 5) out.push({ id: 'b:bc:' + s.t + s.id, title: 'Omdat je ' + s.name + ' keek', items: items });
+                if (items.length >= 5) out.push({ id: 'b:bc:' + s.t + s.id, title: T('Omdat je {title} keek', { title: s.name }), items: items });
             });
             // Jouw genre (behalve als het al in "Omdat je X keek" zit)
             var used = srcs.map(function (s) { return (s.genres || [])[0]; });
@@ -217,19 +217,19 @@ var Reco = (function () {
                 var items = [];
                 types.forEach(function (t) { if (idx[t][g]) items = items.concat(best(idx[t][g], t)); });
                 items = pick(items, w, types);
-                if (items.length >= 5) out.push({ id: 'b:g:' + g, title: Genres.byId(g).name + ' voor jou', items: items });
+                if (items.length >= 5) out.push({ id: 'b:g:' + g, title: T('{genre} voor jou', { genre: T(Genres.byId(g).name) }), items: items });
             });
             // Nieuw en best gewaardeerd (rating van de provider)
             if (kind === 'home') {
-                if (idx.m) out.push({ id: 'b:new-m', title: 'Nieuwe films', items: pick(idx.m['*'].map(wrap('m')), w, ['m']) });
-                if (idx.t) out.push({ id: 'b:new-t', title: 'Nieuwe series', items: pick(idx.t['*'].map(wrap('t')), w, ['t']) });
+                if (idx.m) out.push({ id: 'b:new-m', title: T('Nieuwe films'), items: pick(idx.m['*'].map(wrap('m')), w, ['m']) });
+                if (idx.t) out.push({ id: 'b:new-t', title: T('Nieuwe series'), items: pick(idx.t['*'].map(wrap('t')), w, ['t']) });
             }
             var top = [];
             types.forEach(function (t) { top = top.concat(idx[t]['*'].filter(function (it) { return pRating(it) >= 7; }).slice(0, 2000)); });
             var topItems = pick(top.sort(function (a, b) { return pRating(b) - pRating(a); }).map(function (it) {
                 return wrap(it.series_id != null && it.stream_id == null ? 't' : 'm')(it);
             }), w, types);
-            if (topItems.length >= 5) out.push({ id: 'b:top', title: 'Hoogst gewaardeerd', items: topItems });
+            if (topItems.length >= 5) out.push({ id: 'b:top', title: T('Hoogst gewaardeerd'), items: topItems });
             return out.filter(function (r) { return r.items.length >= 3; });
         }).catch(function () { return []; });
     }

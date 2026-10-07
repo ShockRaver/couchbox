@@ -38,11 +38,10 @@ var U = (function () {
     }
     function fmtClock(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 
-    var DAYS = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
-    var MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+    // Datum in de gekozen taal: "di 6 okt" / "Tue 6 Oct" (met jaar: "6 okt 2026")
     function fmtDate(t, withYear) {
         var d = new Date(t);
-        return (withYear ? '' : DAYS[d.getDay()] + ' ') + d.getDate() + ' ' + MONTHS[d.getMonth()] + (withYear ? ' ' + d.getFullYear() : '');
+        return (withYear ? '' : I18N.days()[d.getDay()] + ' ') + d.getDate() + ' ' + I18N.months()[d.getMonth()] + (withYear ? ' ' + d.getFullYear() : '');
     }
 
     // Base64 (UTF-8) decoderen, gebruikt door de Xtream EPG
@@ -94,13 +93,14 @@ var U = (function () {
         es: ['es', 'spa', 'spanish'], it: ['it', 'ita', 'italian'], tr: ['tr', 'tur', 'turkish'],
         ar: ['ar', 'ara', 'arabic'], pl: ['pl', 'pol', 'polish'], pt: ['pt', 'por', 'portuguese']
     };
+    // Namen blijven Nederlands (sleutels voor de vertaling); langLabel vertaalt bij het tonen
     var LABELS = { nl: 'Nederlands', en: 'Engels', de: 'Duits', fr: 'Frans', es: 'Spaans', it: 'Italiaans', tr: 'Turks', ar: 'Arabisch', pl: 'Pools', pt: 'Portugees' };
     function normLang(code) {
         var c = String(code || '').toLowerCase().trim();
         for (var k in LANGS) if (LANGS[k].indexOf(c) >= 0) return k;
         return c;
     }
-    function langLabel(code) { var n = normLang(code); return LABELS[n] || (n ? n.toUpperCase() : 'Onbekend'); }
+    function langLabel(code) { var n = normLang(code); return LABELS[n] ? T(LABELS[n]) : (n ? n.toUpperCase() : T('Onbekend')); }
 
     // Initialen als placeholder voor ontbrekende logo's/posters ("NL | NPO 1" -> "N1")
     function initials(name) {

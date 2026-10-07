@@ -45,21 +45,21 @@ Screens.search = {
         var safe = function (p) { return p.catch(function () { return []; }); };
         var get = this.data ? Promise.resolve(null) : Promise.all([safe(Api.liveStreams()), safe(Api.vodStreams(null)), safe(Api.series(null)),
             safe(Api.liveCategories()), safe(Api.vodCategories()), safe(Api.seriesCategories())]);
-        this.setStatus('Catalogus laden voor zoeken… (kan even duren bij grote abonnementen)');
+        this.setStatus(T('Catalogus laden voor zoeken… (kan even duren bij grote abonnementen)'));
         get.then(function (r) {
             if (r) {
                 var a = [App.adultIds(r[3]), App.adultIds(r[4]), App.adultIds(r[5])];
                 var f = function (list, ad) { return ad ? list.filter(function (x) { return !App.inCats(x, ad); }) : list; };
                 self.data = { live: f(r[0], a[0]), movie: Genres.unique(f(r[1], a[1]), r[4]), series: Genres.unique(f(r[2], a[2]), r[5]) };
             }
-            return Find.build(self.data, function (n, total) { self.setStatus('Zoekindex opbouwen… ' + Math.round(n / Math.max(1, total) * 100) + '%'); });
+            return Find.build(self.data, function (n, total) { self.setStatus(T('Zoekindex opbouwen… {pct}%', { pct: Math.round(n / Math.max(1, total) * 100) })); });
         }).then(function () {
             self.loading = false;
             self.setStatus('');
             self.run();
         }).catch(function (e) {
             self.loading = false;
-            self.setStatus('Zoeken niet beschikbaar: ' + e.message);
+            self.setStatus(T('Zoeken niet beschikbaar: {error}', { error: e.message }));
         });
     },
 
@@ -78,7 +78,7 @@ Screens.search = {
     drawQuery: function () {
         // Lange zoekopdracht: het einde blijft zichtbaar
         var q = this.q;
-        this.qText.textContent = q ? (q.length > 24 ? '…' + q.slice(-23) : q) : 'Titel, zender, persoon';
+        this.qText.textContent = q ? (q.length > 24 ? '…' + q.slice(-23) : q) : T('Titel, zender, persoon');
         this.qText.classList.toggle('ph', !q);
     },
     press: function (id) {
@@ -110,7 +110,7 @@ Screens.search = {
         var self = this, list = this.recent();
         this.recentBox.innerHTML = '';
         if (!list.length) return;
-        this.recentBox.appendChild(U.h('h4', { text: 'Recent gezocht' }));
+        this.recentBox.appendChild(U.h('h4', { text: T('Recent gezocht') }));
         list.forEach(function (q, i) {
             self.recentBox.appendChild(U.h('div', { class: 'sk-ritem' + (self.zone === 'recent' && i === self.ri ? ' focus' : ''), html: Icons.get('restart') }, U.h('span', { text: q })));
         });
@@ -138,7 +138,7 @@ Screens.search = {
         if (!Find.ready()) return;
         if (q.length < 2) {
             if (this.zone === 'rows') this.setZone('keys');
-            this.setStatus(q.length ? 'Typ nog een letter…' : 'Zoek op titel, zender, acteur of regisseur.\nKies letters met de pijltjes en OK.');
+            this.setStatus(q.length ? T('Typ nog een letter…') : T('Zoek op titel, zender, acteur of regisseur.\nKies letters met de pijltjes en OK.'));
             return;
         }
         var r = Find.query(q, this.boost());
@@ -152,7 +152,7 @@ Screens.search = {
     online: function (raw, my) {
         var self = this, fallback = false;
         var ask = function (q) {
-            return Tmdb.api('search/multi', 'language=nl-NL&include_adult=false&query=' + encodeURIComponent(q)).then(function (d) { return (d && d.results) || []; });
+            return Tmdb.api('search/multi', 'language=' + I18N.tmdb() + '&include_adult=false&query=' + encodeURIComponent(q)).then(function (d) { return (d && d.results) || []; });
         };
         ask(raw).then(function (res) {
             if (res.length) return res;
@@ -163,7 +163,7 @@ Screens.search = {
             return ask(w[0]);
         }).then(function (res) {
             if (my !== self.qToken) return;
-            var DEPT = { Acting: 'Acteur', Directing: 'Regie', Writing: 'Schrijver', Production: 'Producent' };
+            var DEPT = { Acting: T('Acteur'), Directing: T('Regie'), Writing: T('Schrijver'), Production: T('Producent') };
             // Personen: naam moet passen, en onbekende namen zonder foto overslaan
             var people = res.filter(function (x) { return x.media_type === 'person' && (x.profile_path || x.popularity >= 3); }).map(function (p) {
                 return { id: p.id, name: p.name, img: p.profile_path || '', role: DEPT[p.known_for_department] || '', pop: p.popularity || 0, s: Find.score(raw, p.name) };
@@ -211,24 +211,24 @@ Screens.search = {
         var open = function (fn) { return function () { self.remember(); fn.apply(null, arguments); }; };
         var small = function (type) { return function (it) { return UI.libCard(type, it, { small: true }); }; };
         if (r.live.length) rows.push({
-            s: top(r.live), id: 'live', title: 'Zenders (' + r.live.length + ')', items: items(r.live), itemW: 250, itemH: 214,
+            s: top(r.live), id: 'live', title: T('Zenders ({n})', { n: r.live.length }), items: items(r.live), itemW: 250, itemH: 214,
             render: function (c) { return UI.logoCard(c); },
             onSelect: open(function (c, i, list) { App.go('player', { mode: 'live', channel: c, list: list }); })
         });
         if (r.movie.length) rows.push({
-            s: top(r.movie), id: 'movie', title: 'Films (' + r.movie.length + ')', items: items(r.movie), itemW: 184, itemH: 320,
+            s: top(r.movie), id: 'movie', title: T('Films ({n})', { n: r.movie.length }), items: items(r.movie), itemW: 184, itemH: 320,
             render: small('m'), onSelect: open(function (m) { App.go('movie', { item: m }); })
         });
         if (r.series.length) rows.push({
-            s: top(r.series), id: 'series', title: 'Series (' + r.series.length + ')', items: items(r.series), itemW: 184, itemH: 320,
+            s: top(r.series), id: 'series', title: T('Series ({n})', { n: r.series.length }), items: items(r.series), itemW: 184, itemH: 320,
             render: small('t'), onSelect: open(function (x) { App.go('series', { item: x }); })
         });
         if (r.people.length) rows.push({
-            s: r.people[0].s, id: 'people', title: 'Personen', items: r.people, itemW: 190, itemH: 250,
+            s: r.people[0].s, id: 'people', title: T('Personen'), items: r.people, itemW: 190, itemH: 250,
             render: UI.personCard, onSelect: open(function (p) { App.go('person', { id: p.id, name: p.name }); })
         });
         if (r.withP) rows.push({
-            s: r.withP.s, id: 'withp', title: 'Met ' + r.withP.name + ' in je bibliotheek', items: r.withP.items, itemW: 184, itemH: 320,
+            s: r.withP.s, id: 'withp', title: T('Met {name} in je bibliotheek', { name: r.withP.name }), items: r.withP.items, itemW: 184, itemH: 320,
             render: function (x) { return UI.libCard(x.type, x.item, { small: true, sub: x.role }); },
             onSelect: open(function (x) { UI.openLib(x.type, x.item); })
         });
@@ -237,7 +237,7 @@ Screens.search = {
         rows.forEach(function (row) { self.rows.add(row); });
         this.rows.restore(st);
         this.rows.setActive(this.zone === 'rows');
-        this.setStatus(rows.length ? '' : 'Niets gevonden voor "' + r.q + '"' + (Tmdb.enabled() ? '' : '\n(zoeken op acteurs werkt met een TMDB-sleutel)'));
+        this.setStatus(rows.length ? '' : T('Niets gevonden voor "{query}"', { query: r.q }) + (Tmdb.enabled() ? '' : '\n' + T('(zoeken op acteurs werkt met een TMDB-sleutel)')));
     },
 
     onKey: function (k) {

@@ -66,7 +66,7 @@ var Dialog = (function () {
             else value += id;
             draw();
         });
-        var btns = [{ id: 'ok', label: o.okLabel || 'Opslaan' }, { id: 'cancel', label: 'Annuleren' }].map(function (b) {
+        var btns = [{ id: 'ok', label: o.okLabel || T('Opslaan') }, { id: 'cancel', label: T('Annuleren') }].map(function (b) {
             b.el = U.h('div', { class: 'btn', text: b.label });
             return b;
         });
@@ -107,7 +107,7 @@ var Dialog = (function () {
 
     // Standaard staat de focus op "Annuleren", zodat een verdwaalde OK niets onomkeerbaars doet
     function confirm(title, text, cb, yesLabel) {
-        menu({ title: title, text: text, index: 1, items: [{ id: 'yes', label: yesLabel || 'Ja' }, { id: 'no', label: 'Annuleren' }] }, function (it) {
+        menu({ title: title, text: text, index: 1, items: [{ id: 'yes', label: yesLabel || T('Ja') }, { id: 'no', label: T('Annuleren') }] }, function (it) {
             cb(!!(it && it.id === 'yes'));
         });
     }
@@ -124,7 +124,7 @@ var Dialog = (function () {
             el: U.h('div', { class: 'dialog-wrap' }, U.h('div', { class: 'dialog pin' }, [
                 U.h('h2', { text: title }),
                 U.h('div', { class: 'pin-row' }, boxes),
-                U.h('p', { class: 'dialog-hint', text: 'Cijfertoetsen, of ▲▼ om te kiezen en ◀▶ om te verplaatsen · OK bevestigen · Terug annuleren' })
+                U.h('p', { class: 'dialog-hint', text: T('Cijfertoetsen, of ▲▼ om te kiezen en ◀▶ om te verplaatsen · OK bevestigen · Terug annuleren') })
             ]))
         };
         function draw() {

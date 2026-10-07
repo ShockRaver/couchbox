@@ -19,7 +19,7 @@ var Api = (function () {
     function enc(s) { return encodeURIComponent(s || ''); }
 
     function request(params, timeout) {
-        if (!prof) return Promise.reject(new Error('Geen profiel ingesteld'));
+        if (!prof) return Promise.reject(new Error(T('Geen profiel ingesteld')));
         if (isDemo()) return Demo.handle(params || {});
         var qs = 'username=' + enc(prof.username) + '&password=' + enc(prof.password);
         Object.keys(params || {}).forEach(function (k) { if (params[k] != null) qs += '&' + k + '=' + enc(String(params[k])); });
@@ -27,15 +27,15 @@ var Api = (function () {
         var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeout || 30000);
         return fetch(base + '/player_api.php?' + qs, ctrl ? { signal: ctrl.signal } : {})
             .then(function (r) {
-                if (!r.ok) throw new Error('Server gaf foutcode ' + r.status);
+                if (!r.ok) throw new Error(T('Server gaf foutcode {code}', { code: r.status }));
                 return r.text();
             })
             .then(function (t) {
-                try { return t ? JSON.parse(t) : null; } catch (e) { throw new Error('Ongeldig antwoord van de server'); }
+                try { return t ? JSON.parse(t) : null; } catch (e) { throw new Error(T('Ongeldig antwoord van de server')); }
             })
             .catch(function (e) {
-                if (e && e.name === 'AbortError') throw new Error('Time-out: de server reageert niet');
-                if (e instanceof TypeError) throw new Error('Kan de server niet bereiken');
+                if (e && e.name === 'AbortError') throw new Error(T('Time-out: de server reageert niet'));
+                if (e instanceof TypeError) throw new Error(T('Kan de server niet bereiken'));
                 throw e;
             })
             .finally(function () { clearTimeout(timer); });
@@ -93,10 +93,10 @@ var Api = (function () {
 
     function login() {
         return request({}, 20000).then(function (res) {
-            if (!res || !res.user_info) throw new Error('Onverwacht antwoord – is dit een Xtream Codes-server?');
+            if (!res || !res.user_info) throw new Error(T('Onverwacht antwoord – is dit een Xtream Codes-server?'));
             var ui = res.user_info;
-            if (String(ui.auth) === '0') throw new Error('Onjuiste gebruikersnaam of wachtwoord');
-            if (ui.status && ui.status !== 'Active') throw new Error('Account is niet actief (' + ui.status + ')');
+            if (String(ui.auth) === '0') throw new Error(T('Onjuiste gebruikersnaam of wachtwoord'));
+            if (ui.status && ui.status !== 'Active') throw new Error(T('Account is niet actief ({status})', { status: ui.status }));
             account = res;
             return res;
         });

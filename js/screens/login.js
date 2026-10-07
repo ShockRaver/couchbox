@@ -5,14 +5,14 @@ Screens.login = {
         this.el = UI.screen('login');
         var card = U.h('div', { class: 'login-card' });
         card.appendChild(U.h('div', { class: 'login-logo', html: Icons.logo() + '<span>Kijkdoos</span>' }));
-        this.titleEl = U.h('h1', { text: 'Verbinden met je IPTV-server' });
+        this.titleEl = U.h('h1', { text: T('Verbinden met je IPTV-server') });
         card.appendChild(this.titleEl);
-        card.appendChild(U.h('p', { class: 'muted', text: 'Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.' }));
+        card.appendChild(U.h('p', { class: 'muted', text: T('Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.') }));
         this.fields = [
-            { key: 'name', label: 'Naam van dit profiel', ph: 'Bijv. Thuis' },
-            { key: 'server', label: 'Server-URL (met poort)', ph: 'http://voorbeeld.com:8080', type: 'url' },
-            { key: 'username', label: 'Gebruikersnaam' },
-            { key: 'password', label: 'Wachtwoord', type: 'password' }
+            { key: 'name', label: T('Naam van dit profiel'), ph: T('Bijv. Thuis') },
+            { key: 'server', label: T('Server-URL (met poort)'), ph: T('http://voorbeeld.com:8080'), type: 'url' },
+            { key: 'username', label: T('Gebruikersnaam') },
+            { key: 'password', label: T('Wachtwoord'), type: 'password' }
         ];
         this.items = [];
         this.fields.forEach(function (f) {
@@ -23,13 +23,13 @@ Screens.login = {
             f.input.addEventListener('focus', function () { self.setFocus(idx); });
             self.items.push({ el: row, input: f.input });
         });
-        this.btnConnect = U.h('div', { class: 'btn primary', html: Icons.get('play') + '<span>Verbinden</span>' });
-        this.btnCancel = U.h('div', { class: 'btn', text: 'Annuleren' });
+        this.btnConnect = U.h('div', { class: 'btn primary', html: Icons.get('play') + '<span>' + T('Verbinden') + '</span>' });
+        this.btnCancel = U.h('div', { class: 'btn', text: T('Annuleren') });
         card.appendChild(U.h('div', { class: 'btn-row' }, [this.btnConnect, this.btnCancel]));
         this.items.push({ el: this.btnConnect, action: 'connect' }, { el: this.btnCancel, action: 'cancel' });
         this.err = U.h('div', { class: 'login-error' });
         card.appendChild(this.err);
-        card.appendChild(U.h('p', { class: 'muted small', text: 'Tip: vul "demo" in als server-URL om de app te proberen zonder abonnement.' }));
+        card.appendChild(U.h('p', { class: 'muted small', text: T('Tip: vul "demo" in als server-URL om de app te proberen zonder abonnement.') }));
         this.el.appendChild(card);
     },
 
@@ -38,7 +38,7 @@ Screens.login = {
         this.first = Store.profiles().length === 0;
         var v = this.editing || {};
         this.fields.forEach(function (f) { f.input.value = v[f.key] || ''; });
-        this.titleEl.textContent = this.editing ? 'Profiel bewerken' : 'Verbinden met je IPTV-server';
+        this.titleEl.textContent = this.editing ? T('Profiel bewerken') : T('Verbinden met je IPTV-server');
         this.btnCancel.style.display = this.first ? 'none' : '';
         this.err.textContent = '';
         this.setFocus(0);
@@ -74,25 +74,25 @@ Screens.login = {
         var self = this, v = {};
         this.fields.forEach(function (f) { v[f.key] = f.input.value.trim(); });
         var server = Api.normalizeServer(v.server);
-        if (!server) return this.error('Vul de server-URL in');
-        if (server !== 'demo' && (!v.username || !v.password)) return this.error('Vul gebruikersnaam en wachtwoord in');
+        if (!server) return this.error(T('Vul de server-URL in'));
+        if (server !== 'demo' && (!v.username || !v.password)) return this.error(T('Vul gebruikersnaam en wachtwoord in'));
         var name = v.name || (server === 'demo' ? 'Demo' : server.replace(/^https?:\/\//, '').replace(/:\d+$/, ''));
         var p = { id: this.editing ? this.editing.id : U.uid(), name: name, server: v.server, username: v.username, password: v.password };
         var prev = Store.activeProfile();
         Api.setProfile(p);
         this.error('');
-        Loader.show('Verbinden met ' + name + '…');
+        Loader.show(T('Verbinden met {name}…', { name: name }));
         Api.login().then(function () {
             Loader.hide();
             Store.saveProfile(p);
             Store.setActive(p.id);
             EPG.reset();
-            Toast.show('Verbonden met ' + name);
+            Toast.show(T('Verbonden met {name}', { name: name }));
             App.reset('home');
         }).catch(function (e) {
             Loader.hide();
             Api.setProfile(prev);
-            self.error(e.message + (Player.isNative() || server === 'demo' ? '' : ' (let op: in een desktopbrowser blokkeert CORS vaak de verbinding)'));
+            self.error(Player.isNative() || server === 'demo' ? e.message : T('{error} (let op: in een desktopbrowser blokkeert CORS vaak de verbinding)', { error: e.message }));
         });
     },
 

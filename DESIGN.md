@@ -34,3 +34,9 @@ Geen losse hexwaarden in componenten; altijd een token.
 ## Beweging
 - Tokens: `--t-fast` (.12s, focus), `--t-med` (.2s), `--t-slow` (.4s, achtergrondbeelden).
 - Alleen focus, panelen en achtergrondbeelden animeren; `prefers-reduced-motion` zet overgangen uit.
+
+## Taal
+- Elke tekst die je ziet loopt via `T('Nederlandse tekst')`; de Engelse vertaling staat in `js/lang/en.js`. Standaard is de app Engels.
+- Zinnen met variabelen als één sjabloon: `T('Omdat je {title} keek', { title: x })`, nooit in stukjes.
+- Nooit `T()` aanroepen bij het laden van een script (de taal is pas bekend na `I18N.init()`); vaste lijsten houden Nederlandse tekst en vertalen bij het tonen.
+- Na nieuwe teksten: `node scripts/i18n-check.js`.

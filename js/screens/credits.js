@@ -15,25 +15,25 @@ Screens.credits = {
         var self = this, key = p.type + ':' + p.id;
         this.key = key;
         this.hdr.title.textContent = p.title || '';
-        this.hdr.sub.textContent = 'Cast & meer zoals dit';
+        this.hdr.sub.textContent = T('Cast & meer zoals dit');
         this.rows.clear();
-        this.status.textContent = 'Laden…';
+        this.status.textContent = T('Laden…');
         this.status.style.display = '';
         Meta.details(p.type, p.id).then(function (det) {
             if (self.key !== key) return;
-            if (!det) { self.status.textContent = 'Geen gegevens gevonden'; return; }
+            if (!det) { self.status.textContent = T('Geen gegevens gevonden'); return; }
             var person = function (x) { App.go('person', { id: x.id, name: x.name }); };
-            if (det.crew.length) self.rows.add({ id: 'crew', title: 'Makers', items: det.crew, itemW: 190, itemH: 250, render: UI.personCard, onSelect: person });
-            if (det.cast.length) self.rows.add({ id: 'cast', title: 'Cast', items: det.cast, itemW: 190, itemH: 250, render: UI.personCard, onSelect: person });
+            if (det.crew.length) self.rows.add({ id: 'crew', title: T('Makers'), items: det.crew, itemW: 190, itemH: 250, render: UI.personCard, onSelect: person });
+            if (det.cast.length) self.rows.add({ id: 'cast', title: T('Cast'), items: det.cast, itemW: 190, itemH: 250, render: UI.personCard, onSelect: person });
             self.status.style.display = self.rows.rows.length ? 'none' : '';
-            self.status.textContent = 'Geen cast bekend';
+            self.status.textContent = T('Geen cast bekend');
             self.rows.restore(null);
             self.rows.setActive(true);
             return Meta.inLibrary(det.recs.map(function (id) { return { t: p.type, id: id }; })).then(function (list) {
                 if (self.key !== key || !list.length) return;
                 var st = self.rows.state();
                 self.rows.add({
-                    id: 'recs', title: 'Meer zoals dit', items: list.slice(0, 30), itemW: 200, itemH: 372,
+                    id: 'recs', title: T('Meer zoals dit'), items: list.slice(0, 30), itemW: 200, itemH: 372,
                     render: function (x) { return UI.libCard(x.type, x.item); },
                     onSelect: function (x) { UI.openLib(x.type, x.item); }
                 });
@@ -41,7 +41,7 @@ Screens.credits = {
                 self.rows.restore(st);
                 self.rows.setActive(true);
             });
-        }).catch(function (e) { if (self.key === key) self.status.textContent = 'Laden mislukt: ' + e.message; });
+        }).catch(function (e) { if (self.key === key) self.status.textContent = T('Laden mislukt: {error}', { error: e.message }); });
     },
 
     resume: function () { this.rows.draw(); },

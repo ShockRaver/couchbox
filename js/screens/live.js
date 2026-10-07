@@ -6,7 +6,7 @@ Screens.live = {
     build: function () {
         var self = this;
         this.el = UI.screen('live', 'live');
-        this.hdr = UI.header('Live TV');
+        this.hdr = UI.header(T('Live TV'));
         this.el.appendChild(this.hdr.el);
         this.catBox = U.h('div', { class: 'col col-cats' });
         this.chBox = U.h('div', { class: 'col col-chans' });
@@ -31,13 +31,13 @@ Screens.live = {
         this.chans.setItems([]);
         this.chans.setEmpty('');
         this.info.innerHTML = '';
-        Loader.show('Zenders laden…');
+        Loader.show(T('Zenders laden…'));
         Promise.all([Api.liveCategories(), Api.liveStreams()]).then(function (r) {
             Loader.hide();
             self.setup(r[0], r[1], p || {});
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert('Zenders laden mislukt', e.message, function () { App.back(); });
+            Dialog.alert(T('Zenders laden mislukt'), e.message, function () { App.back(); });
         });
     },
 
@@ -49,7 +49,7 @@ Screens.live = {
             self.byId[s.stream_id] = s;
             App.catIds(s).forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
         });
-        var list = [{ id: 'all', name: 'Alle zenders', count: this.all.length }, { id: 'fav', name: 'Favorieten', count: Store.favorites('live').length }];
+        var list = [{ id: 'all', name: T('Alle zenders'), count: this.all.length }, { id: 'fav', name: T('Favorieten'), count: Store.favorites('live').length }];
         cats.forEach(function (c) {
             var id = String(c.category_id);
             if (counts[id]) list.push({ id: id, name: c.category_name, count: counts[id] });
@@ -59,7 +59,7 @@ Screens.live = {
         var ci = list.findIndex(function (c) { return c.id === saved; });
         if (ci < 0) ci = Store.favorites('live').length ? 1 : 0;
         this.cats.setItems(list, ci);
-        this.chans.setEmpty('Geen zenders in deze categorie');
+        this.chans.setEmpty(T('Geen zenders in deze categorie'));
         this.loadCat(list[ci]);
         this.setZone('chans');
     },
@@ -80,7 +80,7 @@ Screens.live = {
             if (j >= 0) idx = j;
         }
         this.chans.setItems(items, idx);
-        this.hdr.sub.textContent = cat.name + ' · ' + items.length + (items.length === 1 ? ' zender' : ' zenders');
+        this.hdr.sub.textContent = cat.name + ' · ' + (items.length === 1 ? T('{n} zender', { n: items.length }) : T('{n} zenders', { n: items.length }));
         this.updateInfo();
         this.requestEpg();
     },
@@ -123,7 +123,7 @@ Screens.live = {
     detach: function () { (this.offs || []).forEach(function (f) { f(); }); this.offs = []; },
 
     setPreviewMsg: function (st) {
-        var t = { idle: 'Druk op OK voor een voorbeeld', loading: 'Laden…', retry: 'Opnieuw verbinden…', error: 'Deze zender kan niet worden afgespeeld' }[st];
+        var t = { idle: T('Druk op OK voor een voorbeeld'), loading: T('Laden…'), retry: T('Opnieuw verbinden…'), error: T('Deze zender kan niet worden afgespeeld') }[st];
         this.preview.classList.toggle('playing', st === 'playing' || st === 'paused');
         this.previewMsg.innerHTML = (st === 'loading' || st === 'retry' ? '<div class="spinner"></div>' : Icons.get('tv')) + '<div>' + (t || '') + '</div>';
     },
@@ -174,24 +174,24 @@ Screens.live = {
             U.img(s.stream_icon, 'ci-logo', s.name),
             U.h('div', { class: 'ci-name' }, [
                 U.h('div', { class: 'ci-title', text: s.name }),
-                U.h('div', { class: 'ci-sub', text: (s.num ? 'Zender ' + s.num : '') + (Store.isFav('live', s.stream_id) ? '  ·  ★ Favoriet' : '') })
+                U.h('div', { class: 'ci-sub', text: (s.num ? T('Zender {num}', { num: s.num }) : '') + (Store.isFav('live', s.stream_id) ? '  ·  ★ ' + T('Favoriet') : '') })
             ])
         ]));
-        if (!nn) el.appendChild(U.h('div', { class: 'ci-empty', text: 'Programmagegevens laden…' }));
-        else if (!nn.cur && !nn.next) el.appendChild(U.h('div', { class: 'ci-empty', text: 'Geen programmagegevens beschikbaar' }));
+        if (!nn) el.appendChild(U.h('div', { class: 'ci-empty', text: T('Programmagegevens laden…') }));
+        else if (!nn.cur && !nn.next) el.appendChild(U.h('div', { class: 'ci-empty', text: T('Geen programmagegevens beschikbaar') }));
         else {
             if (nn.cur) el.appendChild(U.h('div', { class: 'ci-prog' }, [
-                U.h('div', { class: 'ci-when', html: '<span class="chip-now">NU</span>' + U.fmtClock(nn.cur.start) + ' – ' + U.fmtClock(nn.cur.end) }),
+                U.h('div', { class: 'ci-when', html: '<span class="chip-now">' + T('NU') + '</span>' + U.fmtClock(nn.cur.start) + ' – ' + U.fmtClock(nn.cur.end) }),
                 U.h('div', { class: 'ci-ptitle', text: nn.cur.title }),
                 UI.pbar(UI.frac(nn.cur)),
                 nn.cur.desc ? U.h('div', { class: 'ci-desc', text: nn.cur.desc }) : null
             ]));
             if (nn.next) el.appendChild(U.h('div', { class: 'ci-next' }, [
-                U.h('span', { class: 'ci-when', text: 'Straks ' + U.fmtClock(nn.next.start) }),
+                U.h('span', { class: 'ci-when', text: T('Straks {time}', { time: U.fmtClock(nn.next.start) }) }),
                 U.h('span', { class: 'ci-ntitle', text: nn.next.title })
             ]));
         }
-        el.appendChild(U.h('div', { class: 'ci-hint', html: '<b>OK</b> voorbeeld · nogmaals <b>OK</b> volledig scherm<br><b>OK</b> ingedrukt houden: favoriet &amp; opties' }));
+        el.appendChild(U.h('div', { class: 'ci-hint', html: T('<b>OK</b> voorbeeld · nogmaals <b>OK</b> volledig scherm<br><b>OK</b> ingedrukt houden: favoriet &amp; opties') }));
     },
 
     // EPG ophalen voor de zenders die in beeld zijn
@@ -282,9 +282,9 @@ Screens.live = {
         Dialog.menu({
             title: s.name,
             items: [
-                { id: 'play', label: 'Volledig scherm afspelen' },
-                { id: 'fav', label: fav ? 'Verwijderen uit favorieten' : 'Toevoegen aan favorieten' },
-                { id: 'guide', label: 'TV-gids voor deze categorie' }
+                { id: 'play', label: T('Volledig scherm afspelen') },
+                { id: 'fav', label: fav ? T('Verwijderen uit favorieten') : T('Toevoegen aan favorieten') },
+                { id: 'guide', label: T('TV-gids voor deze categorie') }
             ]
         }, function (it) {
             if (!it) return;
@@ -296,7 +296,7 @@ Screens.live = {
 
     toggleFav: function (s) {
         var added = Store.toggleFav('live', App.favFromCh(s));
-        Toast.show(added ? '★ ' + s.name + ' toegevoegd aan favorieten' : s.name + ' verwijderd uit favorieten');
+        Toast.show(added ? T('★ {name} toegevoegd aan favorieten', { name: s.name }) : T('{name} verwijderd uit favorieten', { name: s.name }));
         this.catList[1].count = Store.favorites('live').length;
         this.cats.refresh();
         if (this.cat.id === 'fav') this.loadCat(this.cat); else { this.chans.refresh(); this.updateInfo(); }
@@ -318,7 +318,7 @@ Screens.live = {
             self.numBuf = '';
             self.numEl.classList.remove('show');
             var ch = self.all.filter(function (c) { return String(c.num) === num; })[0];
-            if (!ch) { Toast.show('Zender ' + num + ' niet gevonden'); return; }
+            if (!ch) { Toast.show(T('Zender {num} niet gevonden', { num: num })); return; }
             var j = self.items.indexOf(ch);
             if (j < 0) { self.cats.focus(0); self.loadCat(self.catList[0], ch.stream_id); }
             else { self.chans.focus(j); self.updateInfo(); self.requestEpg(); }

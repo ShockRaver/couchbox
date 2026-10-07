@@ -11,7 +11,8 @@ var Meta = (function () {
     var FRESH = 30 * 86400e3;  // details/personen na 30 dagen opnieuw ophalen
 
     // Compacte opslag per titel (array, scheelt geheugen bij ±70.000 titels). Volgorde nooit wijzigen.
-    var F = { title: 0, otitle: 1, year: 2, runtime: 3, rating: 4, votes: 5, pop: 6, lang: 7, countries: 8, poster: 9, backdrop: 10, seasons: 11, status: 12 };
+    // ul = taal waarin titel/gegevens zijn opgehaald ('nl'/'en'; oude records zonder = 'nl')
+    var F = { title: 0, otitle: 1, year: 2, runtime: 3, rating: 4, votes: 5, pop: 6, lang: 7, countries: 8, poster: 9, backdrop: 10, seasons: 11, status: 12, ul: 13 };
 
     var mem = null, readyP = null, queue = [], flushT = null, persist = true;
 
@@ -33,6 +34,14 @@ var Meta = (function () {
     }
 
     function has(type, id) { return !!(mem && mem.has(k(type, id))); }
+    // In welke taal is dit record opgehaald? (MISSING-records tellen als actueel)
+    function langOf(type, id) {
+        var r = mem && mem.get(k(type, id));
+        if (!r || !r.length) return I18N.lang();
+        return r[F.ul] || 'nl';
+    }
+    // Bewaarsleutel per taal (Nederlands houdt de oude sleutels)
+    function lk(key) { return I18N.lang() === 'nl' ? key : key + ':' + I18N.lang(); }
 
     function put(type, id, rec) {
         if (!mem) mem = new Map();
@@ -64,7 +73,7 @@ var Meta = (function () {
             tv ? ((d.episode_run_time || [])[0] || 0) : (d.runtime || 0),
             Math.round((d.vote_average || 0) * 10), d.vote_count || 0, Math.round(d.popularity || 0),
             d.original_language || '', countries.join(','), d.poster_path || '', d.backdrop_path || '',
-            tv ? (d.number_of_seasons || 0) : 0, tv ? (d.status || '') : ''
+            tv ? (d.number_of_seasons || 0) : 0, tv ? (d.status || '') : '', I18N.lang()
         ];
     }
 
@@ -102,12 +111,12 @@ var Meta = (function () {
     // ---- Details per titel (bij openen) ----
     function details(type, id) {
         if (!id || !Tmdb.enabled()) return Promise.resolve(null);
-        var key = k(type, id);
+        var key = lk(k(type, id));
         return Db.get('details', key).catch(function () { return null; }).then(function (cached) {
             // v2: ook de reeks (collectie) waar een film bij hoort; oudere bewaarde gegevens één keer opnieuw ophalen
             if (cached && cached.v === 2 && Date.now() - cached.at < FRESH) return cached;
             var path = (type === 't' ? 'tv/' : 'movie/') + id;
-            return Tmdb.api(path, 'language=nl-NL&append_to_response=credits,videos,recommendations&include_video_language=nl,en,null').then(function (d) {
+            return Tmdb.api(path, 'language=' + I18N.tmdb() + '&append_to_response=credits,videos,recommendations&include_video_language=' + I18N.lang() + ',en,null').then(function (d) {
                 if (!d) return null;
                 put(type, id, fromTmdb(type, d));
                 var det = {
@@ -120,7 +129,7 @@ var Meta = (function () {
                     coll: d.belongs_to_collection ? { id: d.belongs_to_collection.id, name: d.belongs_to_collection.name } : null
                 };
                 // Geen Nederlandse beschrijving? Dan de Engelse
-                var en = det.overview ? Promise.resolve(null) : Tmdb.api(path, 'language=en-US').catch(function () { return null; });
+                var en = det.overview || I18N.lang() === 'en' ? Promise.resolve(null) : Tmdb.api(path, 'language=en-US').catch(function () { return null; });
                 return en.then(function (e) {
                     if (e && e.overview) det.overview = e.overview;
                     if (e && !det.tagline) det.tagline = e.tagline || '';
@@ -134,10 +143,10 @@ var Meta = (function () {
     // Reeks (bv. alle Harry Potter-films): delen op volgorde van verschijnen. Bewaard voor 30 dagen.
     function collection(id) {
         if (!id || !Tmdb.enabled()) return Promise.resolve(null);
-        var key = 'c:' + id;
+        var key = lk('c:' + id);
         return Db.get('details', key).catch(function () { return null; }).then(function (cached) {
             if (cached && Date.now() - cached.at < FRESH) return cached;
-            return Tmdb.api('collection/' + id, 'language=nl-NL').then(function (d) {
+            return Tmdb.api('collection/' + id, 'language=' + I18N.tmdb()).then(function (d) {
                 if (!d) return null;
                 var c = { at: Date.now(), id: d.id, name: d.name || '', parts: (d.parts || []).map(function (x) {
                     return { id: x.id, year: parseInt(String(x.release_date || '').slice(0, 4), 10) || 9999 };
@@ -157,6 +166,10 @@ var Meta = (function () {
         return out.slice(0, 6);
     }
 
+    // Rol om te tonen: 'Regie'/'Bedenker' blijven in de (bewaarde) gegevens Nederlands en worden pas bij het tonen vertaald;
+    // andere rollen (personage, functie) komen van TMDB en blijven zoals ze zijn
+    function roleText(role) { return role === 'Regie' ? T('Regie') : role === 'Bedenker' ? T('Bedenker') : (role || ''); }
+
     function trailerOf(videos) {
         var list = (videos && videos.results) || [];
         var t = list.filter(function (v) { return v.site === 'YouTube' && v.type === 'Trailer'; })[0] || list.filter(function (v) { return v.site === 'YouTube'; })[0];
@@ -165,10 +178,10 @@ var Meta = (function () {
 
     // ---- Personen (bij openen) ----
     function person(id) {
-        var key = 'p:' + id;
+        var key = lk('p:' + id);
         return Db.get('people', key).catch(function () { return null; }).then(function (cached) {
             if (cached && Date.now() - cached.at < FRESH) return cached;
-            return Tmdb.api('person/' + id, 'language=nl-NL&append_to_response=combined_credits').then(function (d) {
+            return Tmdb.api('person/' + id, 'language=' + I18N.tmdb() + '&append_to_response=combined_credits').then(function (d) {
                 if (!d) return null;
                 var cc = d.combined_credits || {}, seen = {}, credits = [];
                 (cc.cast || []).concat((cc.crew || []).filter(function (c) { return c.department === 'Directing' || c.job === 'Creator'; })).forEach(function (c) {
@@ -180,7 +193,7 @@ var Meta = (function () {
                 });
                 var p = { at: Date.now(), id: d.id, name: d.name, img: d.profile_path || '', dept: d.known_for_department || '', bio: d.biography || '',
                     born: d.birthday || '', credits: credits };
-                var en = p.bio ? Promise.resolve(null) : Tmdb.api('person/' + id, 'language=en-US').catch(function () { return null; });
+                var en = p.bio || I18N.lang() === 'en' ? Promise.resolve(null) : Tmdb.api('person/' + id, 'language=en-US').catch(function () { return null; });
                 return en.then(function (e) {
                     if (e && e.biography) p.bio = e.biography;
                     Db.put('people', key, p).catch(function () {});
@@ -215,7 +228,7 @@ var Meta = (function () {
             var out = [];
             items.forEach(function (x) {
                 var it = map[x.t] && map[x.t].get(String(x.id));
-                if (it) out.push({ type: x.t, item: it, role: x.role || '' });
+                if (it) out.push({ type: x.t, item: it, role: roleText(x.role) });
             });
             return out;
         });
@@ -225,7 +238,7 @@ var Meta = (function () {
 
     return {
         MISSING: MISSING, ready: ready, has: has, put: put, flush: flush, clear: clear, fromTmdb: fromTmdb,
-        info: info, byId: byId, img: img, rating: rating, poster: poster, details: details, collection: collection, person: person,
+        info: info, byId: byId, langOf: langOf, img: img, rating: rating, poster: poster, details: details, collection: collection, person: person, roleText: roleText,
         library: library, inLibrary: inLibrary, count: count, persistent: function () { return persist; }
     };
 })();

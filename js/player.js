@@ -32,7 +32,7 @@ var Player = (function () {
             video.addEventListener('waiting', function () { emit('buffering', true); });
             video.addEventListener('timeupdate', function () { lastTime = video.currentTime * 1000; });
             video.addEventListener('ended', function () { setState('ended'); emit('ended'); });
-            video.addEventListener('error', function () { if (cur.url) fail('Afspeelfout (code ' + (video.error && video.error.code) + ')'); });
+            video.addEventListener('error', function () { if (cur.url) fail(T('Afspeelfout (code {code})', { code: video.error && video.error.code })); });
         }
         applyRect();
         document.addEventListener('visibilitychange', onVisibility);
@@ -142,7 +142,7 @@ var Player = (function () {
     }
 
     function fail(err) {
-        var msg = typeof err === 'string' ? err : (err && (err.message || err.name)) || 'onbekende fout';
+        var msg = typeof err === 'string' ? err : (err && (err.message || err.name)) || T('onbekende fout');
         console.warn('Speler-fout:', msg);
         var keepAt = lastTime;
         halt();
@@ -221,7 +221,7 @@ var Player = (function () {
         if (type !== 'AUDIO') return '';
         var p = [];
         var ch = parseInt(x.channels, 10);
-        if (ch) p.push(ch >= 6 ? '5.1' : ch === 2 ? 'stereo' : ch + ' kan.');
+        if (ch) p.push(ch >= 6 ? '5.1' : ch === 2 ? 'stereo' : T('{n} kan.', { n: ch }));
         if (x.fourCC) p.push(String(x.fourCC).toUpperCase());
         return p.length ? ' (' + p.join(', ') + ')' : '';
     }

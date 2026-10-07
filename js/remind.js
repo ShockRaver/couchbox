@@ -27,9 +27,9 @@ var Remind = (function () {
         if (rest.length !== l.length) save(rest);
         due.forEach(function (r) {
             Dialog.menu({
-                title: (r.start > now ? 'Begint zo: ' : 'Nu begonnen: ') + r.title,
+                title: r.start > now ? T('Begint zo: {title}', { title: r.title }) : T('Nu begonnen: {title}', { title: r.title }),
                 text: r.ch.name + '  ·  ' + U.fmtClock(r.start) + ' – ' + U.fmtClock(r.end),
-                items: [{ id: 'watch', label: 'Kijken' }, { id: 'close', label: 'Sluiten' }]
+                items: [{ id: 'watch', label: T('Kijken') }, { id: 'close', label: T('Sluiten') }]
             }, function (it) {
                 if (it && it.id === 'watch') App.go('player', { mode: 'live', channel: r.ch, list: [r.ch] });
             });

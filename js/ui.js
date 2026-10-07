@@ -106,7 +106,7 @@ var UI = {
         return U.h('div', { class: 'pcard' }, [
             U.img(Meta.img(p.img, 'w185'), 'pcard-img', p.name),
             U.h('div', { class: 'pcard-name', text: p.name }),
-            p.role ? U.h('div', { class: 'pcard-role', text: p.role }) : null
+            p.role ? U.h('div', { class: 'pcard-role', text: Meta.roleText(p.role) }) : null
         ]);
     },
 
@@ -243,7 +243,7 @@ var Loader = {
     show: function (text) {
         this.n++;
         var el = document.getElementById('loader');
-        el.querySelector('.loader-text').textContent = text || 'Laden…';
+        el.querySelector('.loader-text').textContent = text || T('Laden…');
         el.classList.add('show');
     },
     hide: function () {
@@ -259,9 +259,9 @@ var Loader = {
 function TopNav(active) {
     var self = this;
     this.items = [
-        { id: 'search', icon: 'search', label: 'Zoeken' }, { id: 'home', label: 'Home' }, { id: 'live', label: 'Live TV' },
-        { id: 'movie', label: 'Films' }, { id: 'series', label: 'Series' }, { id: 'guide', label: 'TV-gids' },
-        { id: 'mylist', label: 'Mijn lijst' }, { id: 'settings', icon: 'settings', label: 'Instellingen' }
+        { id: 'search', icon: 'search', label: T('Zoeken') }, { id: 'home', label: T('Home') }, { id: 'live', label: T('Live TV') },
+        { id: 'movie', label: T('Films') }, { id: 'series', label: T('Series') }, { id: 'guide', label: T('TV-gids') },
+        { id: 'mylist', label: T('Mijn lijst') }, { id: 'settings', icon: 'settings', label: T('Instellingen') }
     ];
     this.active = active;
     this.index = Math.max(0, this.items.findIndex(function (x) { return x.id === active; }));
@@ -330,7 +330,7 @@ function Keyboard(onPress) {
             ? row.split('').map(function (ch, i) { return { id: ch, label: ch, c: i, w: 1 }; })
             : row.map(function (k, i) { return { id: k[0], label: k[1], c: i * 2, w: 2 }; });
         list.forEach(function (k) {
-            k.el = U.h('div', { class: 'sk-key' + (k.w > 1 ? ' wide' : ''), html: k.id === 'del' ? Icons.get('backspace') : U.esc(k.label) });
+            k.el = U.h('div', { class: 'sk-key' + (k.w > 1 ? ' wide' : ''), html: k.id === 'del' ? Icons.get('backspace') : U.esc(k.id === 'space' ? T('Spatie') : k.id === 'clear' ? T('Wissen') : k.label) });
             self.el.appendChild(k.el);
         });
         return list;
@@ -418,7 +418,7 @@ Hero.prototype.forItem = function (type, item, extra, onTmdb) {
     if (r > 0) meta.push(UI.rating(r));
     if (m && m.year) meta.push(String(m.year));
     if (m && type === 'm' && m.runtime) meta.push(App.durText(m.runtime * 60));
-    if (m && type === 't' && m.seasons) meta.push(m.seasons + (m.seasons === 1 ? ' seizoen' : ' seizoenen'));
+    if (m && type === 't' && m.seasons) meta.push(m.seasons === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: m.seasons }));
     var bd = (m && m.backdrop && Meta.img(m.backdrop, 'w1280')) || U.toArr(item.backdrop_path)[0] || '';
     // Geen backdrop? Dan in elk geval de poster tonen
     var poster = bd ? '' : ((m && m.poster && Meta.img(m.poster, 'w500')) || (type === 'm' ? item.stream_icon : item.cover) || item.icon || '');
@@ -449,8 +449,8 @@ Hero.prototype.forItem = function (type, item, extra, onTmdb) {
 Hero.prototype.forChannel = function (ch) {
     ++this.token;
     var nn = EPG.nowNext(ch.stream_id), plot = '';
-    if (nn && nn.cur) plot = 'Nu: ' + nn.cur.title + (nn.next ? '   ·   Straks ' + U.fmtClock(nn.next.start) + ': ' + nn.next.title : '');
-    this.set({ title: ch.name, meta: ch.num ? ['Zender ' + ch.num] : [], plot: plot, backdrop: '', logo: ch.stream_icon || '' });
+    if (nn && nn.cur) plot = T('Nu: {title}', { title: nn.cur.title }) + (nn.next ? '   ·   ' + T('Straks {time}: {title}', { time: U.fmtClock(nn.next.start), title: nn.next.title }) : '');
+    this.set({ title: ch.name, meta: ch.num ? [T('Zender {num}', { num: ch.num })] : [], plot: plot, backdrop: '', logo: ch.stream_icon || '' });
     var self = this;
     if (!nn) EPG.request(ch.stream_id, 4, function () { if (self.lastCh === ch) self.forChannel(ch); });
     this.lastCh = ch;
@@ -483,12 +483,12 @@ UI.histCard = function (h) {
         sub: App.historyLabel(h),
         image: ep ? UI.wideImage('t', { tmdb: h.series.tmdb }, h.series.icon) : UI.wideImage('m', { tmdb: h.tmdb }, h.icon),
         progress: h.duration ? Math.max(0.02, h.position / h.duration) : 0,
-        tag: h.upNext ? 'Volgende' : ''
+        tag: h.upNext ? T('Volgende') : ''
     });
 };
 UI.heroHistory = function (hero, h) {
     var ep = h.mode === 'episode' && h.series;
-    var extra = Icons.get('play') + '<b>' + (h.upNext ? '' : 'Verder kijken · ') + '</b>' + U.esc(App.historyLabel(h, true));
+    var extra = Icons.get('play') + '<b>' + (h.upNext ? '' : U.esc(T('Verder kijken')) + ' · ') + '</b>' + U.esc(App.historyLabel(h, true));
     var save = function (tid) { Store.patchHistory(h.key, ep ? { seriesTmdb: tid } : { tmdb: tid }); if (hero.onUpdate) hero.onUpdate(); };
     if (ep) hero.forItem('t', { series_id: h.series.id, name: h.series.name, tmdb: h.series.tmdb, cover: h.series.icon }, extra, save);
     else hero.forItem('m', { stream_id: h.id, name: h.name, tmdb: h.tmdb, stream_icon: h.icon }, extra, save);

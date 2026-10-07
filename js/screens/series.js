@@ -33,7 +33,7 @@ Screens.series = {
         this.loadDetails();
         this.seasons.setItems([]);
         this.eps.setItems([]);
-        this.eps.setEmpty('Afleveringen laden…');
+        this.eps.setEmpty(T('Afleveringen laden…'));
         this.setZone('btns');
         Api.seriesInfo(it.series_id).then(function (res) {
             if (self.item !== it) return;
@@ -44,13 +44,13 @@ Screens.series = {
             if (Store.isFav('series', it.series_id)) Follow.track({ id: it.series_id, name: it.name, icon: it.cover }, res);
             self.setInfo(self.data.info);
             self.seasons.setItems(self.data.seasons);
-            self.eps.setEmpty('Geen afleveringen gevonden');
+            self.eps.setEmpty(T('Geen afleveringen gevonden'));
             self.focusTarget();
             self.renderButtons();
         }).catch(function (e) {
             if (self.item !== it) return;
             self.loadFailed = true;
-            self.eps.setEmpty('Laden mislukt: ' + e.message);
+            self.eps.setEmpty(T('Laden mislukt: {error}', { error: e.message }));
             self.renderButtons();
         });
     },
@@ -92,7 +92,7 @@ Screens.series = {
         if (/^\d{4}$/.test(String(year))) meta.push(U.esc(year));
         var genres = det && det.genres.length ? det.genres.slice(0, 3).join(', ') : (inf.genre || it.genre);
         if (genres) meta.push(U.esc(genres));
-        if (this.data) meta.push(this.data.seasons.length + (this.data.seasons.length === 1 ? ' seizoen' : ' seizoenen'));
+        if (this.data) meta.push(this.data.seasons.length === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: this.data.seasons.length }));
         this.metaEl.innerHTML = meta.join('<span class="dot">·</span>');
         this.plotEl.textContent = (det && det.overview) || inf.plot || it.plot || '';
         this.renderButtons();
@@ -123,13 +123,15 @@ Screens.series = {
     renderButtons: function () {
         // Alle knoppen staan er meteen (geen verspringen); wat nog laadt krijgt een spinner
         var self = this, t = this.target(), b = [];
-        if (t) b.push({ id: 'play', icon: 'play', label: (t.upNext ? 'Volgende: ' : t.pos > 30000 ? 'Verder kijken ' : 'Afspelen ') + 'S' + t.ep.season + ' E' + t.ep.episode });
-        else if (!this.data && !this.loadFailed) b.push({ id: 'play', icon: 'play', label: 'Afspelen', loading: true });
+        if (t) {
+            var se = { episode: 'S' + t.ep.season + ' E' + t.ep.episode };
+            b.push({ id: 'play', icon: 'play', label: t.upNext ? T('Volgende: {episode}', se) : t.pos > 30000 ? T('Verder kijken {episode}', se) : T('Afspelen {episode}', se) });
+        } else if (!this.data && !this.loadFailed) b.push({ id: 'play', icon: 'play', label: T('Afspelen'), loading: true });
         var fav = Store.isFav('series', this.item.series_id);
-        b.push({ id: 'fav', icon: fav ? 'check' : 'plus', label: fav ? 'In Mijn lijst' : 'Mijn lijst', on: fav });
-        if (this.det) b.push({ id: 'cast', icon: 'user', label: 'Cast & meer zoals dit' });
-        else if (this.tmdbId && !this.detFailed) b.push({ id: 'cast', icon: 'user', label: 'Cast & meer zoals dit', loading: true });
-        if (this.det && this.det.trailer) b.push({ id: 'trailer', icon: 'film', label: 'Trailer' });
+        b.push({ id: 'fav', icon: fav ? 'check' : 'plus', label: fav ? T('In Mijn lijst') : T('Mijn lijst'), on: fav });
+        if (this.det) b.push({ id: 'cast', icon: 'user', label: T('Cast & meer zoals dit') });
+        else if (this.tmdbId && !this.detFailed) b.push({ id: 'cast', icon: 'user', label: T('Cast & meer zoals dit'), loading: true });
+        if (this.det && this.det.trailer) b.push({ id: 'trailer', icon: 'film', label: T('Trailer') });
         this.btns = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
         this.btnBox.innerHTML = '';
@@ -145,8 +147,8 @@ Screens.series = {
         return U.h('div', { class: 'ep' }, [
             U.img(e.icon || this.cover, 'ep-thumb', e.name),
             U.h('div', { class: 'ep-main' }, [
-                U.h('div', { class: 'ep-title' }, ['E' + e.episode + ' · ' + e.name, Follow.isFresh(this.id, e.id) ? U.h('span', { class: 'ep-new', text: 'NIEUW' }) : null]),
-                U.h('div', { class: 'ep-meta', text: [dur, h ? 'nog ' + U.fmtTime(h.duration - h.position) : ''].filter(Boolean).join('  ·  ') }),
+                U.h('div', { class: 'ep-title' }, ['E' + e.episode + ' · ' + e.name, Follow.isFresh(this.id, e.id) ? U.h('span', { class: 'ep-new', text: T('NIEUW') }) : null]),
+                U.h('div', { class: 'ep-meta', text: [dur, h ? T('nog {time}', { time: U.fmtTime(h.duration - h.position) }) : ''].filter(Boolean).join('  ·  ') }),
                 e.plot ? U.h('div', { class: 'ep-plot', text: e.plot }) : null,
                 h && h.duration ? UI.pbar(h.position / h.duration) : null
             ]),
@@ -175,7 +177,7 @@ Screens.series = {
     askEp: function (e) {
         var self = this, h = Store.progress('episode:' + e.id);
         if (!h || h.position < 30000) return this.playEp(e, 0);
-        Dialog.menu({ title: 'S' + e.season + ' E' + e.episode + ' · ' + e.name, items: [{ id: 'resume', label: 'Hervatten vanaf ' + U.fmtTime(h.position) }, { id: 'start', label: 'Vanaf begin' }] }, function (x) {
+        Dialog.menu({ title: 'S' + e.season + ' E' + e.episode + ' · ' + e.name, items: [{ id: 'resume', label: T('Hervatten vanaf {time}', { time: U.fmtTime(h.position) }) }, { id: 'start', label: T('Vanaf begin') }] }, function (x) {
             if (x) self.playEp(e, x.id === 'resume' ? h.position : 0);
         });
     },

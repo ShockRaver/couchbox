@@ -82,8 +82,8 @@ Screens.player = {
             this.saveT = setInterval(function () { self.saveProgress(); }, 10000);
         }
         this.hintEl.innerHTML = this.live
-            ? '▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer'
-            : '<b>OK</b> pauze · ◀▶ spoelen · ▼ menu (audio, ondertitels)';
+            ? T('▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer')
+            : T('<b>OK</b> pauze · ◀▶ spoelen · ▼ menu (audio, ondertitels)');
         this.buildButtons();
         this.showOsd('info');
         this.tickT = setInterval(function () { self.updateOsd(); }, 500);
@@ -107,9 +107,9 @@ Screens.player = {
             Player.on('state', function (s) { self.onState(s); }),
             Player.on('buffering', function (b) { self.el.classList.toggle('buffering', !!b); }),
             Player.on('error', function (m) {
-                self.setMsg(self.live ? 'Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.' : 'Deze video kan niet worden afgespeeld.\n(' + m + ')');
+                self.setMsg(self.live ? T('Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.') : T('Deze video kan niet worden afgespeeld.\n({error})', { error: m }));
             }),
-            Player.on('retry', function (n) { self.setMsg('Verbinding verbroken – opnieuw verbinden (' + n + ')…'); }),
+            Player.on('retry', function (n) { self.setMsg(T('Verbinding verbroken – opnieuw verbinden ({n})…', { n: n })); }),
             Player.on('ended', function () { self.onEnded(); }),
             Player.on('subtitle', function (t, d) { self.showSub(t, d); })
         ];
@@ -181,13 +181,13 @@ Screens.player = {
         this.oLogo.innerHTML = '';
         this.oLogo.appendChild(U.img(c.stream_icon, 'osd-logo', c.name));
         this.oTitle.textContent = (c.num ? c.num + '   ' : '') + c.name;
-        this.oSub.textContent = Store.isFav('live', c.stream_id) ? '★ Favoriet' : '';
+        this.oSub.textContent = Store.isFav('live', c.stream_id) ? '★ ' + T('Favoriet') : '';
         var nn = EPG.nowNext(c.stream_id), t;
-        if (!nn) t = '<span class="muted">Programmagegevens laden…</span>';
-        else if (!nn.cur && !nn.next) t = '<span class="muted">Geen programmagegevens</span>';
+        if (!nn) t = '<span class="muted">' + T('Programmagegevens laden…') + '</span>';
+        else if (!nn.cur && !nn.next) t = '<span class="muted">' + T('Geen programmagegevens') + '</span>';
         else {
-            t = nn.cur ? '<b>Nu</b> ' + U.fmtClock(nn.cur.start) + '–' + U.fmtClock(nn.cur.end) + '&nbsp;&nbsp;' + U.esc(nn.cur.title) : '';
-            if (nn.next) t += (t ? '<br>' : '') + '<span class="muted"><b>Straks</b> ' + U.fmtClock(nn.next.start) + '&nbsp;&nbsp;' + U.esc(nn.next.title) + '</span>';
+            t = nn.cur ? '<b>' + T('Nu') + '</b> ' + U.fmtClock(nn.cur.start) + '–' + U.fmtClock(nn.cur.end) + '&nbsp;&nbsp;' + U.esc(nn.cur.title) : '';
+            if (nn.next) t += (t ? '<br>' : '') + '<span class="muted"><b>' + T('Straks') + '</b> ' + U.fmtClock(nn.next.start) + '&nbsp;&nbsp;' + U.esc(nn.next.title) + '</span>';
         }
         this.oEpg.innerHTML = t;
         this.liveProg = nn && nn.cur;
@@ -276,8 +276,8 @@ Screens.player = {
         this.overlay = 'next';
         this.nextEp = next;
         var draw = function () {
-            self.nextBox.innerHTML = '<div class="p-next-label">Volgende aflevering</div><div class="p-next-title">S' + next.season + ' E' + next.episode + ' · ' + U.esc(next.name) +
-                '</div><div class="p-next-hint">Start over ' + left + ' s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen</div>';
+            self.nextBox.innerHTML = '<div class="p-next-label">' + T('Volgende aflevering') + '</div><div class="p-next-title">S' + next.season + ' E' + next.episode + ' · ' + U.esc(next.name) +
+                '</div><div class="p-next-hint">' + T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen', { n: left }) + '</div>';
         };
         draw();
         this.nextBox.classList.add('show');
@@ -348,17 +348,17 @@ Screens.player = {
 
     buildButtons: function () {
         var b = [];
-        if (this.live) b.push({ id: 'list', label: 'Zenderlijst', icon: 'list' });
+        if (this.live) b.push({ id: 'list', label: T('Zenderlijst'), icon: 'list' });
         // Vorige zender (de SolarCell-afstandsbediening heeft geen PRE-CH-knop)
-        if (this.live && this.prevCh) b.push({ id: 'prev', label: 'Vorige: ' + this.prevCh.name, icon: 'restart' });
-        b.push({ id: 'audio', label: 'Audio', icon: 'audio' }, { id: 'subs', label: 'Ondertitels', icon: 'subs' });
-        if (this.live) b.push({ id: 'fav', label: 'Favoriet', icon: 'star', on: !!(this.ch && Store.isFav('live', this.ch.stream_id)) });
-        b.push({ id: 'aspect', label: this.ASPECT[Store.settings().aspect] || 'Beeld', icon: 'aspect' });
+        if (this.live && this.prevCh) b.push({ id: 'prev', label: T('Vorige: {name}', { name: this.prevCh.name }), icon: 'restart' });
+        b.push({ id: 'audio', label: T('Audio'), icon: 'audio' }, { id: 'subs', label: T('Ondertitels'), icon: 'subs' });
+        if (this.live) b.push({ id: 'fav', label: T('Favoriet'), icon: 'star', on: !!(this.ch && Store.isFav('live', this.ch.stream_id)) });
+        b.push({ id: 'aspect', label: T(this.ASPECT[Store.settings().aspect] || 'Beeld'), icon: 'aspect' });
         if (!this.live) {
             var inList = this.listTarget() && Store.isFav(this.listTarget().type, this.listTarget().fav.id);
-            b.push({ id: 'mylist', label: inList ? 'In Mijn lijst' : 'Mijn lijst', icon: inList ? 'check' : 'plus', on: inList });
+            b.push({ id: 'mylist', label: inList ? T('In Mijn lijst') : T('Mijn lijst'), icon: inList ? 'check' : 'plus', on: inList });
         }
-        if (this.nextEpisode()) b.push({ id: 'next', label: 'Volgende aflevering', icon: 'next' });
+        if (this.nextEpisode()) b.push({ id: 'next', label: T('Volgende aflevering'), icon: 'next' });
         this.buttons = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
         this.drawButtons();
@@ -406,12 +406,12 @@ Screens.player = {
 
     audioMenu: function () {
         var tr = Player.tracks('AUDIO');
-        if (!tr.length) { Toast.show('Geen audiosporen gevonden in deze stream'); return; }
+        if (!tr.length) { Toast.show(T('Geen audiosporen gevonden in deze stream')); return; }
         var cur = Player.currentTrack('AUDIO');
         var self = this;
-        Dialog.menu({ title: 'Audiospoor', items: tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: t.index === cur }; }) }, function (it) {
+        Dialog.menu({ title: T('Audiospoor'), items: tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: t.index === cur }; }) }, function (it) {
             if (it && Player.selectTrack('AUDIO', it.id)) {
-                Toast.show('Audio: ' + it.label + (self.p.series && self.mode === 'episode' ? ' (onthouden voor deze serie)' : ''));
+                Toast.show(self.p.series && self.mode === 'episode' ? T('Audio: {track} (onthouden voor deze serie)', { track: it.label }) : T('Audio: {track}', { track: it.label }));
                 self.rememberTrack('audio', it.lang);
             }
         });
@@ -419,14 +419,14 @@ Screens.player = {
 
     subsMenu: function () {
         var tr = Player.tracks('TEXT');
-        if (!tr.length) { Toast.show('Deze stream bevat geen ondertitels'); return; }
+        if (!tr.length) { Toast.show(T('Deze stream bevat geen ondertitels')); return; }
         var on = Player.subtitlesActive(), cur = on ? Player.currentTrack('TEXT') : -1;
         var self = this;
-        var items = [{ id: -1, label: 'Uit', lang: 'off', checked: !on }].concat(tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: on && t.index === cur }; }));
-        Dialog.menu({ title: 'Ondertitels', items: items }, function (it) {
+        var items = [{ id: -1, label: T('Uit'), lang: 'off', checked: !on }].concat(tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: on && t.index === cur }; }));
+        Dialog.menu({ title: T('Ondertitels'), items: items }, function (it) {
             if (!it) return;
-            if (it.id === -1) { Player.subtitlesOff(); Toast.show('Ondertitels uit'); self.rememberTrack('sub', 'off'); }
-            else if (Player.selectTrack('TEXT', it.id)) { Toast.show('Ondertitels: ' + it.label); self.rememberTrack('sub', it.lang); }
+            if (it.id === -1) { Player.subtitlesOff(); Toast.show(T('Ondertitels uit')); self.rememberTrack('sub', 'off'); }
+            else if (Player.selectTrack('TEXT', it.id)) { Toast.show(T('Ondertitels: {track}', { track: it.label })); self.rememberTrack('sub', it.lang); }
         });
     },
 
@@ -435,7 +435,7 @@ Screens.player = {
         var n = order[(order.indexOf(cur) + 1) % order.length];
         Store.setSetting('aspect', n);
         Player.applyAspect();
-        Toast.show('Beeld: ' + this.ASPECT[n]);
+        Toast.show(T('Beeld: {mode}', { mode: T(this.ASPECT[n]) }));
         this.buildButtons();
     },
 
@@ -443,7 +443,7 @@ Screens.player = {
         c = c || this.ch;
         if (!c) return;
         var added = Store.toggleFav('live', App.favFromCh(c));
-        Toast.show(added ? '★ ' + c.name + ' toegevoegd aan favorieten' : c.name + ' verwijderd uit favorieten');
+        Toast.show(added ? T('★ {name} toegevoegd aan favorieten', { name: c.name }) : T('{name} verwijderd uit favorieten', { name: c.name }));
         this.buildButtons();
         this.fillLive();
     },
@@ -459,7 +459,7 @@ Screens.player = {
     showList: function () {
         this.hideOsd();
         this.overlay = 'list';
-        this.listTitle.textContent = 'Zenders (' + this.list.length + ')';
+        this.listTitle.textContent = T('Zenders ({n})', { n: this.list.length });
         this.listBox.classList.add('show');
         this.chList.setActive(true);
         this.chList.setItems(this.list, this.idx);
@@ -500,12 +500,12 @@ Screens.player = {
             if (i >= 0) { self.idx = i; self.tune(self.list[i]); self.showOsd('info'); return; }
             Api.liveStreams().then(function (all) {
                 var j = all.findIndex(function (c) { return String(c.num) === num; });
-                if (j < 0) { Toast.show('Zender ' + num + ' niet gevonden'); return; }
+                if (j < 0) { Toast.show(T('Zender {num} niet gevonden', { num: num })); return; }
                 self.list = all;
                 self.idx = j;
                 self.tune(all[j]);
                 self.showOsd('info');
-            }).catch(function () { Toast.show('Zender ' + num + ' niet gevonden'); });
+            }).catch(function () { Toast.show(T('Zender {num} niet gevonden', { num: num })); });
         }, 1300);
     },
 

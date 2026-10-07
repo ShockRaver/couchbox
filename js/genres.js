@@ -37,6 +37,7 @@ var Genres = (function () {
     var BY_ID = {};
     LIST.forEach(function (g) { BY_ID[g.id] = g; });
 
+    // Namen blijven Nederlands (sleutels voor de vertaling); langName vertaalt bij het tonen
     var LANG_NAMES = { NL: 'Nederlands', BE: 'België', EN: 'Engels', MULTI: 'Meertalig', DE: 'Duits', FR: 'Frans', ES: 'Spaans', IT: 'Italiaans', TR: 'Turks', AR: 'Arabisch', ASIA: 'Aziatisch', GR: 'Grieks', UK: 'Brits', USA: 'Amerikaans', US: 'Amerikaans' };
     var DEFAULT_LANGS = ['NL', 'BE', 'MULTI', 'EN'];
 
@@ -199,7 +200,7 @@ var Genres = (function () {
     function seriesItems(genreId, cats) { return indexed('t', genreId, cats); }
 
     function reset() { built = { m: null, t: null }; }
-    function langName(code) { return LANG_NAMES[code] || code; }
+    function langName(code) { return LANG_NAMES[code] ? T(LANG_NAMES[code]) : code; }
 
     return {
         LIST: LIST, byId: function (id) { return BY_ID[id]; }, match: match, splitName: splitName,

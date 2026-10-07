@@ -22,6 +22,10 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Multiple profiles** (several servers/subscriptions), stored locally on the TV
 - **PIN lock** for settings, and a filter that hides 18+ categories
 
+**Languages**
+- English (default) and Dutch, chosen under *Settings → Language*. TMDB data (descriptions, titles, genres, biographies, collections, search) follows the same language; after switching, titles are refreshed in the background.
+- In the code the Dutch text is the key: `T('Verder kijken')`, with the English in `js/lang/en.js`. Check with `node scripts/i18n-check.js` (missing translations and texts outside `T()`).
+
 **Search**
 - Own on-screen keyboard on the left, results on the right (no Samsung keyboard pop-up)
 - Searches the provider's names **and** the Dutch and original TMDB titles
@@ -127,10 +131,13 @@ js/epg.js               EPG cache + queue (only fetches visible channels)
 js/vlist.js             virtual list/grid with focus handling
 js/ui.js                icons, cards, rows, top menu, hero banner
 js/storage.js           localStorage: profiles, settings, favourites, history
+js/i18n.js              translations (T()), dates and numbers per language; js/lang/en.js = English dictionary
 js/screens/*.js         screens (home, section, live, guide, catalog, movie, series, person, search, settings, player, …)
 js/demo.js              demo server ("demo") for testing without a subscription
 scripts/deploy.sh       package + sign + install on the TV
 scripts/serve.py        local test server without caching
+scripts/i18n-check.js   checks translations
+tests/drive.mjs         headless Chrome test runner (steps in JSON, screenshots); tests/setup-demo.js = demo profile with history
 scripts/make-icon.js    generates icon.png
 ```
 
