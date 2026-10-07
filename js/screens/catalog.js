@@ -101,7 +101,7 @@ Screens.catalog = {
         else if (cat.genre) {
             // Series-genres hebben de volledige serielijst nodig; de eerste keer duurt dat even
             this.setStatus(movie && !Tmdb.hasData('m') ? T('Laden…') : T('Genres opbouwen… (de eerste keer kan dit even duren)'));
-            p = movie ? Genres.movieItems(cat.genre, this.cats_raw) : Genres.seriesItems(cat.genre, this.cats_raw);
+            p = movie ? Genres.movieItems(cat.genre, this.cats_raw, true) : Genres.seriesItems(cat.genre, this.cats_raw, true);
         }
         else p = movie ? Api.vodStreams(cat.id === 'all' ? null : cat.id) : Api.series(cat.id === 'all' ? null : cat.id);
         p.then(function (items) {

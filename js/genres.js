@@ -114,14 +114,16 @@ var Genres = (function () {
         return LIST.filter(function (g) { return count[g.id]; });
     }
 
-    function movieItems(genreId, cats) {
+    // ranked: op score (Rank) in plaats van nieuwst toegevoegd
+    function movieItems(genreId, cats, ranked) {
+        var light = function () { return byCategory(genreId, cats).then(function (l) { return ranked ? Rank.sort('m', l) : l; }); };
         // Met TMDB-gegevens én de volledige filmlijst al binnen: complete indeling (categorieën + TMDB)
         if (Tmdb.hasData('m') && Api.loaded('vs:*')) {
-            return indexed('m', genreId, cats).catch(function () { return byCategory(genreId, cats); });
+            return indexed('m', genreId, cats, ranked).catch(light);
         }
         // Anders meteen de categorieën met dit genre tonen, en de volledige lijst op de achtergrond laden
         if (Tmdb.hasData('m')) Api.vodStreams(null).catch(function () { /* volgende keer opnieuw */ });
-        return byCategory(genreId, cats);
+        return light();
     }
 
     // Licht: alleen de categorieën met dit genre in de naam laden
@@ -164,6 +166,7 @@ var Genres = (function () {
         }).then(function () {
             list = Object.keys(best).map(function (k) { return best[k].it; });
             return U.each(list, function (s) {
+                s._r = Rank.base(type, s);   // score voor de volgorde in genre-rijen (zie rank.js)
                 var gs = type === 't' ? match(String(s.genre || '').replace(/[,/|]/g, ' , ')) : [];
                 App.catIds(s).forEach(function (id) { if (info[id]) gs = gs.concat(info[id].genres); });
                 var tg = Tmdb.genres(type, s);
@@ -174,7 +177,12 @@ var Genres = (function () {
         }).then(function () {
             idx['*'] = list;
             var keys = Object.keys(idx);
-            return U.each(keys, function (g) { idx[g].sort(function (a, b) { return b._t - a._t; }); }, 1);
+            // Per genre twee volgordes: nieuwst toegevoegd (idx[g]) en op score (idx['~'][g], voor de genre-rijen)
+            var rk = {};
+            return U.each(keys, function (g) {
+                idx[g].sort(function (a, b) { return b._t - a._t; });
+                rk[g] = idx[g].slice().sort(function (a, b) { return b._r - a._r; });
+            }, 1).then(function () { idx['~'] = rk; });
         }).then(function () { return idx; });
     }
 
@@ -195,9 +203,15 @@ var Genres = (function () {
             return old || e.p;
         });
     }
-    function indexed(type, genreId, cats) { return index(type, cats).then(function (idx) { return idx[genreId] || []; }); }
+    function indexed(type, genreId, cats, ranked) {
+        return index(type, cats).then(function (idx) {
+            if (!ranked) return idx[genreId] || [];
+            return (idx['~'] && idx['~'][genreId]) || Rank.sort(type, idx[genreId] || []);
+        });
+    }
 
-    function seriesItems(genreId, cats) { return indexed('t', genreId, cats); }
+    // ranked: op score (Rank) in plaats van nieuwst toegevoegd
+    function seriesItems(genreId, cats, ranked) { return indexed('t', genreId, cats, ranked); }
 
     function reset() { built = { m: null, t: null }; }
     function langName(code) { return LANG_NAMES[code] ? T(LANG_NAMES[code]) : code; }

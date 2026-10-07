@@ -91,15 +91,16 @@ Screens.section = {
         if (Reco.stale(kind)) Reco.refresh(kind).then(put);
     },
 
-    // Eén rij per genre (achter elkaar geladen, zodat de volgorde vast is); plus "Nieuw toegevoegd" als de volledige lijst er is
+    // Eén rij per genre (achter elkaar geladen, zodat de volgorde vast is); plus "Nieuw toegevoegd" als de volledige lijst er is.
+    // Volgorde per rij via Rank: recent uitgekomen, goed gewaardeerd en bekend eerst, en niet vooraan in meerdere rijen.
     addGenres: function (cats, my) {
-        var self = this, movie = this.mode === 'movie', type = this.type;
+        var self = this, movie = this.mode === 'movie', type = this.type, used = {};
         var genres = movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return Screens.catalog.SERIES_GENRES.indexOf(g.id) >= 0; });
         var add = function (id, title, items) {
             if (my !== self.token || !items.length) return;
             var st = self.rows.state(), first = !self.rows.rows.length;
             self.rows.add({
-                id: id, title: title, items: items.slice(0, self.ROW_MAX), itemW: 184, itemH: 320,
+                id: id, title: title, items: items, itemW: 184, itemH: 320,
                 render: function (it) { return UI.libCard(type, it, { small: true }); },
                 onSelect: function (it) { UI.openLib(type, it); }
             });
@@ -109,15 +110,15 @@ Screens.section = {
         };
         // Series: de volledige lijst is toch nodig voor de genres, dus ook "Nieuw toegevoegd"
         var start = movie && !Api.loaded('vs:*') ? Promise.resolve() : Genres.all(this.type, cats).then(function (list) {
-            add('new', T('Nieuw toegevoegd'), list);
+            add('new', T('Nieuw toegevoegd'), Rank.recent(type, list, used, self.ROW_MAX));
         }).catch(function () { /* geen "nieuw" */ });
         // Tussen de rijen even ruimte geven aan de TV (tekenen, toetsen), anders hapert het scherm
         var pause = function () { return new Promise(function (r) { setTimeout(r, 0); }); };
         return genres.reduce(function (chain, g) {
             return chain.then(pause).then(function () {
                 if (my !== self.token) return;
-                return (movie ? Genres.movieItems(g.id, cats) : Genres.seriesItems(g.id, cats))
-                    .then(function (items) { add('g:' + g.id, T(g.name), items); })
+                return (movie ? Genres.movieItems(g.id, cats, true) : Genres.seriesItems(g.id, cats, true))
+                    .then(function (items) { add('g:' + g.id, T(g.name), Rank.row(type, items, used, self.ROW_MAX)); })
                     .catch(function () { /* genre overslaan */ });
             });
         }, start);
