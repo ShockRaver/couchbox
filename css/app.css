@@ -232,6 +232,10 @@ b { font-weight: 700; }
 .ch-name { font-size: 27px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-now { font-size: 21px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 2px 0 6px; }
 .ch-fav { color: var(--gold); font-size: 26px; display: flex; }
+/* Verplaatsen (zenderbeheer): oranje rand en pijltjes */
+.cat.moving, .ch-row.moving { box-shadow: inset 0 0 0 4px var(--accent) !important; }
+.cat.moving .cat-ic, .ch-move { color: var(--accent); display: flex; }
+.ch-row.focus .ch-move { color: var(--focus-ink); }
 .ch-live { color: var(--accent); font-size: 22px; display: flex; }
 .ch-row.playing .ch-name { color: var(--accent); }
 .ch-row.sel { background: var(--panel2); box-shadow: inset 4px 0 0 var(--accent); }
@@ -582,6 +586,10 @@ b { font-weight: 700; }
 .dlg-text .sk-keys { margin: 8px 0 6px; }
 .dlg-text .sk-key { background: var(--panel2); }
 .dlg-text .sk-key.focus { background: var(--focus); color: var(--focus-ink); }
+/* Adres-toetsenbord heeft meer rijen: lagere toetsen; lange adressen lopen naar links weg */
+.dlg-text.url .sk-key { height: 54px; font-size: 26px; }
+.dlg-text.url .sk-key.wide { font-size: 21px; }
+.dlg-text.url .sk-query { font-size: 26px; justify-content: flex-end; }
 .dlg-query { margin-bottom: 18px; font-size: 32px; }
 .dlg-text .btn.focus { transform: none; }
 

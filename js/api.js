@@ -128,6 +128,13 @@ var Api = (function () {
     // Volledige gids van één zender (meerdere dagen vooruit)
     function fullEpg(id) { return request({ action: 'get_simple_data_table', stream_id: id }, 20000); }
 
+    // Volledige XMLTV-gids van de provider (voor de tv-gids; in de demo een nagemaakte gids)
+    function xmltvUrl() {
+        if (!prof) return '';
+        if (isDemo()) return 'demo:xmltv';
+        return base + '/xmltv.php?username=' + enc(prof.username) + '&password=' + enc(prof.password);
+    }
+
     // ---- Stream-URL's ----
     function path(kind, id, ext) {
         return base + '/' + kind + '/' + enc(prof.username) + '/' + enc(prof.password) + '/' + id + '.' + ext;
@@ -147,7 +154,7 @@ var Api = (function () {
         account: function () { return account; }, profile: function () { return prof; },
         liveCategories: liveCategories, liveStreams: liveStreams,
         vodCategories: vodCategories, vodStreams: vodStreams, vodInfo: vodInfo,
-        seriesCategories: seriesCategories, series: series, seriesInfo: seriesInfo, shortEpg: shortEpg, fullEpg: fullEpg,
+        seriesCategories: seriesCategories, series: series, seriesInfo: seriesInfo, shortEpg: shortEpg, fullEpg: fullEpg, xmltvUrl: xmltvUrl,
         loaded: loaded, liveUrl: liveUrl, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
     };
 })();

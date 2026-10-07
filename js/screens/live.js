@@ -42,35 +42,34 @@ Screens.live = {
     },
 
     setup: function (cats, streams, p) {
-        var self = this, adult = App.adultIds(cats), counts = {};
-        this.all = adult ? streams.filter(function (s) { return !App.inCats(s, adult); }) : streams;
-        this.byId = {};
-        this.all.forEach(function (s) {
-            self.byId[s.stream_id] = s;
-            App.catIds(s).forEach(function (id) { counts[id] = (counts[id] || 0) + 1; });
-        });
-        var list = [{ id: 'all', name: T('Alle zenders'), count: this.all.length }, { id: 'fav', name: T('Favorieten'), count: Store.favorites('live').length }];
-        cats.forEach(function (c) {
-            var id = String(c.category_id);
-            if (counts[id]) list.push({ id: id, name: c.category_name, count: counts[id] });
-        });
-        this.catList = list;
-        var saved = p.cat || Store.liveCat();
-        var ci = list.findIndex(function (c) { return c.id === saved; });
-        if (ci < 0) ci = Store.favorites('live').length ? 1 : 0;
-        this.cats.setItems(list, ci);
-        this.chans.setEmpty(T('Geen zenders in deze categorie'));
-        this.loadCat(list[ci]);
+        this.src = [cats, streams];
+        this.applyLineup(p.cat || Store.liveCat());
         this.setZone('chans');
+    },
+
+    // Groepen en zenders (opnieuw) opbouwen via Lineup (verborgen, eigen volgorde, eigen lijsten).
+    // catId = welke groep tonen, focusId = welke zender selecteren
+    applyLineup: function (catId, focusId) {
+        var L = Lineup.build(this.src[0], this.src[1]);
+        this.all = L.all;
+        this.byId = L.byId;
+        var list = L.groups;
+        list.forEach(function (g) { g.count = g.n; });
+        this.catList = list;
+        // Opgeslagen id van voor de zenderindeling (zonder 'c:')
+        if (catId && !/^(all$|fav$|l:|c:)/.test(catId)) catId = 'c:' + catId;
+        var ci = list.findIndex(function (c) { return c.id === catId; });
+        if (ci < 0) ci = Store.favorites('live').length ? 1 : 0;
+        this.cats.setItems(list, ci, true);
+        this.chans.setEmpty(T('Geen zenders in deze categorie'));
+        this.loadCat(list[ci], focusId);
     },
 
     loadCat: function (cat, focusId) {
         var self = this, items;
         this.cat = cat;
         Store.setLiveCat(cat.id);
-        if (cat.id === 'all') items = this.all;
-        else if (cat.id === 'fav') items = Store.favorites('live').map(function (f) { return self.byId[f.id] || App.chFromFav(f); });
-        else items = this.all.filter(function (s) { return App.catIds(s).indexOf(cat.id) >= 0; });
+        items = cat.items();
         this.items = items;
         var m = Player.meta(), last = Store.lastChannel();
         var pid = focusId != null ? focusId : (Player.url() && m ? m.stream_id : (last ? last.stream_id : null));
@@ -93,17 +92,9 @@ Screens.live = {
             Player.setRect(this.preview.getBoundingClientRect());
             this.setPreviewMsg(Player.state());
         } else this.setPreviewMsg('idle');
-        this.catList[1].count = Store.favorites('live').length;
-        this.cats.refresh();
-        if (this.cat.id === 'fav') this.loadCat(this.cat);
-        else {
-            if (m) {
-                var j = this.items.findIndex(function (s) { return String(s.stream_id) === String(m.stream_id); });
-                if (j >= 0) this.chans.focus(j);
-            }
-            this.chans.refresh();
-            this.updateInfo();
-        }
+        // Favorieten of lijsten kunnen in de speler gewijzigd zijn: opnieuw opbouwen, focus op de spelende zender
+        var cur = this.chans.current();
+        this.applyLineup(this.cat.id, Player.url() && m ? m.stream_id : cur && cur.stream_id);
     },
 
     hide: function () {
@@ -135,8 +126,10 @@ Screens.live = {
     },
 
     renderCat: function (c) {
-        return U.h('div', { class: 'cat' }, [
-            c.id === 'fav' ? U.h('span', { class: 'cat-ic', html: Icons.get('star') }) : null,
+        var moving = this.moving === 'cat' && c === this.cats.current();
+        return U.h('div', { class: 'cat' + (moving ? ' moving' : '') }, [
+            moving ? U.h('span', { class: 'cat-ic', html: Icons.get('move') }) : c.id === 'fav' ? U.h('span', { class: 'cat-ic', html: Icons.get('star') })
+                : c.kind === 'list' ? U.h('span', { class: 'cat-ic', html: Icons.get('list') }) : null,
             U.h('span', { class: 'cat-name', text: c.name }),
             U.h('span', { class: 'cnt', text: c.count != null ? String(c.count) : '' })
         ]);
@@ -151,12 +144,14 @@ Screens.live = {
             main.appendChild(U.h('div', { class: 'ch-now', text: nn.cur.title }));
             main.appendChild(UI.pbar(UI.frac(nn.cur)));
         }
-        return U.h('div', { class: 'ch-row' + (playing ? ' playing' : '') }, [
+        var moving = this.moving === 'ch' && s === this.chans.current();
+        return U.h('div', { class: 'ch-row' + (playing ? ' playing' : '') + (moving ? ' moving' : '') }, [
             U.h('div', { class: 'ch-num', text: s.num != null ? String(s.num) : '' }),
             U.img(s.stream_icon, 'ch-logo', s.name),
             main,
             Store.isFav('live', s.stream_id) ? U.h('div', { class: 'ch-fav', html: Icons.get('star') }) : null,
-            playing ? U.h('div', { class: 'ch-live', html: Icons.get('play') }) : null
+            playing ? U.h('div', { class: 'ch-live', html: Icons.get('play') }) : null,
+            moving ? U.h('div', { class: 'ch-move', html: Icons.get('move') }) : null
         ]);
     },
 
@@ -229,6 +224,7 @@ Screens.live = {
 
     onKey: function (k) {
         if (!this.catList) return false;
+        if (this.moving) return this.keyMove(k);
         if (Keys.isDigit(k)) { this.numInput(k); return true; }
         if (this.zone === 'cats') {
             switch (k) {
@@ -236,7 +232,8 @@ Screens.live = {
                     if (this.cats.move(k)) this.schedCat(); else if (k === 'up') this.navFocus(true);
                     return true;
                 case 'chup': case 'chdown': this.cats.page(k === 'chup' ? -1 : 1); this.schedCat(); return true;
-                case 'right': case 'ok': case 'longok':
+                case 'longok': case 'red': this.flushCat(); this.catMenu(); return true;
+                case 'right': case 'ok':
                     this.flushCat();
                     if (this.items.length) this.setZone('chans');
                     return true;
@@ -278,28 +275,135 @@ Screens.live = {
     contextMenu: function () {
         var self = this, s = this.chans.current();
         if (!s) return;
-        var fav = Store.isFav('live', s.stream_id);
-        Dialog.menu({
-            title: s.name,
-            items: [
-                { id: 'play', label: T('Volledig scherm afspelen') },
-                { id: 'fav', label: fav ? T('Verwijderen uit favorieten') : T('Toevoegen aan favorieten') },
-                { id: 'guide', label: T('TV-gids voor deze categorie') }
-            ]
-        }, function (it) {
+        var fav = Store.isFav('live', s.stream_id), c = this.cat;
+        var items = [
+            { id: 'play', label: T('Volledig scherm afspelen') },
+            { id: 'fav', label: fav ? T('Verwijderen uit favorieten') : T('Toevoegen aan favorieten') },
+            { id: 'lists', label: T('Zenderlijsten…'), hint: Lineup.lists().filter(function (l) { return Lineup.inList(l.id, s.stream_id); }).map(function (l) { return l.name; }).join(', ') }
+        ];
+        if ((c.kind === 'fav' || c.kind === 'list') && this.items.length > 1) items.push({ id: 'move', label: T('Verplaatsen') });
+        if (c.kind === 'list') items.push({ id: 'unlist', label: T('Verwijderen uit {name}', { name: c.name }) });
+        items.push({ id: 'hide', label: T('Zender verbergen') }, { id: 'guide', label: T('TV-gids voor deze categorie') });
+        Dialog.menu({ title: s.name, items: items }, function (it) {
             if (!it) return;
             if (it.id === 'play') self.activate(true);
             else if (it.id === 'fav') self.toggleFav(s);
+            else if (it.id === 'lists') self.listsMenu(s);
+            else if (it.id === 'move') self.startMove('ch');
+            else if (it.id === 'unlist') { Lineup.toggleInList(c.listId, s); self.applyLineup(c.id, self.neighbour()); }
+            else if (it.id === 'hide') {
+                var next = self.neighbour();
+                Lineup.hideChannel(s.stream_id, true);
+                Toast.show(T('{name} verborgen; terugzetten kan in Instellingen', { name: s.name }), 4000);
+                self.applyLineup(c.id, next);
+            }
             else if (it.id === 'guide') self.openGuide();
         });
+    },
+    // Zender naast de huidige (om na verbergen/verwijderen daarop te staan)
+    neighbour: function () {
+        var i = this.chans.index, x = this.items[i + 1] || this.items[i - 1];
+        return x ? x.stream_id : null;
+    },
+
+    // Zender in eigen lijsten zetten of eruit halen; of een nieuwe lijst maken
+    listsMenu: function (s) {
+        var self = this, ls = Lineup.lists();
+        var items = ls.map(function (l) { return { id: l.id, label: l.name, checked: Lineup.inList(l.id, s.stream_id) }; });
+        items.push({ id: '_new', label: T('Nieuwe zenderlijst…') });
+        Dialog.menu({ title: T('Zenderlijsten'), text: T('Kies een lijst om {name} toe te voegen of te verwijderen.', { name: s.name }), index: 0, items: items }, function (it) {
+            if (!it) return;
+            if (it.id === '_new') { self.newList(s); return; }
+            var added = Lineup.toggleInList(it.id, s);
+            Toast.show(added ? T('{name} toegevoegd aan {list}', { name: s.name, list: it.label }) : T('{name} verwijderd uit {list}', { name: s.name, list: it.label }));
+            self.applyLineup(self.cat.id, s.stream_id);
+        });
+    },
+    newList: function (s) {
+        var self = this;
+        Dialog.text({ title: T('Nieuwe zenderlijst'), text: T('Bijvoorbeeld Sport, Kids of Nieuws'), okLabel: T('Maken') }, function (v) {
+            if (!v || !v.trim()) return;
+            var l = Lineup.addList(v.trim());
+            if (s) {
+                Lineup.toggleInList(l.id, s);
+                Toast.show(T('{name} toegevoegd aan {list}', { name: s.name, list: l.name }));
+                self.applyLineup(self.cat.id, s.stream_id);
+            } else self.applyLineup('l:' + l.id);
+        });
+    },
+
+    // Opties voor een groep: verplaatsen, verbergen; eigen lijst: naam wijzigen, verwijderen
+    catMenu: function () {
+        var self = this, c = this.cats.current();
+        if (!c) return;
+        var items = [];
+        if (c.kind === 'cat') items.push({ id: 'move', label: T('Verplaatsen') }, { id: 'hide', label: T('Groep verbergen') });
+        if (c.kind === 'list') {
+            items.push({ id: 'rename', label: T('Naam wijzigen') });
+            if (Lineup.lists().length > 1) items.push({ id: 'move', label: T('Verplaatsen') });
+            items.push({ id: 'del', label: T('Lijst verwijderen'), danger: true });
+        }
+        items.push({ id: 'new', label: T('Nieuwe zenderlijst…') });
+        Dialog.menu({ title: c.name, items: items }, function (it) {
+            if (!it) return;
+            var here = self.cat.id === c.id;
+            if (it.id === 'move') self.startMove('cat');
+            else if (it.id === 'hide') {
+                Lineup.hideCat(c.catId, true);
+                Toast.show(T('{name} verborgen; terugzetten kan in Instellingen', { name: c.name }), 4000);
+                self.applyLineup(here ? 'all' : self.cat.id);
+            }
+            else if (it.id === 'rename') Dialog.text({ title: T('Naam van de lijst'), value: c.name }, function (v) {
+                if (v && v.trim()) { Lineup.renameList(c.listId, v.trim()); self.applyLineup(self.cat.id); }
+            });
+            else if (it.id === 'del') Dialog.confirm(T('Lijst "{name}" verwijderen?', { name: c.name }), T('De zenders zelf blijven gewoon bestaan.'), function (yes) {
+                if (yes) { Lineup.deleteList(c.listId); self.applyLineup(here ? 'fav' : self.cat.id); }
+            }, T('Verwijderen'));
+            else if (it.id === 'new') self.newList(null);
+        });
+    },
+
+    // ---- Verplaatsen: ▲▼ schuift de groep of zender, OK of Terug = klaar ----
+    startMove: function (what) {
+        this.moving = what;   // 'cat' | 'ch'
+        this.setZone(what === 'cat' ? 'cats' : 'chans');
+        this.cats.refresh();
+        this.chans.refresh();
+        Toast.show(T('▲▼ verplaatsen · OK klaar'), 3000);
+    },
+    keyMove: function (k) {
+        var L = this.moving === 'cat' ? this.cats : this.chans, i = L.index, items = L.items;
+        if (k === 'up' || k === 'down') {
+            var j = i + (k === 'up' ? -1 : 1);
+            // Groepen alleen tussen hun eigen soort (categorieën onder elkaar, eigen lijsten onder elkaar)
+            if (j < 0 || j >= items.length || (this.moving === 'cat' && items[j].kind !== items[i].kind)) return true;
+            var x = items[i]; items[i] = items[j]; items[j] = x;
+            L.setItems(items, j, true);
+        } else if (k === 'ok' || k === 'back' || k === 'longok') this.endMove();
+        return true;
+    },
+    endMove: function () {
+        var what = this.moving, c;
+        this.moving = null;
+        if (what === 'cat') {
+            c = this.cats.current();
+            if (c.kind === 'list') Lineup.orderLists(this.cats.items.filter(function (x) { return x.kind === 'list'; }).map(function (x) { return x.id; }));
+            else Lineup.setOrder(this.cats.items.filter(function (x) { return x.kind === 'cat'; }).map(function (x) { return x.catId; }));
+            this.applyLineup(this.cat.id);
+            this.cats.focus(this.catList.findIndex(function (x) { return x.id === c.id; }));
+            this.setZone('cats');
+        } else {
+            var s = this.chans.current();
+            Lineup.reorder(this.cat.id, this.chans.items.map(function (x) { return x.stream_id; }));
+            this.applyLineup(this.cat.id, s && s.stream_id);
+        }
+        Toast.show(T('Volgorde bewaard'));
     },
 
     toggleFav: function (s) {
         var added = Store.toggleFav('live', App.favFromCh(s));
         Toast.show(added ? T('★ {name} toegevoegd aan favorieten', { name: s.name }) : T('{name} verwijderd uit favorieten', { name: s.name }));
-        this.catList[1].count = Store.favorites('live').length;
-        this.cats.refresh();
-        if (this.cat.id === 'fav') this.loadCat(this.cat); else { this.chans.refresh(); this.updateInfo(); }
+        this.applyLineup(this.cat.id, this.cat.id === 'fav' && !added ? this.neighbour() : s.stream_id);
     },
 
     openGuide: function () {

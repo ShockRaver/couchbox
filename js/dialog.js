@@ -54,7 +54,8 @@ var Dialog = (function () {
         return d;
     }
 
-    // Tekst invoeren met het toetsenbord op het scherm. o: {title, text, value, placeholder, okLabel}; cb(tekst|null)
+    // Tekst invoeren met het toetsenbord op het scherm. o: {title, text, value, placeholder, okLabel, url}; cb(tekst|null)
+    // url: true = toetsenbord met hoofdletters en leestekens (internetadressen)
     function text(o, cb) {
         var value = o.value || '', btnIdx = 0, zone = 'keys';
         var shown = U.h('span', { class: 'sk-text' });
@@ -65,12 +66,12 @@ var Dialog = (function () {
             else if (id === 'clear') value = '';
             else value += id;
             draw();
-        });
+        }, o.url ? Keyboard.URL : null);
         var btns = [{ id: 'ok', label: o.okLabel || T('Opslaan') }, { id: 'cancel', label: T('Annuleren') }].map(function (b) {
             b.el = U.h('div', { class: 'btn', text: b.label });
             return b;
         });
-        var box = U.h('div', { class: 'dialog dlg-text' }, [
+        var box = U.h('div', { class: 'dialog dlg-text' + (o.url ? ' url' : '') }, [
             U.h('h2', { text: o.title || '' }),
             o.text ? U.h('p', { class: 'dialog-text', text: o.text }) : null,
             field, kb.el,

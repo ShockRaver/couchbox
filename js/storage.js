@@ -25,7 +25,9 @@ var Store = (function () {
     // ---- Instellingen (gelden voor alle profielen) ----
     var DEFAULTS = {
         lang: 'en',
-        trailer: 'app',         // trailers: 'app' (in Kijkdoos) | 'youtube' (YouTube-app van de TV)             // taal van de app en van TMDB-gegevens: 'en' | 'nl'
+        // taal van de app en van TMDB-gegevens: 'en' | 'nl'
+        trailer: 'app',         // trailers: 'app' (in Kijkdoos) | 'youtube' (YouTube-app van de TV)
+        autoNext: 'on',         // na een aflevering: 'on' (volgende na 10 s) | 'ask' (vragen, niet vanzelf) | 'off' (terug naar de serie)
         startup: 'none',        // bij opstarten: 'none' (startscherm) | 'live' (laatste zender) | 'ask' (verder kijken?)
         liveFormat: 'm3u8',     // 'm3u8' (HLS) of 'ts'
         audioLang: 'nl',        // 'auto' | 'nl' | 'en'
@@ -56,7 +58,7 @@ var Store = (function () {
     }
     function deleteProfile(id) {
         set('profiles', profiles().filter(function (p) { return p.id !== id; }));
-        ['fav', 'hist', 'last', 'livecat', 'seen', 'follow'].forEach(function (k) { del('p.' + id + '.' + k); });
+        ['fav', 'hist', 'last', 'livecat', 'seen', 'follow', 'lineup', 'guideGroup'].forEach(function (k) { del('p.' + id + '.' + k); });
         if (get('active', null) === id) del('active');
     }
     function setActive(id) { set('active', id); }
@@ -80,6 +82,12 @@ var Store = (function () {
         all[type] = list;
         set(pk('fav'), all);
         return i < 0; // true = toegevoegd
+    }
+    // Volgorde aanpassen (zenderbeheer)
+    function setFavorites(type, list) {
+        var all = Object.assign({ live: [], movie: [], series: [] }, favs());
+        all[type] = list;
+        set(pk('fav'), all);
     }
 
     // ---- Verder kijken ----
@@ -126,7 +134,7 @@ var Store = (function () {
         setP: function (k, v) { return set(pk(k), v); },
         settings: settings, setSetting: setSetting,
         profiles: profiles, activeProfile: activeProfile, saveProfile: saveProfile, deleteProfile: deleteProfile, setActive: setActive,
-        favorites: favorites, isFav: isFav, toggleFav: toggleFav,
+        favorites: favorites, isFav: isFav, toggleFav: toggleFav, setFavorites: setFavorites,
         history: history, progress: progress, saveProgress: saveProgress, patchHistory: patchHistory, removeProgress: removeProgress, clearHistory: clearHistory,
         isSeen: isSeen, markSeen: markSeen,
         lastChannel: lastChannel, setLastChannel: setLastChannel, liveCat: liveCat, setLiveCat: setLiveCat

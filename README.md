@@ -12,6 +12,9 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings; for series your choice is remembered for all episodes
 - **Trailers** open in the TV's YouTube app. YouTube's embedded player needs an HTTP Referer, and a Tizen app runs from `file://` without one (error 153), so in-app playback only works in the browser test version; movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
 - **4K/HDR labels** on posters and channels (recognised from the name)
+- **Channel management** (Live TV, hold OK on a channel or group): hide channels or whole groups, move groups and favourites with ▲▼, and make your **own channel lists** (e.g. Sports, Kids) that also show up in the TV guide. *Settings → Hidden channels and groups* brings things back and restores the group order.
+- **TV guide source** (*Settings → TV guide source*): the provider's guide per channel (default), the provider's full **XMLTV** file, or your **own XMLTV address** (also .gz; on-screen keyboard with capitals and punctuation). Channels are matched on the provider's EPG id or on name ("NL | NPO 1 HD" = "NPO 1"); channels without XMLTV data keep the provider's guide. Wrong match? In the TV guide, hold OK → *Match guide data…*. The file is streamed and parsed in parts, only your channels are kept (4 hours back to 3 days ahead), refreshed every 12 hours.
+- **Next episode**: automatically after 10 seconds, ask, or off (*Settings → Play next episode*)
 - Number keys to jump to a channel, CH+/CH− to zap, previous channel (PRE-CH, or the *Vorige* button in the player menu), picture format (fit/stretch/auto), automatic reconnect when a stream drops
 
 **Personal**
@@ -84,7 +87,7 @@ node tests/run.mjs gids       # only tests whose name or file contains "gids"
 
 The runner needs Node 22+ and Google Chrome (or Chromium; set `CHROME=/path` if it isn't found). It runs:
 - **Checks**: syntax of all JS files, the scripts in `index.html` exist, and translations are complete (`scripts/i18n-check.js`).
-- **Screen tests** in headless Chrome against the demo server (`tests/specs/*.mjs`): login, Home (including "focus stays put while rows load"), the top menu, Movies/Series, detail pages, My list, trailers, Live TV, TV guide, search with typos, settings, switching language, plus some units (EPG clean-up, recommendations, 4K/HDR labels).
+- **Screen tests** in headless Chrome against the demo server (`tests/specs/*.mjs`): login, Home (including "focus stays put while rows load"), the top menu, Movies/Series, detail pages, My list, trailers, Live TV, TV guide, search with typos, settings, switching language, channel management, XMLTV guide (demo XMLTV, .gz, time zones, matching), plus some units (EPG clean-up, recommendations, ordering, 4K/HDR labels).
 - Any error in the browser console fails a test. On failure a screenshot is saved in `build/test-out/run`.
 - Tests marked `tmdb` only run when `js/config.local.js` has a TMDB key; otherwise they're skipped.
 
@@ -146,6 +149,8 @@ js/follow.js            new-episode detection for series in My list
 js/remind.js            reminders for programmes in the TV guide
 js/player.js            AVPlay (TV) / HTML5 video (browser), audio/subtitle tracks, reconnect
 js/epg.js               EPG cache + queue (only fetches visible channels)
+js/xmltv.js             XMLTV guide: streaming download/parse (also .gz), channel matching, stored in IndexedDB
+js/lineup.js            channel management: hidden channels/groups, group order, own channel lists
 js/vlist.js             virtual list/grid with focus handling
 js/ui.js                icons, cards, rows, top menu, hero banner
 js/storage.js           localStorage: profiles, settings, favourites, history

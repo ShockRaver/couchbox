@@ -68,6 +68,34 @@ var Demo = (function () {
         return { info: Object.assign({}, s), seasons: [{ season_number: 1, name: 'Seizoen 1' }, { season_number: 2, name: 'Seizoen 2' }], episodes: eps };
     }
 
+    // Nagemaakte XMLTV-gids (Instellingen → Bron van de tv-gids): even zenders op epg-id, oneven op naam (zonder "HD"),
+    // zenders 9, 19, 29… ontbreken (die blijven op de provider-gids), plus één extra zender om handmatig te koppelen
+    var XSHOWS = ['Ochtendshow', 'Middagfilm', 'Avondjournaal', 'Late Night', 'Documentaire: Oceanen', 'Kinderuur', 'Sportcafé', 'Kaas & Wijn'];
+    function xmltv() {
+        var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+        var off = -new Date().getTimezoneOffset(), zone = (off < 0 ? '-' : '+') + pad(Math.floor(Math.abs(off) / 60)) + pad(Math.abs(off) % 60);
+        var fmt = function (t) { var d = new Date(t); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + pad(d.getHours()) + pad(d.getMinutes()) + '00 ' + zone; };
+        var esc = function (x) { return x.replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+        var chans = live.filter(function (c) { return c.num % 10 !== 9; }).map(function (c) {
+            return { id: c.num % 2 ? 'x' + c.num + '.demo' : c.epg_channel_id, name: c.name.replace(/ HD$/, ''), num: c.num };
+        });
+        chans.push({ id: 'extra.demo', name: 'Extra Zender', num: 99 });
+        var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv generator-info-name="Kijkdoos demo">'];
+        chans.forEach(function (c) { out.push('<channel id="' + c.id + '"><display-name lang="nl">' + esc(c.name) + '</display-name></channel>'); });
+        var day = new Date(); day.setMinutes(0, 0, 0);
+        var t0 = day.getTime() - 3 * 3600e3, end = Date.now() + 30 * 3600e3;
+        chans.forEach(function (c) {
+            for (var t = t0, n = 0; t < end; n++) {
+                var dur = (30 + Math.floor(rnd(c.num * 13 + n) * 4) * 30) * 60e3, title = XSHOWS[Math.floor(rnd(c.num * 3 + n) * XSHOWS.length)];
+                out.push('<programme start="' + fmt(t) + '" stop="' + fmt(t + dur) + '" channel="' + c.id + '"><title lang="nl">' + esc(title) +
+                    '</title><desc lang="nl">' + esc('XMLTV-demo: ' + title + ' op ' + c.name + '.') + '</desc></programme>');
+                t += dur;
+            }
+        });
+        out.push('</tv>');
+        return out.join('\n');
+    }
+
     function byCat(list, cat) { return cat ? list.filter(function (x) { return String(x.category_id) === String(cat); }) : list; }
 
     function handle(p) {
@@ -96,5 +124,5 @@ var Demo = (function () {
         return new Promise(function (resolve) { setTimeout(function () { resolve(JSON.parse(JSON.stringify(res))); }, 120); });
     }
 
-    return { handle: handle, src: src };
+    return { handle: handle, src: src, xmltv: xmltv, XSHOWS: XSHOWS };
 })();

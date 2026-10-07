@@ -48,7 +48,7 @@ Screens.guide = {
         this.loadGroups().then(function () {
             Loader.hide();
             // Vanuit Live TV: die categorie; anders de laatst gekozen groep (standaard favorieten, of alle zenders)
-            if (p.items) return self.setup(p.items, p.index || 0, p.catId === 'all' || p.catId === 'fav' ? p.catId : 'c:' + p.catId, p.catName);
+            if (p.items) return self.setup(p.items, p.index || 0, p.catId, p.catName);
             var saved = Store.getP('guideGroup', null);
             var g = self.groups.filter(function (x) { return x.id === saved; })[0] || self.groups[0];
             self.useGroup(g);
@@ -58,23 +58,14 @@ Screens.guide = {
         });
     },
 
-    // Groepen: favorieten (als je die hebt), alle zenders, en elke categorie (zonder 18+)
+    // Groepen uit de zenderindeling (Lineup): favorieten (als je die hebt), eigen lijsten, alle zenders en elke categorie
     loadGroups: function () {
         var self = this;
-        return Promise.all([Api.liveCategories(), Api.liveStreams()]).then(function (r) {
-            var adult = App.adultIds(r[0]);
-            var all = adult ? r[1].filter(function (s) { return !App.inCats(s, adult); }) : r[1];
-            var byId = {}, count = {};
-            all.forEach(function (s) { byId[s.stream_id] = s; App.catIds(s).forEach(function (c) { count[c] = (count[c] || 0) + 1; }); });
-            var favs = Store.favorites('live');
-            self.groups = [];
-            if (favs.length) self.groups.push({ id: 'fav', name: T('Favorieten'), items: function () { return Store.favorites('live').map(function (f) { return byId[f.id] || App.chFromFav(f); }); }, n: favs.length });
-            self.groups.push({ id: 'all', name: T('Alle zenders'), items: function () { return all; }, n: all.length });
-            r[0].forEach(function (c) {
-                var id = String(c.category_id);
-                if ((adult && adult[id]) || !count[id]) return;
-                self.groups.push({ id: 'c:' + id, name: c.category_name, n: count[id], items: function () { return all.filter(function (s) { return App.catIds(s).indexOf(id) >= 0; }); } });
-            });
+        return Lineup.load().then(function (L) {
+            self.groups = L.groups.filter(function (g) { return g.n > 0 || g.id === 'all'; });
+            // Zoals voorheen: favorieten bovenaan, daarna alle zenders
+            var fav = self.groups.filter(function (g) { return g.id === 'fav'; });
+            self.groups = fav.concat(self.groups.filter(function (g) { return g.id !== 'fav'; }));
         });
     },
 
@@ -212,6 +203,10 @@ Screens.guide = {
         if (p && p.start > now) items.push({ id: 'rem', label: Remind.has(ch, p) ? T('Herinnering verwijderen') : T('Herinner me ({time})', { time: U.fmtClock(p.start) }) });
         items.push({ id: 'watch', label: live ? T('Nu kijken') : T('Zender nu kijken') });
         items.push({ id: 'fav', label: fav ? T('Zender verwijderen uit favorieten') : T('Zender toevoegen aan favorieten') });
+        if (Xmltv.source().mode !== 'api') {
+            var lk = Xmltv.linked(ch.stream_id), auto = Xmltv.idFor(ch);
+            items.push({ id: 'link', label: T('Gidsgegevens koppelen…'), hint: lk === '-' ? T('provider') : auto ? Xmltv.nameOf(auto) : T('niet gekoppeld') });
+        }
         Dialog.menu({ title: p ? p.title : ch.name, text: ch.name + (p ? '  ·  ' + U.fmtDate(p.start) + ' ' + U.fmtClock(p.start) + ' – ' + U.fmtClock(p.end) : ''), items: items }, function (it) {
             if (!it) return;
             if (it.id === 'watch') App.go('player', { mode: 'live', channel: ch, list: self.items });
@@ -219,11 +214,37 @@ Screens.guide = {
                 var on = Remind.toggle(ch, p);
                 Toast.show(on ? T('Herinnering ingesteld voor {time}', { time: U.fmtClock(p.start) }) : T('Herinnering verwijderd'));
                 self.list.refresh(); self.updateDetail();
-            } else if (it.id === 'fav') {
+            } else if (it.id === 'link') self.linkMenu(ch);
+            else if (it.id === 'fav') {
                 var added = Store.toggleFav('live', App.favFromCh(ch));
                 Toast.show(added ? T('{name} toegevoegd aan favorieten', { name: ch.name }) : T('{name} verwijderd uit favorieten', { name: ch.name }));
                 self.loadGroups();
             }
+        });
+    },
+
+    // Zender handmatig aan een zender in de XMLTV-gids koppelen (als de naam of het epg-id niet automatisch klopt)
+    linkMenu: function (ch) {
+        var self = this, cur = Xmltv.linked(ch.stream_id);
+        Dialog.text({
+            title: T('Gidsgegevens voor {name}', { name: ch.name }), text: T('Zoek de zender in de XMLTV-gids op (een deel van) de naam.'),
+            value: ch.name.replace(/^.*?\|\s*/, '').replace(/\b(uhd|fhd|hd|sd|4k)\b/gi, '').trim(), okLabel: T('Zoeken')
+        }, function (q) {
+            if (q == null) return;
+            var hits = Xmltv.search(q);
+            var items = [
+                { id: '', label: T('Automatisch'), checked: !cur },
+                { id: '-', label: T('Gids van de provider gebruiken'), checked: cur === '-' }
+            ].concat(hits.map(function (h) { return { id: h.id, label: h.name, hint: h.id, checked: cur === h.id }; }));
+            Dialog.menu({ title: T('Koppelen aan'), text: hits.length ? '' : T('Niets gevonden voor "{q}" in de XMLTV-gids.', { q: q }), items: items }, function (it) {
+                if (!it) return;
+                var download = Xmltv.link(ch.stream_id, it.id);
+                var after = function () { self.list.refresh(); self.updateDetail(); self.requestEpg(); };
+                if (download) {
+                    Toast.show(T('Tv-gids wordt bijgewerkt voor deze zender…'), 4000);
+                    Xmltv.refresh(true).then(after, function (e) { Toast.show(T('Tv-gids laden mislukt') + ': ' + e.message, 5000); });
+                } else { Toast.show(T('Koppeling opgeslagen')); after(); }
+            });
         });
     },
 

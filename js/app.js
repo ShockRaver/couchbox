@@ -100,6 +100,7 @@ var App = {
         Store.setActive(p.id);
         Api.setProfile(p);
         EPG.reset();
+        Xmltv.reset();
         Screens.search.data = null;
         Reco.reset();
         this.connect();
@@ -121,6 +122,8 @@ var App = {
             setTimeout(function () { Follow.check(false); }, 8000);
             // Genre-index alvast opbouwen, zodat Films/Series meteen open gaan
             setTimeout(Genres.warm, 3000);
+            // XMLTV-gids (als ingesteld) bijwerken als hij ouder is dan 12 uur
+            setTimeout(function () { Xmltv.refresh(false).catch(function () { /* status staat in Instellingen */ }); }, 15000);
             if (autoplay) self.startupAction();
         }).catch(function (e) {
             Loader.hide();
@@ -139,6 +142,7 @@ var App = {
     refreshCatalog: function (done) {
         Api.clearCache();
         EPG.reset();
+        if (Xmltv.source().mode !== 'api') Xmltv.refresh(true).catch(function () { /* status staat in Instellingen */ });
         Genres.reset();
         Reco.reset();
         Screens.search.data = null;

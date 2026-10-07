@@ -22,7 +22,8 @@ var Icons = (function () {
         bookmark: '<path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/>',
         bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
         backspace: '<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
-        lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
+        lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+        move: '<path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/>'
     };
     var FILLED = { star: 1, play: 1, pause: 1, next: 1 };
     function get(name) {
@@ -356,11 +357,12 @@ UI.addNav = function (scr, active) {
 
 /* Toetsenbord op het scherm (zoeken, TMDB-sleutel): acties bovenaan, daarna a-z en 0-9 in 6 kolommen.
    onPress(id): 'space', 'del', 'clear' of een teken. key(k) geeft 'up'/'down'/'right' terug als de focus het toetsenbord verlaat. */
-function Keyboard(onPress) {
+function Keyboard(onPress, layout) {
     var self = this;
     this.onPress = onPress;
+    this.upper = false;
     this.el = U.h('div', { class: 'sk-keys' });
-    this.rows = Keyboard.LAYOUT.map(function (row) {
+    this.rows = (layout || Keyboard.LAYOUT).map(function (row) {
         var list = typeof row === 'string'
             ? row.split('').map(function (ch, i) { return { id: ch, label: ch, c: i, w: 1 }; })
             : row.map(function (k, i) { return { id: k[0], label: k[1], c: i * 2, w: 2 }; });
@@ -375,6 +377,19 @@ function Keyboard(onPress) {
     this.active = false;
 }
 Keyboard.LAYOUT = [[['space', 'Spatie'], ['del', ''], ['clear', 'Wissen']], 'abcdef', 'ghijkl', 'mnopqr', 'stuvwx', 'yz1234', '567890'];
+// Voor internetadressen: hoofdletters (ABC), leestekens en veelgebruikte stukken
+Keyboard.URL = [[['shift', 'ABC'], ['del', ''], ['clear', 'Wissen']], 'abcdef', 'ghijkl', 'mnopqr', 'stuvwx', 'yz1234', '567890',
+    '.:/-_~', '?=&%+#', [['https://', 'https://'], ['.xml', '.xml'], ['.gz', '.gz']]];
+// Hoofdletters aan/uit: letters op de toetsen wisselen mee
+Keyboard.prototype.shift = function () {
+    var up = this.upper = !this.upper;
+    this.rows.forEach(function (row) {
+        row.forEach(function (k) {
+            if (/^[a-z]$/.test(k.id)) k.el.textContent = up ? k.id.toUpperCase() : k.id;
+            if (k.id === 'shift') k.el.textContent = up ? 'abc' : 'ABC';
+        });
+    });
+};
 Keyboard.prototype.setActive = function (b) { this.active = b; this.draw(); };
 Keyboard.prototype.draw = function () {
     var self = this;
@@ -395,7 +410,11 @@ Keyboard.prototype.key = function (k) {
         case 'right': if (this.i < row.length - 1) { this.i++; this.draw(); return true; } return 'right';
         case 'up': if (this.r === 0) return 'up'; this.i = this.below(this.r - 1); this.r--; this.draw(); return true;
         case 'down': if (this.r < this.rows.length - 1) { this.i = this.below(this.r + 1); this.r++; this.draw(); return true; } return 'down';
-        case 'ok': this.onPress(row[this.i].id); return true;
+        case 'ok':
+            var id = row[this.i].id;
+            if (id === 'shift') this.shift();
+            else this.onPress(this.upper && /^[a-z]$/.test(id) ? id.toUpperCase() : id);
+            return true;
     }
     return false;
 };

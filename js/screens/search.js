@@ -50,7 +50,7 @@ Screens.search = {
             if (r) {
                 var a = [App.adultIds(r[3]), App.adultIds(r[4]), App.adultIds(r[5])];
                 var f = function (list, ad) { return ad ? list.filter(function (x) { return !App.inCats(x, ad); }) : list; };
-                self.data = { live: f(r[0], a[0]), movie: Genres.unique(f(r[1], a[1]), r[4]), series: Genres.unique(f(r[2], a[2]), r[5]) };
+                self.data = { live: Lineup.visible(f(r[0], a[0])), movie: Genres.unique(f(r[1], a[1]), r[4]), series: Genres.unique(f(r[2], a[2]), r[5]) };
             }
             return Find.build(self.data, function (n, total) { self.setStatus(T('Zoekindex opbouwen… {pct}%', { pct: Math.round(n / Math.max(1, total) * 100) })); });
         }).then(function () {

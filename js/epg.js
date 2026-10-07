@@ -14,10 +14,12 @@ var EPG = (function () {
     var FULL = 1000;
 
     function parse(res) {
-        var min = Date.now() - 4 * 3600e3, max = Date.now() + 7 * 86400e3;
-        var list = U.toArr(res && res.epg_listings).map(function (p) {
+        return tidy(U.toArr(res && res.epg_listings).map(function (p) {
             return { title: U.b64(p.title) || T('Onbekend programma'), desc: U.b64(p.description), start: ts(p.start_timestamp, p.start), end: ts(p.stop_timestamp, p.end) };
-        });
+        }));
+    }
+    function tidy(list) {
+        var min = Date.now() - 4 * 3600e3, max = Date.now() + 7 * 86400e3;
         // Alleen een bruikbaar tijdvak bewaren (volledige tabellen kunnen dagen terug gaan)
         list = list.filter(function (p) {
             return p.end > p.start && p.end >= min && p.start <= max;
@@ -44,8 +46,13 @@ var EPG = (function () {
         return out;
     }
 
-    // Volledige gids ophalen; valt terug op de korte EPG als de provider die niet (goed) levert
+    // Gids van één zender: uit de XMLTV-gids als die is ingesteld en de zender erin staat, anders van de provider
     function fetchList(id, limit) {
+        var api = function () { return fetchApi(id, limit); };
+        return Xmltv.list(id).then(function (l) { return l && l.length ? tidy(l) : api(); }, api);
+    }
+    // Volledige gids ophalen; valt terug op de korte EPG als de provider die niet (goed) levert
+    function fetchApi(id, limit) {
         if (limit < FULL) return Api.shortEpg(id, limit).then(parse);
         return Api.fullEpg(id).then(parse).catch(function () { return []; }).then(function (list) {
             var future = list.filter(function (p) { return p.end > Date.now(); });

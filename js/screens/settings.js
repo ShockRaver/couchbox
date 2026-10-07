@@ -9,7 +9,8 @@ Screens.settings = {
         subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels']],
         aspect: [['letterbox', 'Passend (zwarte balken)'], ['fill', 'Uitrekken tot volledig scherm'], ['auto', 'Automatisch']],
         hideAdult: [[false, 'Uit'], [true, 'Aan']],
-        trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']]
+        trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']],
+        autoNext: [['on', 'Automatisch na 10 seconden'], ['ask', 'Vragen'], ['off', 'Uit']]
     },
 
     build: function () {
@@ -37,7 +38,10 @@ Screens.settings = {
             { id: 'audioLang', label: T('Voorkeur audiotaal') },
             { id: 'subLang', label: T('Voorkeur ondertitels') },
             { id: 'aspect', label: T('Beeldweergave') },
+            { id: 'autoNext', label: T('Volgende aflevering afspelen') },
             { id: 'hideAdult', label: T('Verberg 18+ categorieën') },
+            { id: 'lineup', label: T('Verborgen zenders en groepen'), value: this.lineupLabel(), action: true },
+            { id: 'epgSrc', label: T('Bron van de tv-gids'), value: this.epgLabel(), action: true },
             App.canEmbed() ? { id: 'trailer', label: T('Trailers afspelen') } : null,
             { id: 'genreLangs', label: T('Talen in genres (films & series)'), value: this.langsLabel(), action: true },
             { id: 'tmdb', label: T('TMDB-gegevens (genres, posters, info)'), value: Tmdb.status(), action: true },
@@ -110,6 +114,8 @@ Screens.settings = {
             case 'account': this.accountInfo(); break;
             case 'refresh': App.refreshCatalog(); break;
             case 'genreLangs': this.langMenu(); break;
+            case 'lineup': this.lineupMenu(); break;
+            case 'epgSrc': this.epgMenu(); break;
             case 'tmdb': this.tmdbMenu(); break;
             case 'history':
                 Dialog.confirm(T('Kijkgeschiedenis wissen?'), T('Verder kijken en de "bekeken"-vinkjes van dit profiel worden gewist.'), function (yes) {
@@ -197,9 +203,91 @@ Screens.settings = {
         this.tick = setInterval(function () {
             var i = self.list.items.findIndex(function (r) { return r.id === 'tmdb'; });
             if (i >= 0) { self.list.items[i].value = Tmdb.status(); self.list.refreshItem(i); }
+            var j = self.list.items.findIndex(function (r) { return r.id === 'epgSrc'; });
+            if (j >= 0) { self.list.items[j].value = self.epgLabel(); self.list.refreshItem(j); }
         }, 3000);
     },
     hide: function () { clearInterval(this.tick); },
+
+    // ---- Bron van de tv-gids: provider (per zender), XMLTV van de provider, of een eigen XMLTV-adres ----
+    epgLabel: function () {
+        var src = Xmltv.source(), st = Xmltv.status();
+        var name = src.mode === 'xmltv' ? T('Provider (XMLTV)') : src.mode === 'url' ? T('Eigen XMLTV-adres') : T('Provider (standaard)');
+        return name + (st ? ' · ' + st : '');
+    },
+    epgMenu: function () {
+        var self = this, src = Xmltv.source();
+        var items = [
+            { id: 'api', label: T('Provider (standaard)'), hint: T('per zender opgevraagd'), checked: src.mode === 'api' },
+            { id: 'xmltv', label: T('Provider (XMLTV)'), hint: T('volledige gids, vaak completer'), checked: src.mode === 'xmltv' },
+            { id: 'url', label: T('Eigen XMLTV-adres…'), hint: src.mode === 'url' ? src.url.replace(/^https?:\/\//, '').slice(0, 40) : '', checked: src.mode === 'url' }
+        ];
+        if (src.mode !== 'api') items.push({ id: 'now', label: T('Gids nu vernieuwen') });
+        Dialog.menu({
+            title: T('Bron van de tv-gids'),
+            text: T('Een XMLTV-gids wordt één keer per 12 uur gedownload en vult de gids voor alle zenders tegelijk. Zenders die er niet in staan, houden de gids van de provider. Koppeling per zender aanpassen: houd in de TV-gids OK ingedrukt.'),
+            items: items
+        }, function (it) {
+            if (!it) return;
+            if (it.id === 'api') { Xmltv.setSource({ mode: 'api' }); EPG.reset(); self.render(self.list.index); }
+            else if (it.id === 'xmltv') { Xmltv.setSource({ mode: 'xmltv' }); self.loadEpg(); }
+            else if (it.id === 'now') self.loadEpg();
+            else if (it.id === 'url') Dialog.text({
+                title: T('XMLTV-adres'), text: T('Bijvoorbeeld https://example.com/epg.xml.gz (ABC = hoofdletters)'),
+                value: src.mode === 'url' ? src.url : 'https://', okLabel: T('Gebruiken'), url: true
+            }, function (v) {
+                if (!v) return;
+                if (!/^https?:\/\/[^\s/]+\.[^\s]+/i.test(v)) { Dialog.alert(T('Ongeldig adres'), T('Een adres begint met http:// of https://')); return; }
+                Xmltv.setSource({ mode: 'url', url: v });
+                self.loadEpg();
+            });
+        });
+    },
+    // Gids downloaden met voortgang in de statusregel; daarna melden hoeveel zenders gekoppeld zijn
+    loadEpg: function () {
+        var self = this;
+        self.render(self.list.index);
+        Toast.show(T('Tv-gids downloaden…'));
+        Xmltv.refresh(true).then(function (m) {
+            if (m) Toast.show(T('Tv-gids bijgewerkt: {n} van {total} zenders', { n: m.matched, total: m.total }), 5000);
+            if (App.screen() === self) self.render(self.list.index);
+        }).catch(function (e) {
+            if (App.screen() === self) self.render(self.list.index);
+            Dialog.alert(T('Tv-gids laden mislukt'), e.message + '\n\n' + T('Zolang gebruikt Kijkdoos de gids van de provider.'));
+        });
+    },
+
+    lineupLabel: function () {
+        var d = Store.getP('lineup', null) || {}, n = (d.hideCats || []).length + (d.hideCh || []).length;
+        return n ? T('{n} verborgen', { n: n }) : T('Geen');
+    },
+    // Verborgen groepen en zenders weer tonen; volgorde van de groepen herstellen
+    lineupMenu: function () {
+        var self = this;
+        Lineup.load().then(function (L) {
+            var items = [];
+            L.hiddenCats.forEach(function (c) { items.push({ id: 'c', ref: c.id, label: T('Groep tonen: {name}', { name: c.name }) }); });
+            L.hiddenChannels.forEach(function (s) { items.push({ id: 'h', ref: s.stream_id, label: T('Zender tonen: {name}', { name: s.name }) }); });
+            if (items.length > 1) items.unshift({ id: 'all', label: T('Alles weer tonen') });
+            var none = !items.length;
+            items.push({ id: 'order', label: T('Volgorde van groepen herstellen') });
+            Dialog.menu({
+                title: T('Verborgen zenders en groepen'),
+                text: none ? T('Er is niets verborgen. Verbergen, verplaatsen en eigen zenderlijsten: houd in Live TV OK ingedrukt op een zender of groep.')
+                    : T('Kies wat je weer wilt tonen.'),
+                items: items
+            }, function (it) {
+                if (!it) return;
+                if (it.id === 'all') Lineup.showAll();
+                else if (it.id === 'c') Lineup.hideCat(it.ref, false);
+                else if (it.id === 'h') Lineup.hideChannel(it.ref, false);
+                else Lineup.resetOrder();
+                Toast.show(it.id === 'order' ? T('Volgorde hersteld') : T('Weer zichtbaar'));
+                self.render(self.list.index);
+                if (it.id === 'c' || it.id === 'h') self.lineupMenu();
+            });
+        }).catch(function (e) { Dialog.alert(T('Zenders laden mislukt'), e.message); });
+    },
 
     langsLabel: function () {
         var s = Store.settings().genreLangs;

@@ -267,22 +267,25 @@ Screens.player = {
             return;
         }
         this.markDone();
-        var next = this.nextEpisode();
-        if (next) this.askNext(next); else App.back();
+        // Instelling "Volgende aflevering afspelen": automatisch, vragen of uit (terug naar de serie)
+        var next = this.nextEpisode(), mode = Store.settings().autoNext;
+        if (next && mode !== 'off') this.askNext(next, mode !== 'ask'); else App.back();
     },
 
-    askNext: function (next) {
+    // Volgende aflevering aanbieden; auto = na 10 seconden vanzelf starten
+    askNext: function (next, auto) {
         var self = this, left = 10;
         this.overlay = 'next';
         this.nextEp = next;
         var draw = function () {
             self.nextBox.innerHTML = '<div class="p-next-label">' + T('Volgende aflevering') + '</div><div class="p-next-title">S' + next.season + ' E' + next.episode + ' · ' + U.esc(next.name) +
-                '</div><div class="p-next-hint">' + T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen', { n: left }) + '</div>';
+                '</div><div class="p-next-hint">' + (auto ? T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen', { n: left })
+                    : T('<b>OK</b> starten &nbsp;·&nbsp; <b>Terug</b> stoppen')) + '</div>';
         };
         draw();
         this.nextBox.classList.add('show');
         clearInterval(this.nextT);
-        this.nextT = setInterval(function () { left--; if (left <= 0) self.playEpisode(next); else draw(); }, 1000);
+        if (auto) this.nextT = setInterval(function () { left--; if (left <= 0) self.playEpisode(next); else draw(); }, 1000);
     },
     closeNext: function () { clearInterval(this.nextT); this.overlay = null; this.nextBox.classList.remove('show'); },
 

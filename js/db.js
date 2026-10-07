@@ -2,7 +2,7 @@
 var Db = (function () {
     'use strict';
 
-    var NAME = 'kijkdoos', VERSION = 2, STORES = ['titles', 'details', 'people', 'lists'];
+    var NAME = 'kijkdoos', VERSION = 3, STORES = ['titles', 'details', 'people', 'lists', 'epg'];
     var dbp = null;
 
     function open() {
