@@ -38,7 +38,7 @@ Screens.settings = {
             { id: 'subLang', label: T('Voorkeur ondertitels') },
             { id: 'aspect', label: T('Beeldweergave') },
             { id: 'hideAdult', label: T('Verberg 18+ categorieën') },
-            { id: 'trailer', label: T('Trailers afspelen') },
+            App.canEmbed() ? { id: 'trailer', label: T('Trailers afspelen') } : null,
             { id: 'genreLangs', label: T('Talen in genres (films & series)'), value: this.langsLabel(), action: true },
             { id: 'tmdb', label: T('TMDB-gegevens (genres, posters, info)'), value: Tmdb.status(), action: true },
             { id: 'pin', label: T('Pincode voor instellingen'), value: s.pin ? T('Aan') : T('Uit'), action: true },
@@ -46,7 +46,7 @@ Screens.settings = {
             { id: 'refresh', label: T('Zenders, films en gids vernieuwen'), value: '', action: true },
             { id: 'history', label: T('Kijkgeschiedenis wissen'), value: '', action: true },
             { id: 'about', label: T('Over deze app'), value: T('versie {version}', { version: App.VERSION }) + (BUILD.date ? '  ·  ' + BUILD.date : ''), action: true }
-        ];
+        ].filter(Boolean);
     },
 
     render: function (idx) {

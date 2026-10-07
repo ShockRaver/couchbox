@@ -48,13 +48,17 @@ var App = {
         });
     },
 
-    // Trailer (YouTube-id van TMDB) openen in de YouTube-app van de TV; in een browser in een nieuw tabblad.
-    // Samsung gebruikt per TV-generatie een ander app-id; eerst met de video, anders alleen de app openen.
+    // De ingebouwde YouTube-speler werkt alleen als de pagina via http(s) draait: YouTube eist een Referer
+    // (anders fout 153). Op de TV is de app een lokaal bestand (file://) zonder Referer, dus daar de YouTube-app.
+    canEmbed: function () { return /^https?:$/.test(location.protocol); },
+
+    // Trailer (YouTube-id van TMDB) afspelen: in Kijkdoos zelf als dat kan, anders in de YouTube-app.
     trailer: function (key, title) {
-        // Standaard in Kijkdoos zelf (ingebouwde YouTube-speler); via Instellingen kan het in de YouTube-app
-        if (Store.settings().trailer === 'youtube') this.trailerApp(key, title);
+        if (!this.canEmbed() || Store.settings().trailer === 'youtube') this.trailerApp(key, title);
         else this.go('trailer', { key: key, title: title });
     },
+    // In de YouTube-app van de TV; in een browser in een nieuw tabblad.
+    // Samsung gebruikt per TV-generatie een ander app-id; eerst met de video, anders alleen de app openen.
     trailerApp: function (key, title) {
         var url = 'https://www.youtube.com/watch?v=' + key;
         if (!window.tizen || !tizen.application) { window.open(url, '_blank'); return; }
