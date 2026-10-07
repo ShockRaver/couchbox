@@ -9,7 +9,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
 - **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings; for series your choice is remembered for all episodes
-- **Trailers** open in the TV's YouTube app; movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
+- **Trailers** play inside Kijkdoos (embedded YouTube player; if YouTube refuses, they open in the TV's YouTube app; *Settings → Play trailers* switches to the app permanently); movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
 - **4K/HDR labels** on posters and channels (recognised from the name)
 - Number keys to jump to a channel, CH+/CH− to zap, previous channel (PRE-CH, or the *Vorige* button in the player menu), picture format (fit/stretch/auto), automatic reconnect when a stream drops
 

@@ -8,7 +8,8 @@ Screens.settings = {
         audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels']],
         subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels']],
         aspect: [['letterbox', 'Passend (zwarte balken)'], ['fill', 'Uitrekken tot volledig scherm'], ['auto', 'Automatisch']],
-        hideAdult: [[false, 'Uit'], [true, 'Aan']]
+        hideAdult: [[false, 'Uit'], [true, 'Aan']],
+        trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']]
     },
 
     build: function () {
@@ -37,6 +38,7 @@ Screens.settings = {
             { id: 'subLang', label: T('Voorkeur ondertitels') },
             { id: 'aspect', label: T('Beeldweergave') },
             { id: 'hideAdult', label: T('Verberg 18+ categorieën') },
+            { id: 'trailer', label: T('Trailers afspelen') },
             { id: 'genreLangs', label: T('Talen in genres (films & series)'), value: this.langsLabel(), action: true },
             { id: 'tmdb', label: T('TMDB-gegevens (genres, posters, info)'), value: Tmdb.status(), action: true },
             { id: 'pin', label: T('Pincode voor instellingen'), value: s.pin ? T('Aan') : T('Uit'), action: true },

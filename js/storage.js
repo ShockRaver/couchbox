@@ -24,7 +24,8 @@ var Store = (function () {
 
     // ---- Instellingen (gelden voor alle profielen) ----
     var DEFAULTS = {
-        lang: 'en',             // taal van de app en van TMDB-gegevens: 'en' | 'nl'
+        lang: 'en',
+        trailer: 'app',         // trailers: 'app' (in Kijkdoos) | 'youtube' (YouTube-app van de TV)             // taal van de app en van TMDB-gegevens: 'en' | 'nl'
         startup: 'none',        // bij opstarten: 'none' (startscherm) | 'live' (laatste zender) | 'ask' (verder kijken?)
         liveFormat: 'm3u8',     // 'm3u8' (HLS) of 'ts'
         audioLang: 'nl',        // 'auto' | 'nl' | 'en'

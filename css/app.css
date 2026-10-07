@@ -592,3 +592,13 @@ b { font-weight: 700; }
 .qtags.inline { position: static; display: inline-flex; margin-left: 12px; vertical-align: 3px; }
 .qtag { font-size: 15px; font-weight: 800; letter-spacing: .5px; padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, .72); color: #fff; border: 1px solid rgba(255, 255, 255, .5); }
 .ch-row.focus .qtag { background: var(--focus-ink); }
+
+/* Trailer in Kijkdoos (ingebouwde YouTube-speler) */
+.screen.trailer { background: #000; }
+.tr-frame, .tr-frame iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; }
+.tr-bar { position: absolute; left: 0; right: 0; top: 0; padding: 40px 80px 80px; display: flex; align-items: baseline; gap: 32px; z-index: 2;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .85), transparent); opacity: 0; transition: opacity var(--t-med); pointer-events: none; }
+.tr-bar.show { opacity: 1; }
+.tr-title { font-size: 34px; font-weight: 700; }
+.tr-hint { margin-left: auto; font-size: 22px; color: var(--text2); }
+.tr-msg { position: absolute; left: 50%; bottom: 80px; transform: translateX(-50%); z-index: 2; background: rgba(22, 23, 27, .95); padding: 20px 36px; border-radius: 40px; font-size: 26px; }

@@ -1,6 +1,15 @@
 /* Engelse vertalingen: sleutel = Nederlandse tekst in de code, waarde = Engels. {naam} = variabele.
    Controleren: node scripts/i18n-check.js (ontbrekende vertalingen en teksten buiten T()). */
 I18N.add('en', {
+    // ---- Trailer ----
+    "<b>OK</b> pauze · <b>▼</b> openen in de YouTube-app · <b>Terug</b> sluiten": "<b>OK</b> pause · <b>▼</b> open in the YouTube app · <b>Back</b> close",
+    "Deze trailer kan niet in Kijkdoos spelen; hij opent in de YouTube-app": "This trailer can't play in Kijkdoos; opening it in the YouTube app",
+    "In de YouTube-app": "In the YouTube app",
+    "In Kijkdoos": "In Kijkdoos",
+    "Speelt de trailer niet af? Druk op ▼ om hem in de YouTube-app te openen.": "Trailer not playing? Press ▼ to open it in the YouTube app.",
+    "Trailer": "Trailer",
+    "Trailer: {title}": "Trailer: {title}",
+    "Trailers afspelen": "Play trailers",
     // ---- Instellingen, profielen, inloggen, dialogen ----
     "\"{name}\" en de bijbehorende favorieten en kijkgeschiedenis worden verwijderd.": "\"{name}\" and its favourites and watch history will be deleted.",
     "32 tekens, bv. 1a2b3c…": "32 characters, e.g. 1a2b3c…",
