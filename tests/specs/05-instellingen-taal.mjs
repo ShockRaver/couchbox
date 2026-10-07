@@ -33,7 +33,7 @@ export default [
     }
   },
   {
-    name: 'Taal kiezen vraagt eerst bevestiging (annuleren, daarna Duits, Frans, Spaans, Grieks)',
+    name: 'Taal kiezen vraagt eerst bevestiging (annuleren, daarna alle andere talen)',
     async run(t) {
       await t.demo();
       const pick = async (code) => {
@@ -50,7 +50,7 @@ export default [
       await t.key('ok');
       t.eq(await t.eval("[Store.settings().lang, window.__noReload]"), ['en', 1], 'taal gewijzigd zonder bevestiging');
       // Bevestigen: app start opnieuw in het Duits
-      for (const [code, word] of [['de', 'Einstellungen'], ['fr', 'Paramètres'], ['es', 'Ajustes'], ['el', 'Ρυθμίσεις']]) {
+      for (const [code, word] of [['de', 'Einstellungen'], ['fr', 'Paramètres'], ['es', 'Ajustes'], ['el', 'Ρυθμίσεις'], ['it', 'Impostazioni'], ['pl', 'Ustawienia'], ['tr', 'Ayarlar']]) {
         await pick(code);
         await t.key('up');
         await t.key('ok');

@@ -131,7 +131,10 @@ var Reco = (function () {
         de: { lang: 'de', countries: ['DE', 'AT'], title: 'Duitstalige films' },
         fr: { lang: 'fr', countries: ['FR'], title: 'Franstalige films' },
         es: { lang: 'es', countries: ['ES', 'MX', 'AR'], title: 'Spaanstalige films' },
-        el: { lang: 'el', countries: ['GR', 'CY'], title: 'Griekse films' }
+        el: { lang: 'el', countries: ['GR', 'CY'], title: 'Griekse films' },
+        it: { lang: 'it', countries: ['IT'], title: 'Italiaanse films' },
+        pl: { lang: 'pl', countries: ['PL'], title: 'Poolse films' },
+        tr: { lang: 'tr', countries: ['TR'], title: 'Turkse films' }
     };
     function dutch(list, w) {
         var L = LOCAL[I18N.lang()] || LOCAL.nl;

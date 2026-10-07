@@ -1,4 +1,4 @@
-/* Vertalingen. Standaard Engels; Nederlands, Duits, Frans, Spaans en Grieks kunnen in Instellingen.
+/* Vertalingen. Standaard Engels; Nederlands, Duits, Frans, Spaans, Grieks, Italiaans, Pools en Turks kunnen in Instellingen.
    In de code staat de Nederlandse tekst als sleutel:      T('Verder kijken')
    Variabelen met {naam}:                                  T('Omdat je {title} keek', { title: naam })
    Woordenboeken per taal in js/lang/<code>.js (sleutel = Nederlandse tekst, waarde = vertaling).
@@ -20,7 +20,13 @@ var I18N = (function () {
         es: { name: 'Español', tmdb: 'es-ES', locale: 'es-ES', days: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
             months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'] },
         el: { name: 'Ελληνικά', tmdb: 'el-GR', locale: 'el-GR', days: ['Κυρ', 'Δευ', 'Τρί', 'Τετ', 'Πέμ', 'Παρ', 'Σάβ'],
-            months: ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μαΐ', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'] }
+            months: ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μαΐ', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'] },
+        it: { name: 'Italiano', tmdb: 'it-IT', locale: 'it-IT', days: ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'],
+            months: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'] },
+        pl: { name: 'Polski', tmdb: 'pl-PL', locale: 'pl-PL', days: ['nd', 'pn', 'wt', 'śr', 'czw', 'pt', 'sob'],
+            months: ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'] },
+        tr: { name: 'Türkçe', tmdb: 'tr-TR', locale: 'tr-TR', days: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
+            months: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'] }
     };
     var LANGS = {};
     Object.keys(CONF).forEach(function (l) { LANGS[l] = CONF[l].name; });

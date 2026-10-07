@@ -477,5 +477,8 @@ I18N.add('el', {
     "▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer": "▲▼ αλλαγή καναλιού · ◀▶ λίστα καναλιών · <b>OK</b> μενού · ψηφία = αριθμός καναλιού",
     "◀ ▶ waarde wijzigen · OK kiezen": "◀ ▶ αλλαγή τιμής · OK επιλογή",
     "★ {name} toegevoegd aan favorieten": "★ Το {name} προστέθηκε στα αγαπημένα",
-    "＋ {name} staat in Mijn lijst": "＋ Το {name} προστέθηκε στη λίστα μου"
+    "＋ {name} staat in Mijn lijst": "＋ Το {name} προστέθηκε στη λίστα μου",
+    "Turkse films": "Τουρκικές ταινίες",
+    "Poolse films": "Πολωνικές ταινίες",
+    "Italiaanse films": "Ιταλικές ταινίες"
 });

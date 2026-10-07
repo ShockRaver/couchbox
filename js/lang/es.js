@@ -477,5 +477,8 @@ I18N.add('es', {
     "▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer": "▲▼ zapear · ◀▶ lista de canales · <b>OK</b> menú · números = número de canal",
     "◀ ▶ waarde wijzigen · OK kiezen": "◀ ▶ cambiar valor · OK elegir",
     "★ {name} toegevoegd aan favorieten": "★ {name} añadido a favoritos",
-    "＋ {name} staat in Mijn lijst": "＋ {name} está en Mi lista"
+    "＋ {name} staat in Mijn lijst": "＋ {name} está en Mi lista",
+    "Turkse films": "Películas turcas",
+    "Poolse films": "Películas polacas",
+    "Italiaanse films": "Películas italianas"
 });

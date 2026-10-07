@@ -486,5 +486,8 @@ I18N.add('en', {
     "Franstalige films": "French-language films",
     // Taal kiezen, films in eigen taal
     "Spaanstalige films": "Spanish-language films",
-    "Griekse films": "Greek films"
+    "Griekse films": "Greek films",
+    "Turkse films": "Turkish films",
+    "Poolse films": "Polish films",
+    "Italiaanse films": "Italian films"
 });

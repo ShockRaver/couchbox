@@ -83,7 +83,10 @@ var U = (function () {
         });
     }
 
-    function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+    // Kleine letters zonder accenten; letters die geen accent zijn maar een eigen teken (Turks ı, Pools ł, Duits ß, …)
+    // worden de gewone letter, zodat "kirmizi" ook "Kırmızı" vindt
+    var FOLD = { 'ı': 'i', 'ł': 'l', 'ß': 'ss', 'ø': 'o', 'æ': 'ae', 'œ': 'oe', 'đ': 'd', 'ð': 'd', 'þ': 'th' };
+    function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ıłßøæœđðþ]/g, function (c) { return FOLD[c]; }); }
 
     var LANGS = {
         nl: ['nl', 'nld', 'dut', 'dutch', 'nederlands', 'vlaams', 'flemish'],

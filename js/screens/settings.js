@@ -4,8 +4,8 @@ Screens.settings = {
     OPTS: {
         startup: [['none', 'Startscherm'], ['live', 'Laatste zender afspelen'], ['ask', 'Vragen: verder kijken?']],
         liveFormat: [['m3u8', 'HLS (.m3u8)'], ['ts', 'MPEG-TS (.ts)']],
-        audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks']],
-        subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks']],
+        audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks'], ['it', 'Italiaans'], ['pl', 'Pools'], ['tr', 'Turks']],
+        subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks'], ['it', 'Italiaans'], ['pl', 'Pools'], ['tr', 'Turks']],
         aspect: [['letterbox', 'Passend (zwarte balken)'], ['fill', 'Uitrekken tot volledig scherm'], ['auto', 'Automatisch']],
         hideAdult: [[false, 'Uit'], [true, 'Aan']],
         trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']],

@@ -38,6 +38,14 @@ export default [
     }
   },
   {
+    name: 'Zoeken zonder speciale tekens (Turks, Pools, Duits)',
+    async run(t) {
+      await t.demo();
+      t.eq(await t.eval("['Kırmızı Oda', 'Łódź Wieczorem', 'Straße', 'Søren', 'Ça Gaçe'].map(Find.words).map(function (w) { return w.join(' '); })"),
+        ['kirmizi oda', 'lodz wieczorem', 'strasse', 'soren', 'ca gace'], 'genormaliseerde woorden');
+    }
+  },
+  {
     name: 'Personen zoeken (TMDB)',
     tmdb: true,
     async run(t) {
