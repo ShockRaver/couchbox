@@ -20,7 +20,7 @@ if [ -z "$TV_IP" ]; then echo "Gebruik: $0 <TV-IP> [certificaatprofiel]"; exit 1
 # Testresultaat op GitHub voor deze commit: mislukt = niet installeren (toch doen: SKIP_TESTS=1 scripts/deploy.sh …)
 if [ -z "${SKIP_TESTS:-}" ] && command -v gh >/dev/null 2>&1; then
     RUN="$(cd "$ROOT" && gh run list --workflow test.yml --commit "$(git rev-parse HEAD)" --limit 1 \
-        --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"' 2>/dev/null || true)"
+        --json status,conclusion --jq 'if length == 0 then "" else .[0] | "\(.status) \(.conclusion)" end' 2>/dev/null || true)"
     case "$RUN" in
         "completed success") echo "» Tests op GitHub: geslaagd" ;;
         "completed failure"|"completed timed_out")
