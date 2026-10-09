@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Screenshots voor de Samsung-winkel (1920×1080): demo-modus, zonder TMDB (dus geen posters of beelden van echte films),
-// zodat er niets van derden in beeld is. Gebruik: node scripts/store-screenshots.mjs [taal]   → store/screenshots/<taal>-*.png
+// Screenshots voor de Samsung-winkel (1920×1080, JPG): demo-modus, zonder TMDB (dus geen posters of beelden van echte films),
+// zodat er niets van derden in beeld is. Gebruik: node scripts/store-screenshots.mjs [taal]   → store/screenshots/<taal>-*.jpg
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +25,7 @@ try {
   await b.eval(`Store.setSetting('lang', '${lang}'); location.reload(); 1`);
   await sleep(2500);
   if (await b.eval('Tmdb.enabled() || Meta.count() > 0')) throw new Error('TMDB-gegevens in beeld');
-  const shot = async (name, js, wait = 1500) => { await b.eval(js + '; 1'); await sleep(wait); await b.shot(path.join(out, `${lang}-${name}.png`)); console.log(`${lang}-${name}.png`); };
+  const shot = async (name, js, wait = 1500) => { await b.eval(js + '; 1'); await sleep(wait); await b.shot(path.join(out, `${lang}-${name}.jpg`)); console.log(`${lang}-${name}.jpg`); };
   await shot('1-home', "App.section('home')");
   await shot('2-live', "App.section('live'); setTimeout(function () { Screens.live.applyLineup('all'); }, 300)", 2500);
   await shot('3-guide', "App.section('guide'); setTimeout(function () { var g = Screens.guide.groups.filter(function (x) { return x.id === 'all'; })[0]; if (g) Screens.guide.useGroup(g); }, 600)", 3000);

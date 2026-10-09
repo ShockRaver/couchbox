@@ -90,8 +90,12 @@ export class Browser {
     await sleep(60);
   }
 
-  async shot(file) {
-    const r = await this.send('Page.captureScreenshot', { format: 'png' });
+  // .jpg/.jpeg = JPEG (kwaliteit 92), anders PNG. transparent: geen achtergrond (PNG met alfakanaal)
+  async shot(file, o = {}) {
+    const jpg = /\.jpe?g$/i.test(file);
+    if (o.transparent) await this.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+    const r = await this.send('Page.captureScreenshot', jpg ? { format: 'jpeg', quality: 92 } : { format: 'png' });
+    if (o.transparent) await this.send('Emulation.setDefaultBackgroundColorOverride', {});
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, Buffer.from(r.result.data, 'base64'));
   }

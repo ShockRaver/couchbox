@@ -92,10 +92,17 @@ Samsung vraagt hoe ze de app kunnen testen. Gebruik de ingebouwde demo, **nooit 
 
 > No subscription is needed for testing. On the login screen, enter **demo** as the server URL (leave username and password empty) and press Connect. The demo contains test channels, movies and series with a TV guide; videos are public test streams (Big Buck Bunny, Sintel, Apple HLS examples).
 
-## 4. Screenshots en icoon
+## 4. Afbeeldingen (allemaal 1920×1080)
 
-- Screenshots (1920×1080): `store/screenshots/` — maken met `node scripts/store-screenshots.mjs en` (of `nl`). Demo-modus zonder TMDB, dus zonder beelden van echte films.
-- Icoon: `icon.png` (512×423).
+| Wat | Bestand | Formaat | Maken met |
+|---|---|---|---|
+| Screenshots | `store/screenshots/<taal>-*.jpg` | JPG | `node scripts/store-screenshots.mjs en` (of `nl`) |
+| Logo | `store/logo.png` | PNG, 32-bit (met transparantie) | `node scripts/store-assets.mjs` |
+| Achtergrond | `store/background.jpg` | JPG | `node scripts/store-assets.mjs` |
+| App-icoon (in het pakket) | `icon.png` | PNG 512×423 | `node scripts/make-icon.js` |
+
+- De screenshots komen uit de demo-modus zonder TMDB, dus zonder beelden of teksten van echte films.
+- Het logo heeft witte letters voor een donkere achtergrond.
 
 ## 5. Privacyverklaring
 
