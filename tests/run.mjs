@@ -44,6 +44,21 @@ function staticChecks() {
     .filter(f => f !== 'js/config.local.js' && !f.startsWith('$') && !fs.existsSync(path.join(root, f)));
   report(missing.length ? { name: 'Scripts in index.html bestaan', status: 'fail', error: 'Ontbreekt: ' + missing.join(', ') } : { name: 'Scripts in index.html bestaan', status: 'ok' });
 
+  // Samsung-keuring: geen alert(), confirm() of prompt() in de app (ook niet als eigen functienaam; hun controle zoekt op tekst)
+  const banned = [];
+  (function walk(dir) {
+    for (const f of fs.readdirSync(path.join(root, dir))) {
+      const p = dir + '/' + f;
+      if (fs.statSync(path.join(root, p)).isDirectory()) { if (f !== 'lang') walk(p); continue; }
+      if (!/\.js$/.test(f)) continue;
+      fs.readFileSync(path.join(root, p), 'utf8').split('\n').forEach((line, i) => {
+        const code = line.replace(/\/\/.*$/, '');
+        if (/\b(alert|confirm|prompt)\s*\(/.test(code)) banned.push(`${p}:${i + 1}: ${line.trim().slice(0, 80)}`);
+      });
+    }
+  })('js');
+  report(banned.length ? { name: 'Geen alert/confirm/prompt (Samsung-keuring)', status: 'fail', error: banned.join('\n') } : { name: 'Geen alert/confirm/prompt (Samsung-keuring)', status: 'ok' });
+
   const i18n = spawnSync(process.execPath, ['scripts/i18n-check.js'], { cwd: root, encoding: 'utf8' });
   const miss = (i18n.stdout.match(/Zonder Engelse vertaling \((\d+)\)/) || [])[1];
   report(i18n.status === 0 ? { name: 'Vertalingen compleet (i18n-check)', status: 'ok' }

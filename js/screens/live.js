@@ -37,7 +37,7 @@ Screens.live = {
             self.setup(r[0], r[1], p || {});
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert(T('Zenders laden mislukt'), e.message, function () { App.back(); });
+            Dialog.notice(T('Zenders laden mislukt'), e.message, function () { App.back(); });
         });
     },
 
@@ -356,7 +356,7 @@ Screens.live = {
             else if (it.id === 'rename') Dialog.text({ title: T('Naam van de lijst'), value: c.name }, function (v) {
                 if (v && v.trim()) { Lineup.renameList(c.listId, v.trim()); self.applyLineup(self.cat.id); }
             });
-            else if (it.id === 'del') Dialog.confirm(T('Lijst "{name}" verwijderen?', { name: c.name }), T('De zenders zelf blijven gewoon bestaan.'), function (yes) {
+            else if (it.id === 'del') Dialog.ask(T('Lijst "{name}" verwijderen?', { name: c.name }), T('De zenders zelf blijven gewoon bestaan.'), function (yes) {
                 if (yes) { Lineup.deleteList(c.listId); self.applyLineup(here ? 'fav' : self.cat.id); }
             }, T('Verwijderen'));
             else if (it.id === 'new') self.newList(null);

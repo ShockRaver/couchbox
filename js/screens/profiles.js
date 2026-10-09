@@ -42,7 +42,7 @@ Screens.profiles = {
             if (it.id === 'use') App.switchProfile(p);
             else if (it.id === 'edit') App.go('login', { profile: p });
             else if (it.id === 'del') {
-                Dialog.confirm(T('Profiel verwijderen?'), T('"{name}" en de bijbehorende favorieten en kijkgeschiedenis worden verwijderd.', { name: p.name }), function (yes) {
+                Dialog.ask(T('Profiel verwijderen?'), T('"{name}" en de bijbehorende favorieten en kijkgeschiedenis worden verwijderd.', { name: p.name }), function (yes) {
                     if (!yes) return;
                     var wasActive = Store.activeProfile() && Store.activeProfile().id === p.id;
                     Store.deleteProfile(p.id);

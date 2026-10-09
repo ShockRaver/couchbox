@@ -74,7 +74,7 @@ Screens.catalog = {
             self.loadCat(list[start]);
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert(T('Laden mislukt'), e.message, function () { App.back(); });
+            Dialog.notice(T('Laden mislukt'), e.message, function () { App.back(); });
         });
     },
 

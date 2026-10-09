@@ -71,7 +71,7 @@ var I18N = (function () {
             var items = Object.keys(CONF).map(function (l) { return { id: l, label: CONF[l].name, checked: l === lang }; });
             Dialog.menu({ title: t('Taal'), items: items }, function (it) {
                 if (!it || it.id === lang) return;
-                Dialog.confirm(t('Taal wijzigen naar {lang}?', { lang: it.label }), t('Kijkdoos start opnieuw op om alles in de nieuwe taal te tonen. Titels en beschrijvingen van TMDB worden daarna op de achtergrond bijgewerkt.'), function (yes) {
+                Dialog.ask(t('Taal wijzigen naar {lang}?', { lang: it.label }), t('Kijkdoos start opnieuw op om alles in de nieuwe taal te tonen. Titels en beschrijvingen van TMDB worden daarna op de achtergrond bijgewerkt.'), function (yes) {
                     if (!yes) return;
                     Store.setSetting('lang', it.id);
                     Loader.show(t('Taal wijzigen…'));

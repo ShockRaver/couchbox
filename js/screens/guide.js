@@ -54,7 +54,7 @@ Screens.guide = {
             self.useGroup(g);
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert(T('TV-gids laden mislukt'), e.message, function () { App.back(); });
+            Dialog.notice(T('TV-gids laden mislukt'), e.message, function () { App.back(); });
         });
     },
 

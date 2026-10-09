@@ -111,12 +111,12 @@ Screens.settings = {
             case 'epgSrc': this.epgMenu(); break;
             case 'tmdb': this.tmdbMenu(); break;
             case 'history':
-                Dialog.confirm(T('Kijkgeschiedenis wissen?'), T('Verder kijken en de "bekeken"-vinkjes van dit profiel worden gewist.'), function (yes) {
+                Dialog.ask(T('Kijkgeschiedenis wissen?'), T('Verder kijken en de "bekeken"-vinkjes van dit profiel worden gewist.'), function (yes) {
                     if (yes) { Store.clearHistory(); Toast.show(T('Kijkgeschiedenis gewist')); }
                 }, T('Wissen'));
                 break;
             case 'about':
-                Dialog.alert('Kijkdoos ' + App.VERSION, (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : ''));
+                Dialog.notice('Kijkdoos ' + App.VERSION, (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : ''));
                 break;
         }
     },
@@ -168,7 +168,7 @@ Screens.settings = {
             v = v.replace(/\s+/g, '').toLowerCase();
             if (!v) return;
             if (!/^[0-9a-f]{32}$/.test(v)) {
-                Dialog.alert(T('Dit lijkt geen TMDB-sleutel'), T('Een TMDB-sleutel ("API Key", niet de lange "Read Access Token") bestaat uit 32 tekens: cijfers en de letters a t/m f. Je typte {n} tekens.', { n: v.length }));
+                Dialog.notice(T('Dit lijkt geen TMDB-sleutel'), T('Een TMDB-sleutel ("API Key", niet de lange "Read Access Token") bestaat uit 32 tekens: cijfers en de letters a t/m f. Je typte {n} tekens.', { n: v.length }));
                 return;
             }
             var old = Store.settings().tmdbKey || '';
@@ -184,7 +184,7 @@ Screens.settings = {
             }).catch(function (e) {
                 Loader.hide();
                 Store.setSetting('tmdbKey', old);
-                Dialog.alert(T('Sleutel werkt niet'), (e && e.message) || T('TMDB weigert deze sleutel.'));
+                Dialog.notice(T('Sleutel werkt niet'), (e && e.message) || T('TMDB weigert deze sleutel.'));
             });
         });
     },
@@ -230,7 +230,7 @@ Screens.settings = {
                 value: src.mode === 'url' ? src.url : 'https://', okLabel: T('Gebruiken'), url: true
             }, function (v) {
                 if (!v) return;
-                if (!/^https?:\/\/[^\s/]+\.[^\s]+/i.test(v)) { Dialog.alert(T('Ongeldig adres'), T('Een adres begint met http:// of https://')); return; }
+                if (!/^https?:\/\/[^\s/]+\.[^\s]+/i.test(v)) { Dialog.notice(T('Ongeldig adres'), T('Een adres begint met http:// of https://')); return; }
                 Xmltv.setSource({ mode: 'url', url: v });
                 self.loadEpg();
             });
@@ -246,7 +246,7 @@ Screens.settings = {
             if (App.screen() === self) self.render(self.list.index);
         }).catch(function (e) {
             if (App.screen() === self) self.render(self.list.index);
-            Dialog.alert(T('Tv-gids laden mislukt'), e.message + '\n\n' + T('Zolang gebruikt Kijkdoos de gids van de provider.'));
+            Dialog.notice(T('Tv-gids laden mislukt'), e.message + '\n\n' + T('Zolang gebruikt Kijkdoos de gids van de provider.'));
         });
     },
 
@@ -279,7 +279,7 @@ Screens.settings = {
                 self.render(self.list.index);
                 if (it.id === 'c' || it.id === 'h') self.lineupMenu();
             });
-        }).catch(function (e) { Dialog.alert(T('Zenders laden mislukt'), e.message); });
+        }).catch(function (e) { Dialog.notice(T('Zenders laden mislukt'), e.message); });
     },
 
     langsLabel: function () {
@@ -314,7 +314,7 @@ Screens.settings = {
                 });
             };
             open(0);
-        }).catch(function (e) { Loader.hide(); Dialog.alert(T('Laden mislukt'), e.message); });
+        }).catch(function (e) { Loader.hide(); Dialog.notice(T('Laden mislukt'), e.message); });
     },
 
     pinMenu: function () {
@@ -338,7 +338,7 @@ Screens.settings = {
 
     accountInfo: function () {
         var a = Api.account();
-        if (!a) { Dialog.alert(T('Account'), T('Niet verbonden met een server.')); return; }
+        if (!a) { Dialog.notice(T('Account'), T('Niet verbonden met een server.')); return; }
         var ui = a.user_info || {}, si = a.server_info || {}, p = Store.activeProfile();
         var lines = [
             T('Gebruiker: {user}', { user: ui.username || (p && p.username) || '–' }),
@@ -348,6 +348,6 @@ Screens.settings = {
             T('Formaten: {formats}', { formats: U.toArr(ui.allowed_output_formats).join(', ') }),
             T('Server: {server}', { server: Api.normalizeServer(p && p.server) + (si.timezone ? ' (' + si.timezone + ')' : '') })
         ];
-        Dialog.alert(T('Account'), lines.join('\n'));
+        Dialog.notice(T('Account'), lines.join('\n'));
     }
 };

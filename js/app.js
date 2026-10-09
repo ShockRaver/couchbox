@@ -31,7 +31,7 @@ var App = {
 
     exitPrompt: function () {
         var self = this;
-        Dialog.confirm(T('Afsluiten'), T('Wil je Kijkdoos afsluiten?'), function (yes) { if (yes) self.exit(); }, T('Afsluiten'));
+        Dialog.ask(T('Afsluiten'), T('Wil je Kijkdoos afsluiten?'), function (yes) { if (yes) self.exit(); }, T('Afsluiten'));
     },
     exit: function () {
         Player.stop();
@@ -157,7 +157,7 @@ var App = {
             Follow.check(true);
         }).catch(function (e) {
             Loader.hide();
-            Dialog.alert(T('Vernieuwen mislukt'), e.message);
+            Dialog.notice(T('Vernieuwen mislukt'), e.message);
         });
     },
 

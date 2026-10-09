@@ -107,13 +107,15 @@ var Dialog = (function () {
     }
 
     // Standaard staat de focus op "Annuleren", zodat een verdwaalde OK niets onomkeerbaars doet
-    function confirm(title, text, cb, yesLabel) {
+    // Bevestigen (niet 'confirm' genoemd: Samsungs controle ziet dat als de ingebouwde browserfunctie)
+    function ask(title, text, cb, yesLabel) {
         menu({ title: title, text: text, index: 1, items: [{ id: 'yes', label: yesLabel || T('Ja') }, { id: 'no', label: T('Annuleren') }] }, function (it) {
             cb(!!(it && it.id === 'yes'));
         });
     }
 
-    function alert(title, text, cb) {
+    // Melding met OK (niet 'alert' genoemd, om dezelfde reden)
+    function notice(title, text, cb) {
         menu({ title: title, text: text, items: [{ id: 'ok', label: 'OK' }] }, function () { if (cb) cb(); });
     }
 
@@ -155,5 +157,5 @@ var Dialog = (function () {
         return d;
     }
 
-    return { init: init, isOpen: isOpen, onKey: onKey, onChar: onChar, menu: menu, text: text, confirm: confirm, alert: alert, pin: pin };
+    return { init: init, isOpen: isOpen, onKey: onKey, onChar: onChar, menu: menu, text: text, ask: ask, notice: notice, pin: pin };
 })();
