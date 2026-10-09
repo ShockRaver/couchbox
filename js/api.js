@@ -93,7 +93,7 @@ var Api = (function () {
 
     function login() {
         return request({}, 20000).then(function (res) {
-            if (!res || !res.user_info) throw new Error(T('Onverwacht antwoord – is dit een Xtream Codes-server?'));
+            if (!res || !res.user_info) throw new Error(T('Onverwacht antwoord – klopt het serveradres?'));
             var ui = res.user_info;
             if (String(ui.auth) === '0') throw new Error(T('Onjuiste gebruikersnaam of wachtwoord'));
             if (ui.status && ui.status !== 'Active') throw new Error(T('Account is niet actief ({status})', { status: ui.status }));

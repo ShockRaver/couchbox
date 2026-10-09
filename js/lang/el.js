@@ -264,7 +264,6 @@ I18N.add('el', {
     "Ongeldige TMDB-sleutel": "Μη έγκυρο κλειδί TMDB",
     "Onjuiste gebruikersnaam of wachtwoord": "Λάθος όνομα χρήστη ή κωδικός πρόσβασης",
     "Onjuiste pincode": "Λάθος PIN",
-    "Onverwacht antwoord – is dit een Xtream Codes-server?": "Μη αναμενόμενη απάντηση – είναι αυτός διακομιστής Xtream Codes;",
     "Oorlog & Geschiedenis": "Πολεμική & Ιστορία",
     "Openen": "Άνοιγμα",
     "Opnieuw proberen": "Δοκιμάστε ξανά",
@@ -345,7 +344,6 @@ I18N.add('el', {
     "Time-out: de server reageert niet": "Λήξη χρόνου: ο διακομιστής δεν αποκρίνεται",
     "Tip: vul \"demo\" in als server-URL om de app te proberen zonder abonnement.": "Συμβουλή: εισαγάγετε \"demo\" ως URL διακομιστή για να δοκιμάσετε την εφαρμογή χωρίς συνδρομή.",
     "Titel, zender, persoon": "Τίτλος, κανάλι, πρόσωπο",
-    "Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Εφαρμογή web Tizen για Samsung TV με το Xtream Codes API.\nΑναπαραγωγή μέσω Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nΤα δεδομένα σας αποθηκεύονται μόνο τοπικά σε αυτή την TV.\n\nΔεδομένα ταινιών και σειρών: The Movie Database (TMDB). Αυτή η εφαρμογή χρησιμοποιεί το TMDB API, αλλά δεν υποστηρίζεται ούτε πιστοποιείται από το TMDB.",
     "TMDB weigert deze sleutel.": "Το TMDB απέρριψε αυτό το κλειδί.",
     "TMDB-fout {code}": "Σφάλμα TMDB {code}",
     "TMDB-gegevens": "Δεδομένα TMDB",
@@ -419,7 +417,6 @@ I18N.add('el', {
     "Vragen: verder kijken?": "Ερώτηση: συνέχεια παρακολούθησης;",
     "Vul de server-URL in": "Εισαγάγετε το URL του διακομιστή",
     "Vul gebruikersnaam en wachtwoord in": "Εισαγάγετε όνομα χρήστη και κωδικό πρόσβασης",
-    "Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.": "Εισαγάγετε τα στοιχεία Xtream Codes. Αποθηκεύονται μόνο τοπικά σε αυτή την TV.",
     "Wachtwoord": "Κωδικός πρόσβασης",
     "Weer zichtbaar": "Ορατό ξανά",
     "Welke zenders?": "Ποια κανάλια;",
@@ -480,5 +477,9 @@ I18N.add('el', {
     "＋ {name} staat in Mijn lijst": "＋ Το {name} προστέθηκε στη λίστα μου",
     "Turkse films": "Τουρκικές ταινίες",
     "Poolse films": "Πολωνικές ταινίες",
-    "Italiaanse films": "Ιταλικές ταινίες"
+    "Italiaanse films": "Ιταλικές ταινίες",
+    "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Εισαγάγετε τα στοιχεία του παρόχου IPTV. Αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση.",
+    "Onverwacht antwoord – klopt het serveradres?": "Μη αναμενόμενη απάντηση – είναι σωστή η διεύθυνση του διακομιστή;",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Πρόγραμμα αναπαραγωγής για τη δική σας συνδρομή IPTV. Το Kijkdoos δεν περιέχει κανάλια, ταινίες ή σειρές.\nΑναπαραγωγή μέσω Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nΤα δεδομένα σας αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση· τίποτα δεν αποστέλλεται στους δημιουργούς του Kijkdoos.\n\nΣτοιχεία ταινιών και σειρών: The Movie Database (TMDB). Αυτή η εφαρμογή χρησιμοποιεί το API του TMDB, αλλά δεν εγκρίνεται ούτε πιστοποιείται από το TMDB.",
+    "Privacyverklaring: {url}": "Πολιτική απορρήτου: {url}"
 });

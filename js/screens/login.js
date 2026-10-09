@@ -7,7 +7,7 @@ Screens.login = {
         card.appendChild(U.h('div', { class: 'login-logo', html: Icons.logo() + '<span>Kijkdoos</span>' }));
         this.titleEl = U.h('h1', { text: T('Verbinden met je IPTV-server') });
         card.appendChild(this.titleEl);
-        card.appendChild(U.h('p', { class: 'muted', text: T('Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.') }));
+        card.appendChild(U.h('p', { class: 'muted', text: T('Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.') }));
         this.fields = [
             { key: 'name', label: T('Naam van dit profiel'), ph: T('Bijv. Thuis') },
             { key: 'server', label: T('Server-URL (met poort)'), ph: T('http://voorbeeld.com:8080'), type: 'url' },

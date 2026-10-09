@@ -265,7 +265,6 @@ I18N.add('it', {
     "Ongeldige TMDB-sleutel": "Chiave TMDB non valida",
     "Onjuiste gebruikersnaam of wachtwoord": "Nome utente o password errati",
     "Onjuiste pincode": "PIN errato",
-    "Onverwacht antwoord – is dit een Xtream Codes-server?": "Risposta inattesa – è un server Xtream Codes?",
     "Oorlog & Geschiedenis": "Guerra e storia",
     "Openen": "Apri",
     "Opnieuw proberen": "Riprova",
@@ -347,7 +346,6 @@ I18N.add('it', {
     "Time-out: de server reageert niet": "Timeout: il server non risponde",
     "Tip: vul \"demo\" in als server-URL om de app te proberen zonder abonnement.": "Suggerimento: inserisci \"demo\" come URL del server per provare l'app senza abbonamento.",
     "Titel, zender, persoon": "Titolo, canale, persona",
-    "Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Web app Tizen per Samsung TV con API Xtream Codes.\nRiproduzione tramite Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nI tuoi dati vengono salvati solo localmente su questa TV.\n\nDati di film e serie: The Movie Database (TMDB). Questa app usa l'API TMDB, ma non è approvata né certificata da TMDB.",
     "TMDB weigert deze sleutel.": "TMDB ha rifiutato questa chiave.",
     "TMDB-fout {code}": "Errore TMDB {code}",
     "TMDB-gegevens": "Dati TMDB",
@@ -422,7 +420,6 @@ I18N.add('it', {
     "Vragen: verder kijken?": "Chiedi: continuare a guardare?",
     "Vul de server-URL in": "Inserisci l'URL del server",
     "Vul gebruikersnaam en wachtwoord in": "Inserisci nome utente e password",
-    "Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.": "Inserisci i tuoi dati Xtream Codes. Vengono salvati solo localmente su questa TV.",
     "Wachtwoord": "Password",
     "Weer zichtbaar": "Di nuovo visibile",
     "Welke zenders?": "Quali canali?",
@@ -480,5 +477,9 @@ I18N.add('it', {
     "▲▼ zappen · ◀▶ zenderlijst · <b>OK</b> menu · cijfers = zendernummer": "▲▼ cambia canale · ◀▶ elenco canali · <b>OK</b> menu · cifre = numero canale",
     "◀ ▶ waarde wijzigen · OK kiezen": "◀ ▶ cambia valore · OK scegli",
     "★ {name} toegevoegd aan favorieten": "★ {name} aggiunto ai preferiti",
-    "＋ {name} staat in Mijn lijst": "＋ {name} è nella mia lista"
+    "＋ {name} staat in Mijn lijst": "＋ {name} è nella mia lista",
+    "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Inserisci i dati del tuo fornitore IPTV. Vengono salvati solo su questo televisore.",
+    "Onverwacht antwoord – klopt het serveradres?": "Risposta inattesa – l'indirizzo del server è corretto?",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Lettore per il tuo abbonamento IPTV. Kijkdoos non contiene canali, film o serie.\nRiproduzione tramite Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nI tuoi dati vengono salvati solo su questo televisore; nulla viene inviato ai creatori di Kijkdoos.\n\nDati di film e serie: The Movie Database (TMDB). Questa app usa l'API di TMDB ma non è approvata né certificata da TMDB.",
+    "Privacyverklaring: {url}": "Informativa sulla privacy: {url}"
 });

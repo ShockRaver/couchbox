@@ -121,6 +121,8 @@ The runner needs Node 22+ and Google Chrome (or Chromium; set `CHROME=/path` if 
 scripts/deploy.sh <TV-IP> iptv
 ```
 
+**Samsung store**: `scripts/store-package.sh iptv` builds `build/store/kijkdoos-<version>.wgt` for the TV Seller Office (without a built-in TMDB key, only from a clean commit whose GitHub tests passed). Store text, test account, screenshots and privacy policy: see `store/README.md`.
+
 The script stamps a version (1.&lt;commit count&gt;), date and commit into the app (*Instellingen → Over deze app*). The app then appears in the TV's app list. Your login details stay on the TV. After installing you don't need the Mac any more, not even to start the app. You only need it again for updates, or if the certificate expires or the TV is reset. The script checks that the profile uses the distributor certificate (a common cause of "Invalid certificate chain").
 
 ## Performance

@@ -116,7 +116,7 @@ Screens.settings = {
                 }, T('Wissen'));
                 break;
             case 'about':
-                Dialog.alert('Kijkdoos ' + App.VERSION, (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.'));
+                Dialog.alert('Kijkdoos ' + App.VERSION, (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : ''));
                 break;
         }
     },

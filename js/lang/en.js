@@ -90,7 +90,6 @@ I18N.add('en', {
     "Talen in genres (films & series)": "Languages in genres (movies & series)",
     "Talen ophalen…": "Loading languages…",
     "Tip: vul \"demo\" in als server-URL om de app te proberen zonder abonnement.": "Tip: enter \"demo\" as the server URL to try the app without a subscription.",
-    "Tizen-webapp voor Samsung TV met Xtream Codes API.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Tizen web app for Samsung TV using the Xtream Codes API.\nPlayback via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nYour data is only stored locally on this TV.\n\nMovie and series data: The Movie Database (TMDB). This app uses the TMDB API but is not endorsed or certified by TMDB.",
     "TMDB weigert deze sleutel.": "TMDB rejected this key.",
     "TMDB-gegevens": "TMDB data",
     "TMDB-gegevens (genres, posters, info)": "TMDB data (genres, posters, info)",
@@ -115,7 +114,6 @@ I18N.add('en', {
     "Vragen: verder kijken?": "Ask: continue watching?",
     "Vul de server-URL in": "Enter the server URL",
     "Vul gebruikersnaam en wachtwoord in": "Enter username and password",
-    "Vul je Xtream Codes-gegevens in. Ze worden alleen lokaal op deze TV opgeslagen.": "Enter your Xtream Codes details. They are only stored locally on this TV.",
     "Wachtwoord": "Password",
     "Wissen": "Clear",
     "Zenders, films en gids vernieuwen": "Refresh channels, movies and guide",
@@ -353,7 +351,6 @@ I18N.add('en', {
     "Ongeldige TMDB-sleutel": "Invalid TMDB key",
     "Onjuiste gebruikersnaam of wachtwoord": "Incorrect username or password",
     "Onjuiste pincode": "Incorrect PIN",
-    "Onverwacht antwoord – is dit een Xtream Codes-server?": "Unexpected response – is this an Xtream Codes server?",
     "Oorlog & Geschiedenis": "War & History",
     "Opnieuw proberen": "Try again",
     "Opslag op de TV is vol": "Storage on the TV is full",
@@ -489,5 +486,9 @@ I18N.add('en', {
     "Griekse films": "Greek films",
     "Turkse films": "Turkish films",
     "Poolse films": "Polish films",
-    "Italiaanse films": "Italian films"
+    "Italiaanse films": "Italian films",
+    "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Enter the details from your IPTV provider. They are only stored locally on this TV.",
+    "Onverwacht antwoord – klopt het serveradres?": "Unexpected response – is the server address correct?",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Player for your own IPTV subscription. Kijkdoos itself contains no channels, movies or series.\nPlayback via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nYour data is only stored locally on this TV; nothing is sent to the makers of Kijkdoos.\n\nMovie and series data: The Movie Database (TMDB). This app uses the TMDB API but is not endorsed or certified by TMDB.",
+    "Privacyverklaring: {url}": "Privacy policy: {url}"
 });
