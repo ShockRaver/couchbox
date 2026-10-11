@@ -118,9 +118,11 @@ export default [
       // Een stream die niet bestaat: eerst .m3u8, dan meteen .ts, en pas daarna gewone nieuwe pogingen
       const u = t.base + '/bestaat-niet/1';
       const r = await t.eval(`new Promise(function (done) {
-        var urls = [], off = Player.on('state', function (s) { if (s === 'loading') urls.push(Player.url()); });
+        // Klaar zodra er twee pogingen zijn (op GitHub duurt de eerste fout soms langer), uiterlijk na 15 s
+        var urls = [], t0 = null, finish = function () { clearTimeout(t0); off(); Player.stop(); done(urls.slice(0, 2)); };
+        var off = Player.on('state', function (s) { if (s === 'loading') { urls.push(Player.url()); if (urls.length >= 2) setTimeout(finish, 0); } });
         Player.play('${u}.m3u8', { live: true, meta: { stream_id: 1 }, alt: '${u}.ts' });
-        setTimeout(function () { off(); Player.stop(); done(urls.slice(0, 2)); }, 2500);
+        t0 = setTimeout(finish, 15000);
       })`);
       t.eq(r, [t.base + '/bestaat-niet/1.m3u8', t.base + '/bestaat-niet/1.ts'], 'volgorde van pogingen');
     },
