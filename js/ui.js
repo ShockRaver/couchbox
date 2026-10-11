@@ -19,6 +19,8 @@ var Icons = (function () {
         check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
         restart: '<path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3L3.5 8.3"/><path d="M3.5 3.5v4.8h4.8"/>',
         plus: '<path d="M12 5v14M5 12h14"/>',
+        thumbup: '<path d="M7 10v12"/><path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8a2 2 0 0 1-1.9 1.4H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/>',
+        thumbdown: '<path d="M17 14V2"/><path d="M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.6l2.3-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9z"/>',
         bookmark: '<path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/>',
         bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
         backspace: '<path d="M21 5H9l-6 7 6 7h12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/>',
@@ -131,6 +133,29 @@ var UI = {
             },
             onSelect: function (x) { UI.openLib(x.type, x.item); }
         };
+    },
+
+    // Knop "Beoordelen" op de film- en seriepagina (toont de huidige keuze)
+    rateButton: function (type, it) {
+        var v = Taste.get(type, it);
+        return { id: 'rate', icon: v < 0 ? 'thumbdown' : 'thumbup', label: v > 0 ? T('Vind ik leuk') : v < 0 ? T('Niet voor mij') : T('Beoordelen'), on: v !== 0 };
+    },
+    // Keuzemenu: leuk, niet voor mij, of geen beoordeling; cb() na een wijziging
+    rateMenu: function (type, it, cb) {
+        var v = Taste.get(type, it);
+        Dialog.menu({
+            title: it.name, text: T('Je beoordeling wordt alleen op deze TV bewaard en bepaalt mee wat je bij "Voor jou" en de andere aanbevelingen ziet.'),
+            items: [
+                { id: 1, label: T('Vind ik leuk'), checked: v > 0 },
+                { id: -1, label: T('Niet voor mij'), checked: v < 0 },
+                { id: 0, label: T('Geen beoordeling'), checked: !v }
+            ]
+        }, function (x) {
+            if (!x || x.id === v) return;
+            Taste.set(type, it, x.id);
+            Toast.show(x.id > 0 ? T('Je krijgt vaker titels zoals deze te zien') : x.id < 0 ? T('Je krijgt minder titels zoals deze te zien') : T('Beoordeling verwijderd'));
+            if (cb) cb();
+        });
     },
 
     // Categorie op slot zetten of het slot eraf halen. Zonder pincode eerst een pincode instellen;

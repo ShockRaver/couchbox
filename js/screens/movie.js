@@ -144,6 +144,7 @@ Screens.movie = {
         } else b.push({ id: 'start', label: T('Afspelen'), icon: 'play' });
         var fav = Store.isFav('movie', it.stream_id);
         b.push({ id: 'fav', label: fav ? T('In Mijn lijst') : T('Mijn lijst'), icon: fav ? 'check' : 'plus', on: fav });
+        b.push(UI.rateButton('m', this.rateItem()));
         if (this.det && this.det.trailer) b.push({ id: 'trailer', label: T('Trailer'), icon: 'film' });
         this.btns = b;
         this.bi = U.clamp(this.bi, 0, b.length - 1);
@@ -152,6 +153,9 @@ Screens.movie = {
             self.btnBox.appendChild(U.h('div', { class: 'btn' + (self.zone === 'btns' && i === self.bi ? ' focus' : '') + (x.on ? ' on' : ''), html: Icons.get(x.icon) + '<span>' + U.esc(x.label) + '</span>' }));
         });
     },
+
+    // Voor de beoordeling: film met het TMDB-id (ook als dat pas later bekend werd)
+    rateItem: function () { return Object.assign({}, this.item, { tmdb: this.tmdbId || this.item.tmdb || '' }); },
 
     setZone: function (z) {
         this.zone = z;
@@ -188,6 +192,7 @@ Screens.movie = {
                 if (id === 'resume') { h = Store.progress('movie:' + this.item.stream_id); this.play(h ? h.position : 0); }
                 else if (id === 'start') this.play(0);
                 else if (id === 'trailer') App.trailer(this.det.trailer, this.title.textContent);
+                else if (id === 'rate') { var self = this; UI.rateMenu('m', this.rateItem(), function () { self.renderButtons(); }); }
                 else if (id === 'fav') {
                     App.toggleMyList('movie', App.favFromVod(Object.assign({}, this.item, { tmdb: this.tmdbId || this.item.tmdb })));
                     this.renderButtons();

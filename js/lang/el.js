@@ -552,5 +552,15 @@ I18N.add('el', {
     "Extra groot": "Πολύ μεγάλο",
     "Gewoon tonen": "Κανονική εμφάνιση",
     "Verbergen": "Απόκρυψη",
-    "Op slot (pincode)": "Κλειδωμένο (PIN)"
+    "Op slot (pincode)": "Κλειδωμένο (PIN)",
+    // ---- Voor jou, beoordelen ----
+    "Voor jou": "Για σένα",
+    "Vind ik leuk": "Μου αρέσει",
+    "Niet voor mij": "Δεν είναι για μένα",
+    "Beoordelen": "Αξιολόγηση",
+    "Je beoordeling wordt alleen op deze TV bewaard en bepaalt mee wat je bij \"Voor jou\" en de andere aanbevelingen ziet.": "Η αξιολόγησή σου αποθηκεύεται μόνο σε αυτή την τηλεόραση και επηρεάζει τι βλέπεις στο «Για σένα» και στις άλλες προτάσεις.",
+    "Geen beoordeling": "Χωρίς αξιολόγηση",
+    "Je krijgt vaker titels zoals deze te zien": "Θα βλέπεις περισσότερους τίτλους σαν αυτόν",
+    "Je krijgt minder titels zoals deze te zien": "Θα βλέπεις λιγότερους τίτλους σαν αυτόν",
+    "Beoordeling verwijderd": "Η αξιολόγηση αφαιρέθηκε"
 });

@@ -75,10 +75,11 @@ var Rank = (function () {
     // Eén rij kiezen uit een op score gesorteerde lijst. used = { sleutel: 1 } gedeeld over de rijen van één scherm:
     // titels die al vooraan in een eerdere rij stonden, komen hier niet vooraan (wel verderop).
     function row(type, ranked, used, n) {
-        var day = Math.floor(Date.now() / 864e5), seen = seenSet();
+        var day = Math.floor(Date.now() / 864e5), seen = seenSet(), dis = Taste.disliked();
         var cand = ranked.slice(0, POOL).map(function (it) {
             var k = keyOf(type, it), id = type + ':' + (type === 'm' ? it.stream_id : it.series_id);
             var s = it._r + jitter(k, day) - (seen[k] || seen[id] || (type === 'm' && Store.isSeen('movie:' + it.stream_id)) ? 0.25 : 0);
+            if (dis[k] || dis[id]) s -= 1;   // "Niet voor mij": ver naar achteren
             return { it: it, k: k, s: s };
         }).sort(function (a, b) { return b.s - a.s; });
         var front = [], rest = [];

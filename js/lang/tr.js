@@ -552,5 +552,15 @@ I18N.add('tr', {
     "Extra groot": "Çok büyük",
     "Gewoon tonen": "Normal göster",
     "Verbergen": "Gizle",
-    "Op slot (pincode)": "Kilitli (PIN)"
+    "Op slot (pincode)": "Kilitli (PIN)",
+    // ---- Voor jou, beoordelen ----
+    "Voor jou": "Senin için",
+    "Vind ik leuk": "Beğendim",
+    "Niet voor mij": "Bana göre değil",
+    "Beoordelen": "Değerlendir",
+    "Je beoordeling wordt alleen op deze TV bewaard en bepaalt mee wat je bij \"Voor jou\" en de andere aanbevelingen ziet.": "Değerlendirmen yalnızca bu TV'de saklanır ve \"Senin için\" ile diğer önerilerde ne göreceğini belirlemeye yardımcı olur.",
+    "Geen beoordeling": "Değerlendirme yok",
+    "Je krijgt vaker titels zoals deze te zien": "Bunun gibi daha fazla başlık göreceksin",
+    "Je krijgt minder titels zoals deze te zien": "Bunun gibi daha az başlık göreceksin",
+    "Beoordeling verwijderd": "Değerlendirme kaldırıldı"
 });

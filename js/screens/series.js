@@ -129,6 +129,7 @@ Screens.series = {
         } else if (!this.data && !this.loadFailed) b.push({ id: 'play', icon: 'play', label: T('Afspelen'), loading: true });
         var fav = Store.isFav('series', this.item.series_id);
         b.push({ id: 'fav', icon: fav ? 'check' : 'plus', label: fav ? T('In Mijn lijst') : T('Mijn lijst'), on: fav });
+        b.push(UI.rateButton('t', this.rateItem()));
         if (this.det) b.push({ id: 'cast', icon: 'user', label: T('Cast & meer zoals dit') });
         else if (this.tmdbId && !this.detFailed) b.push({ id: 'cast', icon: 'user', label: T('Cast & meer zoals dit'), loading: true });
         if (this.det && this.det.trailer) b.push({ id: 'trailer', icon: 'film', label: T('Trailer') });
@@ -140,6 +141,9 @@ Screens.series = {
             self.btnBox.appendChild(U.h('div', { class: cls, html: (x.loading ? '<span class="spinner sm"></span>' : Icons.get(x.icon)) + '<span>' + U.esc(x.label) + '</span>' }));
         });
     },
+
+    // Voor de beoordeling: serie met het TMDB-id (ook als dat pas later bekend werd)
+    rateItem: function () { return Object.assign({}, this.item, { tmdb: this.tmdbId || this.item.tmdb || '' }); },
 
     renderEp: function (e) {
         var h = Store.progress('episode:' + e.id), seen = Store.isSeen('episode:' + e.id);
@@ -197,6 +201,7 @@ Screens.series = {
                     if (b.id === 'play') { var t = this.target(); if (t) this.playEp(t.ep, t.pos); }
                     else if (b.id === 'cast') App.go('credits', { type: 't', id: this.tmdbId, title: this.titleEl.textContent });
                     else if (b.id === 'trailer') App.trailer(this.det.trailer, this.titleEl.textContent);
+                    else if (b.id === 'rate') { var self = this; UI.rateMenu('t', this.rateItem(), function () { self.renderButtons(); }); }
                     else if (b.id === 'fav') {
                         App.toggleMyList('series', App.favFromSeries(Object.assign({}, this.item, { cover: this.cover, tmdb: this.tmdbId || this.item.tmdb })), this.raw);
                         this.renderButtons();

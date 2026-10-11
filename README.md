@@ -28,7 +28,8 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Continue watching**: position saved every 10 s, one entry per series (up-next episode), watched checkmarks
 - **My list** for movies and series, **favourites** for channels (hold OK)
 - **New episodes**: series in My list are checked for new episodes, with a notification and a "New episodes" row; *Binnenkort* shows episodes announced for the next 3 weeks (TMDB)
-- **Recommendations** on Home and on the Movies/Series pages: *Because you watched X*, **Top 10 this week** (TMDB trending, only what's in your library, with large rank numbers; also titles you've watched), *Trending this week* (the rest), *&lt;genre&gt; for you*, *Highest rated* (weighted), *Dutch & Flemish films*, *Under 90 minutes*. Only titles that are in your own library are shown; anything already watched is skipped.
+- **Rate titles** on movie and series pages (*Rate* → *I like this* / *Not for me*, stored per profile on the TV, `js/taste.js`). Likes count +3 and dislikes −3 per genre in your taste profile (next to watching +2 and My list +1); "Not for me" titles are never recommended and move to the back of genre rows.
+- **Recommendations** on Home and on the Movies/Series pages: **For you** (first row: one row across all genres, scored on how well a title's genres fit your taste profile, quality, popularity and similarity to titles you liked via TMDB recommendations; without TMDB it uses genres from category names), *Because you watched X*, **Top 10 this week** (TMDB trending, only what's in your library, with large rank numbers; also titles you've watched), *Trending this week* (the rest), *&lt;genre&gt; for you*, *Highest rated* (weighted), *Dutch & Flemish films*, *Under 90 minutes*. Only titles that are in your own library are shown; anything already watched is skipped.
 - **Startup**: start screen, last channel, or ask
 - **Multiple profiles** (several servers/subscriptions), stored locally on the TV
 - **PIN lock** for settings, and **parental lock** for categories: hold OK on a live group or a movie/series category → *Lock (PIN)*. *Settings → 18+ categories*: show, hide, or lock. Locked content stays out of "All", genres, recommendations and search until the PIN is entered once; it locks again when the app goes to the background (or after 4 hours). Simple parental lock, not real security.
@@ -159,6 +160,7 @@ js/season.js            seasonal categories and rows (Halloween, Christmas & Sin
 js/m3u.js               M3U/M3U8 playlists, presented as an Xtream server
 js/find.js              search index (TMDB titles, typo tolerance, ranking)
 js/reco.js              recommendation rows
+js/taste.js             ratings: I like this / Not for me
 js/follow.js            new-episode detection for series in My list
 js/remind.js            reminders for programmes in the TV guide
 js/subs.js              online subtitles (OpenSubtitles): search, download, SRT/WebVTT parsing, local cache

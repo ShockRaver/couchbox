@@ -561,5 +561,15 @@ I18N.add('en', {
     "Extra groot": "Extra large",
     "Gewoon tonen": "Show normally",
     "Verbergen": "Hide",
-    "Op slot (pincode)": "Locked (PIN)"
+    "Op slot (pincode)": "Locked (PIN)",
+    // ---- Voor jou, beoordelen ----
+    "Voor jou": "For you",
+    "Vind ik leuk": "I like this",
+    "Niet voor mij": "Not for me",
+    "Beoordelen": "Rate",
+    "Je beoordeling wordt alleen op deze TV bewaard en bepaalt mee wat je bij \"Voor jou\" en de andere aanbevelingen ziet.": "Your rating is only stored on this TV and helps decide what you see in \"For you\" and the other recommendations.",
+    "Geen beoordeling": "No rating",
+    "Je krijgt vaker titels zoals deze te zien": "You'll see more titles like this",
+    "Je krijgt minder titels zoals deze te zien": "You'll see fewer titles like this",
+    "Beoordeling verwijderd": "Rating removed"
 });

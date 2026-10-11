@@ -35,7 +35,7 @@ var Reco = (function () {
 
     // ---- Wat je al kijkt/gekeken hebt ----
     function watched() {
-        var w = { m: {}, t: {}, tmdb: { m: {}, t: {} } };
+        var w = { m: {}, t: {}, tmdb: { m: {}, t: {} }, dis: Taste.disliked() };
         Store.history().forEach(function (h) {
             if (h.mode === 'movie') { w.m[String(h.id)] = 1; if (h.tmdb) w.tmdb.m[String(h.tmdb)] = 1; }
             else if (h.series) { w.t[String(h.series.id)] = 1; if (h.series.tmdb) w.tmdb.t[String(h.series.tmdb)] = 1; }
@@ -44,6 +44,8 @@ var Reco = (function () {
     }
     function fresh(w) {
         return function (x) {
+            // "Niet voor mij" nooit aanbevelen
+            if (w.dis[x.type + ':' + (x.type === 'm' ? x.item.stream_id : x.item.series_id)] || (x.id && w.dis[x.type + ':' + x.id])) return false;
             if (x.type === 'm') return !w.m[String(x.item.stream_id)] && !w.tmdb.m[String(x.id)] && !Store.isSeen('movie:' + x.item.stream_id);
             return !w.t[String(x.item.series_id)] && !w.tmdb.t[String(x.id)];
         };
@@ -110,8 +112,8 @@ var Reco = (function () {
         }).catch(function () { return {}; });
     }
 
-    // Jouw favoriete genres (uit wat je kijkt en bewaart)
-    function favGenres(types) {
+    // Genreprofiel (TMDB-genres): gekeken 2, Mijn lijst 1, leuk 3, niet voor mij −3
+    function profile(types) {
         var count = {};
         var add = function (t, tmdb, wgt) {
             if (!tmdb || types.indexOf(t) < 0) return;
@@ -120,8 +122,47 @@ var Reco = (function () {
         Store.history().forEach(function (h) { if (h.mode === 'movie') add('m', h.tmdb, 2); else if (h.series) add('t', h.series.tmdb, 2); });
         Store.favorites('movie').forEach(function (f) { add('m', f.tmdb, 1); });
         Store.favorites('series').forEach(function (f) { add('t', f.tmdb, 1); });
+        Taste.list().forEach(function (e) { add(e.t, e.tmdb, e.v * 3); });
+        return count;
+    }
+    // Jouw favoriete genres (uit wat je kijkt, bewaart en leuk vindt)
+    function favGenres(types) {
+        var count = profile(types);
         return Object.keys(count).filter(function (g) { return count[g] >= 2 && Genres.byId(g); })
             .sort(function (a, b) { return count[b] - count[a]; });
+    }
+
+    // "Voor jou": één rij over alle genres heen. Score per titel = hoe goed de genres bij je profiel passen
+    // + kwaliteit + bekendheid + lijkt op wat je leuk vindt (TMDB-aanbevelingen bij je laatste 5 "leuk"-titels)
+    function forYou(list, w, types) {
+        var prof = profile(types), keys = Object.keys(prof);
+        if (!keys.length) return Promise.resolve(null);
+        var max = Math.max.apply(null, keys.map(function (g) { return Math.abs(prof[g]); })) || 1;
+        var liked = Taste.list(1).filter(function (e) { return e.tmdb && types.indexOf(e.t) >= 0; }).slice(0, 5);
+        return Promise.all(liked.map(function (e) {
+            return Meta.details(e.t, e.tmdb).then(function (d) { return (d && d.recs) || []; }).catch(function () { return []; });
+        })).then(function (recs) {
+            var near = {}, day = Math.floor(Date.now() / 864e5);
+            recs.forEach(function (ids, i) { ids.forEach(function (id, j) { var k = liked[i].t + id; near[k] = Math.max(near[k] || 0, 1 - j / 40); }); });
+            var scored = [];
+            list.forEach(function (x) {
+                if (types.indexOf(x.type) < 0) return;
+                var gs = Tmdb.genres(x.type, x.item) || [], g = 0;
+                gs.forEach(function (id) { g += (prof[id] || 0) / max; });
+                if (gs.length) g /= Math.sqrt(gs.length);
+                var s = g * 2 + (x.q - 6.5) * 0.6 + Math.log(1 + x.m.pop) / 4 + (near[x.type + x.id] || 0) * 1.5 + jitter(x.type + x.id, day);
+                if (g > 0 || near[x.type + x.id]) scored.push({ x: x, s: s });
+            });
+            scored.sort(function (a, b) { return b.s - a.s; });
+            var items = pick(scored.map(function (o) { return o.x; }), w, types);
+            return items.length >= 5 ? { id: 'foryou', title: T('Voor jou'), items: byRank(items) } : null;
+        });
+    }
+    // Kleine dagelijkse variatie (0 – 0,3), zodat "Voor jou" niet elke dag precies hetzelfde begint
+    function jitter(k, day) {
+        var h = 2166136261, s = k + '|' + day;
+        for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return (h >>> 0) / 4294967295 * 0.3;
     }
     function genreRows(list, w, types, n) {
         return favGenres(types).slice(0, n).map(function (g) {
@@ -227,6 +268,32 @@ var Reco = (function () {
             var best = function (list, t) {
                 return list.slice().sort(function (a, b) { return pRating(b) - pRating(a) || (b._t || 0) - (a._t || 0); }).map(wrap(t));
             };
+            // "Voor jou" zonder TMDB: genres (uit categorienamen en de provider) van wat je kijkt, bewaart en beoordeelt
+            var wgt = {}, prof = {};
+            Store.history().forEach(function (h) { if (h.mode === 'movie') wgt['m' + h.id] = 2; else if (h.series) wgt['t' + h.series.id] = 2; });
+            Store.favorites('movie').forEach(function (f) { wgt['m' + f.id] = (wgt['m' + f.id] || 0) + 1; });
+            Store.favorites('series').forEach(function (f) { wgt['t' + f.id] = (wgt['t' + f.id] || 0) + 1; });
+            Taste.list().forEach(function (e) { wgt[e.t + e.id] = (wgt[e.t + e.id] || 0) + e.v * 3; });
+            types.forEach(function (t) {
+                Object.keys(idx[t]).forEach(function (g) {
+                    if (g === '*' || g === '~' || !Genres.byId(g)) return;
+                    idx[t][g].forEach(function (it) { var v = wgt[t + keyOf(t, it)]; if (v) prof[g] = (prof[g] || 0) + v; });
+                });
+            });
+            var pk = Object.keys(prof), pmax = Math.max.apply(null, pk.map(function (g) { return Math.abs(prof[g]); }).concat([1]));
+            if (pk.some(function (g) { return prof[g] > 0; })) {
+                var score = {}, ref = {};
+                types.forEach(function (t) {
+                    pk.forEach(function (g) {
+                        (idx[t][g] || []).forEach(function (it) { var k = t + keyOf(t, it); score[k] = (score[k] || 0) + prof[g] / pmax; ref[k] = { t: t, it: it }; });
+                    });
+                });
+                var mine4u = Object.keys(score).filter(function (k) { return score[k] > 0; })
+                    .sort(function (a, b) { return (score[b] * 2 + pRating(ref[b].it) / 3) - (score[a] * 2 + pRating(ref[a].it) / 3); })
+                    .map(function (k) { return wrap(ref[k].t)(ref[k].it); });
+                var fy = pick(mine4u, w, types);
+                if (fy.length >= 5) out.push({ id: 'b:foryou', title: T('Voor jou'), items: fy });
+            }
             // "Omdat je X keek": titels uit hetzelfde genre, best gewaardeerd eerst
             srcs.forEach(function (s) {
                 var g = (s.genres || [])[0];
@@ -265,8 +332,9 @@ var Reco = (function () {
         if (!Tmdb.enabled()) return basic(kind, w);
         return pool().then(function (list) {
             var soon = types.indexOf('t') >= 0 ? upcoming().catch(function () { return null; }) : Promise.resolve(null);
-            return Promise.all([because(w, types, 2), trending(w, types), soon]).then(function (r) {
+            return Promise.all([because(w, types, 2), trending(w, types), soon, forYou(list, w, types).catch(function () { return null; })]).then(function (r) {
                 var bc = r[0].filter(Boolean), out = [];
+                if (r[3]) out.push(r[3]);
                 if (bc[0]) out.push(bc[0]);
                 if (r[1].top) out.push(r[1].top);
                 if (r[1].trend) out.push(r[1].trend);
@@ -289,7 +357,7 @@ var Reco = (function () {
     // Kenmerk van je kijkgedrag: verandert dit, dan opnieuw berekenen
     function sig() {
         return Store.history().slice(0, 6).map(function (h) { return h.key; }).join(',') + '|' +
-            Store.favorites('movie').length + ',' + Store.favorites('series').length + '|' + Math.floor(Meta.count() / 500) + '|' + App.blockSig();
+            Store.favorites('movie').length + ',' + Store.favorites('series').length + '|' + Math.floor(Meta.count() / 500) + '|' + App.blockSig() + '|' + Taste.sig();
     }
 
     var pending = {};
