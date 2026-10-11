@@ -12,6 +12,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Live TV**: categories, a virtualised channel list (thousands of channels stay fast), now/next EPG with a progress bar, and a live preview window
 - **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
+- **Seasonal categories** (`js/season.js`): *Halloween*, *Christmas & Sinterklaas* and *Valentine's Day*. Always available under Categories; from 4 weeks before the date they also appear as a row on Home, Movies and Series. Titles come from TMDB keywords (only what's in your library), provider categories with such a name, and titles containing such a word.
 - **Ordering of genre rows** (`js/rank.js`): a mix of release year (recent first), weighted rating, TMDB popularity and how recently the provider added it, instead of "last added by the provider" (providers often add whole old catalogues at once). A title isn't shown up front in more than one row, titles you've watched move back, and the top of each row shifts a little every day. *Nieuw toegevoegd* stays ordered by date added, but titles released more than 15 years ago move to the back.
 - **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings; for series your choice is remembered for all episodes
 - **Trailers** open in the TV's YouTube app. YouTube's embedded player needs an HTTP Referer, and a Tizen app runs from `file://` without one (error 153), so in-app playback only works in the browser test version; movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
@@ -152,6 +153,8 @@ js/meta.js              metadata service (TMDB titles, details, people, library 
 js/tmdb.js              background job that links the library to TMDB
 js/genres.js            genre index for movies and series (chunked)
 js/rank.js              ordering of titles in genre rows (year, rating, popularity, variety)
+js/season.js            seasonal categories and rows (Halloween, Christmas & Sinterklaas, Valentine's Day)
+js/m3u.js               M3U/M3U8 playlists, presented as an Xtream server
 js/find.js              search index (TMDB titles, typo tolerance, ranking)
 js/reco.js              recommendation rows
 js/follow.js            new-episode detection for series in My list

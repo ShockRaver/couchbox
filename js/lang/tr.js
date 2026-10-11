@@ -491,5 +491,8 @@ I18N.add('tr', {
     "Seizoen {n}": "{n}. Sezon",
     "Server-URL of afspeellijst-link": "Sunucu adresi veya oynatma listesi bağlantısı",
     "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Kullanıcı adı ve şifre ya da bir oynatma listesi bağlantısı (M3U) gir",
-    "Wachtwoord (niet nodig bij een link)": "Şifre (bağlantıyla gerekmez)"
+    "Wachtwoord (niet nodig bij een link)": "Şifre (bağlantıyla gerekmez)",
+    "Halloween": "Cadılar Bayramı",
+    "Valentijn": "Sevgililer Günü",
+    "Seizoenen": "Mevsimlik"
 });

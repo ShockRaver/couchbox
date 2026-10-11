@@ -38,6 +38,7 @@ Screens.section = {
         setTimeout(function () {
             if (my !== self.token) return;
             self.addReco(my);
+            self.addSeason(my);
             (movie ? Api.vodCategories() : Api.seriesCategories()).then(function (cats) {
                 if (my !== self.token) return;
                 self.cats = cats;
@@ -78,7 +79,7 @@ Screens.section = {
         var put = function (rows) {
             if (my !== self.token || !rows.length) return;
             var st = self.rows.state(), first = !self.rows.rows.length;
-            var at = self.rows.rows.filter(function (r) { return r.reco || r.id === 'hist' || r.id === 'fresh' || r.id === 'favs'; }).length;
+            var at = self.rows.rows.filter(function (r) { return r.reco || r.season || r.id === 'hist' || r.id === 'fresh' || r.id === 'favs'; }).length;
             rows.forEach(function (r) {
                 if (self.rows.rows.some(function (x) { return x.id === r.id; })) return;
                 self.rows.add(UI.recoRow(r, at++)).reco = true;
@@ -91,11 +92,33 @@ Screens.section = {
         if (Reco.stale(kind)) Reco.refresh(kind).then(put);
     },
 
+    // Seizoensrij (Halloween, Kerst & Sinterklaas, Valentijn) vanaf 4 weken vóór de datum, direct na de persoonlijke rijen
+    addSeason: function (my) {
+        var self = this, type = this.type;
+        Season.active().forEach(function (s) {
+            Season.items(type, s).then(function (items) {
+                if (my !== self.token || items.length < 3 || self.rows.rows.some(function (r) { return r.id === 'season:' + s.id; })) return;
+                var st = self.rows.state(), first = !self.rows.rows.length;
+                var at = self.rows.rows.filter(function (r) { return r.season || r.id === 'hist' || r.id === 'fresh' || r.id === 'favs'; }).length;
+                self.rows.add({
+                    id: 'season:' + s.id, title: T(s.name), items: items.slice(0, self.ROW_MAX), itemW: 184, itemH: 320, at: at,
+                    render: function (it) { return UI.libCard(type, it, { small: true }); },
+                    onSelect: function (it) { UI.openLib(type, it); }
+                }).season = true;
+                self.rows.restore(st);
+                self.rows.setActive(self.zone === 'rows');
+                if (first) { self.setZone('rows'); self.showHero(); }
+            }).catch(function () { /* geen seizoensrij */ });
+        });
+    },
+
     // Eén rij per genre (achter elkaar geladen, zodat de volgorde vast is); plus "Nieuw toegevoegd" als de volledige lijst er is.
     // Volgorde per rij via Rank: recent uitgekomen, goed gewaardeerd en bekend eerst, en niet vooraan in meerdere rijen.
     addGenres: function (cats, my) {
         var self = this, movie = this.mode === 'movie', type = this.type, used = {};
-        var genres = movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return Screens.catalog.SERIES_GENRES.indexOf(g.id) >= 0; });
+        // "Kerst & Sinterklaas" komt als seizoensrij (alleen in de weken ervoor), niet als genre
+        var genres = (movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return Screens.catalog.SERIES_GENRES.indexOf(g.id) >= 0; }))
+            .filter(function (g) { return g.id !== 'feest'; });
         var add = function (id, title, items) {
             if (my !== self.token || !items.length) return;
             var st = self.rows.state(), first = !self.rows.rows.length;

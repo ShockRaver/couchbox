@@ -54,11 +54,15 @@ Screens.catalog = {
             list.push({ id: 'all', name: movie ? T('Alle films') : T('Alle series') });
             list.push({ id: 'refresh', name: T('Lijst vernieuwen'), action: true });
             // Genres over alle categorieën heen (films: via categorienamen, series: via genre per serie)
-            var genres = movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return self.SERIES_GENRES.indexOf(g.id) >= 0; });
+            var genres = (movie ? Genres.movieGenres(cats) : Genres.LIST.filter(function (g) { return self.SERIES_GENRES.indexOf(g.id) >= 0; }))
+                .filter(function (g) { return g.id !== 'feest'; });
             if (genres.length) {
                 list.push({ header: true, name: T('Genres') });
                 genres.forEach(function (g) { list.push({ id: 'g:' + g.id, name: T(g.name), genre: g.id }); });
             }
+            // Seizoenen: altijd te vinden (op de overzichten alleen in de weken ervoor)
+            list.push({ header: true, name: T('Seizoenen') });
+            Season.LIST.forEach(function (s) { list.push({ id: 's:' + s.id, name: T(s.name), season: s.id }); });
             list.push({ header: true, name: T('Categorieën van provider') });
             cats.forEach(function (c) {
                 var id = String(c.category_id);
@@ -98,6 +102,10 @@ Screens.catalog = {
         else if (cat.id === 'cont') p = Promise.resolve(Store.history().filter(function (h) { return h.mode === 'movie'; }).map(function (h) {
             return { stream_id: h.id, name: h.name, stream_icon: h.icon, container_extension: h.ext };
         }));
+        else if (cat.season) {
+            this.setStatus(T('Laden…'));
+            p = Season.items(movie ? 'm' : 't', Season.byId(cat.season));
+        }
         else if (cat.genre) {
             // Series-genres hebben de volledige serielijst nodig; de eerste keer duurt dat even
             this.setStatus(movie && !Tmdb.hasData('m') ? T('Laden…') : T('Genres opbouwen… (de eerste keer kan dit even duren)'));
@@ -106,12 +114,12 @@ Screens.catalog = {
         else p = movie ? Api.vodStreams(cat.id === 'all' ? null : cat.id) : Api.series(cat.id === 'all' ? null : cat.id);
         p.then(function (items) {
             if (my !== self.token) return;
-            if (self.adult && (cat.id === 'all' || cat.genre)) items = items.filter(function (x) { return !App.inCats(x, self.adult); });
+            if (self.adult && (cat.id === 'all' || cat.genre || cat.season)) items = items.filter(function (x) { return !App.inCats(x, self.adult); });
             if (Store.settings().hideAdult) items = items.filter(function (x) { return String(x.is_adult) !== '1'; });
             self.items = items;
             self.grid.setItems(items, keepIndex || 0);
             self.setStatus(items.length ? '' : cat.id === 'fav' ? T('Je lijst is nog leeg. Houd OK ingedrukt op een poster om hem toe te voegen.')
-                : cat.genre ? (movie ? T('Geen films gevonden in dit genre') : T('Geen series gevonden in dit genre')) : T('Geen items in deze categorie'));
+                : cat.genre || cat.season ? (movie ? T('Geen films gevonden in dit genre') : T('Geen series gevonden in dit genre')) : T('Geen items in deze categorie'));
             self.hdr.sub.textContent = cat.name + ' · ' + items.length;
             // Filmgenre getoond op basis van categorieën: zodra de volledige lijst binnen is, aanvullen met TMDB
             if (cat.genre && movie && Tmdb.hasData('m') && !Api.loaded('vs:*')) {

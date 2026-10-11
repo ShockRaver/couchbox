@@ -491,5 +491,8 @@ I18N.add('el', {
     "Seizoen {n}": "Σεζόν {n}",
     "Server-URL of afspeellijst-link": "Διεύθυνση διακομιστή ή σύνδεσμος λίστας",
     "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Εισαγάγετε όνομα χρήστη και κωδικό ή σύνδεσμο λίστας (M3U)",
-    "Wachtwoord (niet nodig bij een link)": "Κωδικός (δεν χρειάζεται με σύνδεσμο)"
+    "Wachtwoord (niet nodig bij een link)": "Κωδικός (δεν χρειάζεται με σύνδεσμο)",
+    "Halloween": "Χάλογουιν",
+    "Valentijn": "Άγιος Βαλεντίνος",
+    "Seizoenen": "Εποχιακά"
 });

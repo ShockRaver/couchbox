@@ -30,7 +30,7 @@ Screens.home = {
         this.specs().forEach(function (o) { R.add(o); });
         R.restore(st);
         var self = this;
-        setTimeout(function () { self.updateReco(); }, 300);
+        setTimeout(function () { self.updateReco(); self.updateSeason(); }, 300);
         if (R.rows.length) {
             this.setZone(this.zone === 'nav' && st ? 'nav' : 'rows');
             this.showHero();
@@ -79,6 +79,9 @@ Screens.home = {
             onSelect: function (f) { App.go('series', { item: { series_id: f.id, name: f.name, cover: f.icon, tmdb: f.tmdb || '' } }); }
         });
 
+        // Seizoen (Halloween, Kerst & Sinterklaas, Valentijn): vanaf 4 weken vóór de datum, na "Verder kijken"
+        (this.seasonRows || []).forEach(function (r) { R.add(UI.recoRow(r)); });
+
         // Aanbevelingen: de eerste direct na "Verder kijken", de rest na Mijn lijst en de zenders
         var reco = Reco.cached('home');
         if (reco[0]) R.add(UI.recoRow(reco[0]));
@@ -110,6 +113,19 @@ Screens.home = {
 
         reco.slice(1).forEach(function (r) { R.add(UI.recoRow(r)); });
         return R.list;
+    },
+
+    // Seizoensrijen berekenen (één keer per uur); daarna alleen de rijen bijwerken die veranderd zijn
+    updateSeason: function () {
+        var self = this;
+        if (this.seasonAt && Date.now() - this.seasonAt < 3600e3) return;
+        this.seasonAt = Date.now();
+        Season.homeRows().then(function (rows) {
+            var key = function (l) { return JSON.stringify((l || []).map(function (r) { return [r.id, r.items.length]; })); };
+            if (key(rows) === key(self.seasonRows)) return;
+            self.seasonRows = rows;
+            if (App.screen() === self && !Dialog.isOpen()) self.update();
+        }).catch(function () { self.seasonAt = 0; });
     },
 
     // Aanbevelingen op de achtergrond verversen; daarna alleen de rijen bijwerken die veranderd zijn

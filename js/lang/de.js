@@ -491,5 +491,8 @@ I18N.add('de', {
     "Seizoen {n}": "Staffel {n}",
     "Server-URL of afspeellijst-link": "Server-URL oder Playlist-Link",
     "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Gib Benutzername und Passwort ein oder einen Playlist-Link (M3U)",
-    "Wachtwoord (niet nodig bij een link)": "Passwort (bei einem Link nicht nötig)"
+    "Wachtwoord (niet nodig bij een link)": "Passwort (bei einem Link nicht nötig)",
+    "Halloween": "Halloween",
+    "Valentijn": "Valentinstag",
+    "Seizoenen": "Saisonal"
 });
