@@ -58,7 +58,7 @@ var Store = (function () {
     }
     function deleteProfile(id) {
         set('profiles', profiles().filter(function (p) { return p.id !== id; }));
-        ['fav', 'hist', 'last', 'livecat', 'seen', 'follow', 'lineup', 'guideGroup'].forEach(function (k) { del('p.' + id + '.' + k); });
+        ['fav', 'hist', 'last', 'livecat', 'seen', 'follow', 'lineup', 'guideGroup', 'liveFmt', 'epgSrc', 'epgMap'].forEach(function (k) { del('p.' + id + '.' + k); });
         if (get('active', null) === id) del('active');
     }
     function setActive(id) { set('active', id); }

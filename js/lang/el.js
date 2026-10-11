@@ -481,5 +481,15 @@ I18N.add('el', {
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Εισαγάγετε τα στοιχεία του παρόχου IPTV. Αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση.",
     "Onverwacht antwoord – klopt het serveradres?": "Μη αναμενόμενη απάντηση – είναι σωστή η διεύθυνση του διακομιστή;",
     "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Πρόγραμμα αναπαραγωγής για τη δική σας συνδρομή IPTV. Το Kijkdoos δεν περιέχει κανάλια, ταινίες ή σειρές.\nΑναπαραγωγή μέσω Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nΤα δεδομένα σας αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση· τίποτα δεν αποστέλλεται στους δημιουργούς του Kijkdoos.\n\nΣτοιχεία ταινιών και σειρών: The Movie Database (TMDB). Αυτή η εφαρμογή χρησιμοποιεί το API του TMDB, αλλά δεν εγκρίνεται ούτε πιστοποιείται από το TMDB.",
-    "Privacyverklaring: {url}": "Πολιτική απορρήτου: {url}"
+    "Privacyverklaring: {url}": "Πολιτική απορρήτου: {url}",
+    "Afspeellijst (M3U) · {host}": "Λίστα (M3U) · {host}",
+    "Dit lijkt geen M3U-afspeellijst": "Αυτό δεν μοιάζει με λίστα M3U",
+    "Gebruikersnaam (niet nodig bij een link)": "Όνομα χρήστη (δεν χρειάζεται με σύνδεσμο)",
+    "Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul \"demo\" in om de app te proberen zonder abonnement.": "Μπορείτε επίσης να εισαγάγετε έναν μόνο σύνδεσμο από τον πάροχό σας: μια λίστα M3U ή έναν σύνδεσμο με get.php?username=…&password=…. Συμβουλή: πληκτρολογήστε \"demo\" για να δοκιμάσετε την εφαρμογή χωρίς συνδρομή.",
+    "Kan de afspeellijst niet downloaden": "Δεν είναι δυνατή η λήψη της λίστας",
+    "Overig": "Λοιπά",
+    "Seizoen {n}": "Σεζόν {n}",
+    "Server-URL of afspeellijst-link": "Διεύθυνση διακομιστή ή σύνδεσμος λίστας",
+    "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Εισαγάγετε όνομα χρήστη και κωδικό ή σύνδεσμο λίστας (M3U)",
+    "Wachtwoord (niet nodig bij een link)": "Κωδικός (δεν χρειάζεται με σύνδεσμο)"
 });

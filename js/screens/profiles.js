@@ -14,7 +14,7 @@ Screens.profiles = {
                 var active = Store.activeProfile(), on = active && active.id === p.id;
                 return U.h('div', { class: 'prof-row' }, [
                     U.h('div', { html: Icons.get('user') }),
-                    U.h('div', { class: 'prof-main' }, [U.h('div', { class: 'prof-name', text: p.name }), U.h('div', { class: 'prof-host', text: Api.normalizeServer(p.server) + (p.username ? ' · ' + p.username : '') })]),
+                    U.h('div', { class: 'prof-main' }, [U.h('div', { class: 'prof-name', text: p.name }), U.h('div', { class: 'prof-host', text: p.type === 'm3u' ? T('Afspeellijst (M3U) · {host}', { host: p.server }) : Api.normalizeServer(p.server) + (p.username ? ' · ' + p.username : '') })]),
                     on ? U.h('div', { class: 'prof-badge', text: T('Actief') }) : null
                 ]);
             }

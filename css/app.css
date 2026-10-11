@@ -128,12 +128,12 @@ b { font-weight: 700; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---- Inloggen ---- */
-.login-card { width: 940px; margin: 70px auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 30px; padding: 46px 56px; box-shadow: 0 30px 90px rgba(0, 0, 0, .45); }
+.login-card { width: 940px; margin: 40px auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 30px; padding: 36px 56px; box-shadow: 0 30px 90px rgba(0, 0, 0, .45); }
 .login-logo { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
 .login-logo .ic { width: 48px; height: 48px; }
 .login-card h1 { font-size: 42px; margin-bottom: 10px; }
 .login-card > .muted { font-size: 24px; margin-bottom: 8px; }
-.field { margin-top: 16px; padding: 12px 22px; border-radius: 16px; border: 3px solid transparent; background: var(--bg2); }
+.field { margin-top: 12px; padding: 12px 22px; border-radius: 16px; border: 3px solid transparent; background: var(--bg2); }
 .field label { display: block; font-size: 20px; color: var(--muted); margin-bottom: 4px; }
 .field input { width: 100%; background: transparent; border: 0; outline: none; color: var(--text); font-size: 30px; font-family: inherit; }
 .field input::placeholder { color: var(--subtle); }

@@ -481,5 +481,15 @@ I18N.add('pl', {
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Wpisz dane od swojego dostawcy IPTV. Są zapisywane tylko lokalnie na tym telewizorze.",
     "Onverwacht antwoord – klopt het serveradres?": "Nieoczekiwana odpowiedź – czy adres serwera jest poprawny?",
     "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Odtwarzacz do Twojej własnej subskrypcji IPTV. Kijkdoos nie zawiera żadnych kanałów, filmów ani seriali.\nOdtwarzanie przez Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nTwoje dane są zapisywane tylko lokalnie na tym telewizorze; nic nie jest wysyłane do twórców Kijkdoos.\n\nDane filmów i seriali: The Movie Database (TMDB). Ta aplikacja korzysta z API TMDB, ale nie jest wspierana ani certyfikowana przez TMDB.",
-    "Privacyverklaring: {url}": "Polityka prywatności: {url}"
+    "Privacyverklaring: {url}": "Polityka prywatności: {url}",
+    "Afspeellijst (M3U) · {host}": "Playlista (M3U) · {host}",
+    "Dit lijkt geen M3U-afspeellijst": "To nie wygląda na playlistę M3U",
+    "Gebruikersnaam (niet nodig bij een link)": "Nazwa użytkownika (niepotrzebna przy linku)",
+    "Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul \"demo\" in om de app te proberen zonder abonnement.": "Możesz też wpisać jeden link od dostawcy: playlistę M3U albo link z get.php?username=…&password=…. Wskazówka: wpisz \"demo\", aby wypróbować aplikację bez subskrypcji.",
+    "Kan de afspeellijst niet downloaden": "Nie można pobrać playlisty",
+    "Overig": "Inne",
+    "Seizoen {n}": "Sezon {n}",
+    "Server-URL of afspeellijst-link": "Adres serwera lub link do playlisty",
+    "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Wpisz nazwę użytkownika i hasło albo link do playlisty (M3U)",
+    "Wachtwoord (niet nodig bij een link)": "Hasło (niepotrzebne przy linku)"
 });

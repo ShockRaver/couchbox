@@ -1,4 +1,4 @@
-/* Inlogscherm: Xtream-server en gegevens invoeren (nieuw of bestaand profiel bewerken) */
+/* Inlogscherm: server + gebruikersnaam/wachtwoord, of één link (Xtream-link of M3U-afspeellijst); nieuw of bestaand profiel */
 Screens.login = {
     build: function () {
         var self = this;
@@ -10,9 +10,9 @@ Screens.login = {
         card.appendChild(U.h('p', { class: 'muted', text: T('Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.') }));
         this.fields = [
             { key: 'name', label: T('Naam van dit profiel'), ph: T('Bijv. Thuis') },
-            { key: 'server', label: T('Server-URL (met poort)'), ph: T('http://voorbeeld.com:8080'), type: 'url' },
-            { key: 'username', label: T('Gebruikersnaam') },
-            { key: 'password', label: T('Wachtwoord'), type: 'password' }
+            { key: 'server', label: T('Server-URL of afspeellijst-link'), ph: T('http://voorbeeld.com:8080'), type: 'url' },
+            { key: 'username', label: T('Gebruikersnaam (niet nodig bij een link)') },
+            { key: 'password', label: T('Wachtwoord (niet nodig bij een link)'), type: 'password' }
         ];
         this.items = [];
         this.fields.forEach(function (f) {
@@ -29,7 +29,7 @@ Screens.login = {
         this.items.push({ el: this.btnConnect, action: 'connect' }, { el: this.btnCancel, action: 'cancel' });
         this.err = U.h('div', { class: 'login-error' });
         card.appendChild(this.err);
-        card.appendChild(U.h('p', { class: 'muted small', text: T('Tip: vul "demo" in als server-URL om de app te proberen zonder abonnement.') }));
+        card.appendChild(U.h('p', { class: 'muted small', text: T('Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul "demo" in om de app te proberen zonder abonnement.') }));
         this.el.appendChild(card);
     },
 
@@ -37,7 +37,7 @@ Screens.login = {
         this.editing = p.profile || null;
         this.first = Store.profiles().length === 0;
         var v = this.editing || {};
-        this.fields.forEach(function (f) { f.input.value = v[f.key] || ''; });
+        this.fields.forEach(function (f) { f.input.value = (f.key === 'server' && v.type === 'm3u' ? v.url : v[f.key]) || ''; });
         this.titleEl.textContent = this.editing ? T('Profiel bewerken') : T('Verbinden met je IPTV-server');
         this.btnCancel.style.display = this.first ? 'none' : '';
         this.err.textContent = '';
@@ -73,11 +73,14 @@ Screens.login = {
     connect: function () {
         var self = this, v = {};
         this.fields.forEach(function (f) { v[f.key] = f.input.value.trim(); });
-        var server = Api.normalizeServer(v.server);
-        if (!server) return this.error(T('Vul de server-URL in'));
-        if (server !== 'demo' && (!v.username || !v.password)) return this.error(T('Vul gebruikersnaam en wachtwoord in'));
-        var name = v.name || (server === 'demo' ? 'Demo' : server.replace(/^https?:\/\//, '').replace(/:\d+$/, ''));
-        var p = { id: this.editing ? this.editing.id : U.uid(), name: name, server: v.server, username: v.username, password: v.password };
+        // Server, Xtream-link of M3U-afspeellijst herkennen
+        var link = Api.parseLink(v.server, v.username, v.password);
+        if (link.error) return this.error(link.error);
+        var server = link.type === 'demo' ? 'demo' : link.server;
+        var host = String(link.url || link.server).replace(/^https?:\/\//, '').replace(/[/:?].*$/, '');
+        var name = v.name || (link.type === 'demo' ? 'Demo' : host);
+        var p = { id: this.editing ? this.editing.id : U.uid(), name: name, type: link.type === 'm3u' ? 'm3u' : 'xtream',
+            server: link.type === 'm3u' ? host : server, url: link.url || '', username: link.username, password: link.password };
         var prev = Store.activeProfile();
         Api.setProfile(p);
         this.error('');
@@ -87,6 +90,7 @@ Screens.login = {
             Store.saveProfile(p);
             Store.setActive(p.id);
             EPG.reset();
+            Xmltv.reset();
             Toast.show(T('Verbonden met {name}', { name: name }));
             App.reset('home');
         }).catch(function (e) {

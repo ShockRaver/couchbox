@@ -481,5 +481,15 @@ I18N.add('de', {
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Gib die Zugangsdaten deines IPTV-Anbieters ein. Sie werden nur lokal auf diesem Fernseher gespeichert.",
     "Onverwacht antwoord – klopt het serveradres?": "Unerwartete Antwort – stimmt die Serveradresse?",
     "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Player für dein eigenes IPTV-Abo. Kijkdoos selbst enthält keine Sender, Filme oder Serien.\nWiedergabe über Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nDeine Daten werden nur lokal auf diesem Fernseher gespeichert; nichts wird an die Macher von Kijkdoos gesendet.\n\nFilm- und Seriendaten: The Movie Database (TMDB). Diese App verwendet die TMDB-API, wird aber nicht von TMDB unterstützt oder zertifiziert.",
-    "Privacyverklaring: {url}": "Datenschutzerklärung: {url}"
+    "Privacyverklaring: {url}": "Datenschutzerklärung: {url}",
+    "Afspeellijst (M3U) · {host}": "Playlist (M3U) · {host}",
+    "Dit lijkt geen M3U-afspeellijst": "Das sieht nicht nach einer M3U-Playlist aus",
+    "Gebruikersnaam (niet nodig bij een link)": "Benutzername (bei einem Link nicht nötig)",
+    "Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul \"demo\" in om de app te proberen zonder abonnement.": "Du kannst auch einen einzelnen Link von deinem Anbieter eingeben: eine M3U-Playlist oder einen Link mit get.php?username=…&password=…. Tipp: Gib \"demo\" ein, um die App ohne Abo auszuprobieren.",
+    "Kan de afspeellijst niet downloaden": "Die Playlist kann nicht heruntergeladen werden",
+    "Overig": "Sonstiges",
+    "Seizoen {n}": "Staffel {n}",
+    "Server-URL of afspeellijst-link": "Server-URL oder Playlist-Link",
+    "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Gib Benutzername und Passwort ein oder einen Playlist-Link (M3U)",
+    "Wachtwoord (niet nodig bij een link)": "Passwort (bei einem Link nicht nötig)"
 });

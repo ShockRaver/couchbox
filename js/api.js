@@ -1,8 +1,8 @@
-/* Xtream Codes API-client */
+/* Client voor de IPTV-provider: Xtream-API (player_api.php), M3U-afspeellijst (via M3U, zelfde antwoorden) of de demo */
 var Api = (function () {
     'use strict';
 
-    var prof = null, base = '', cache = {}, account = null;
+    var prof = null, base = '', cache = {}, account = null, mode = 'xtream';   // mode: 'xtream' | 'm3u' | 'demo'
 
     // "voorbeeld.com:8080/" of ".../player_api.php?..." -> "http://voorbeeld.com:8080"
     function normalizeServer(url) {
@@ -14,13 +14,46 @@ var Api = (function () {
         return url.replace(/\/+$/, '');
     }
 
-    function setProfile(p) { prof = p || null; base = p ? normalizeServer(p.server) : ''; cache = {}; account = null; }
-    function isDemo() { return base === 'demo'; }
+    // Wat de gebruiker invulde herkennen: 'demo', een Xtream-server (+ gebruiker/wachtwoord), een Xtream-link met
+    // gebruiker en wachtwoord erin (get.php/player_api.php?username=…&password=…), of een M3U-afspeellijst.
+    // Geeft { type: 'demo' | 'xtream' | 'm3u', server, username, password, url } of { error }
+    function parseLink(text, user, pass) {
+        var t = String(text || '').trim();
+        if (!t) return { error: T('Vul de server-URL in') };
+        if (t.toLowerCase() === 'demo') return { type: 'demo', server: 'demo', username: '', password: '' };
+        if (!/^https?:\/\//i.test(t)) t = 'http://' + t;
+        var q = {}, qi = t.indexOf('?');
+        if (qi >= 0) t.slice(qi + 1).split('&').forEach(function (kv) {
+            var i = kv.indexOf('='); if (i > 0) { try { q[kv.slice(0, i).toLowerCase()] = decodeURIComponent(kv.slice(i + 1).replace(/\+/g, ' ')); } catch (e) { /* ongeldig teken */ } }
+        });
+        var path = t.replace(/^https?:\/\/[^/]+/i, '').split('?')[0];
+        // Xtream-link: gebruikersnaam en wachtwoord staan in het adres
+        if (/\/(get|player_api|panel_api|xmltv)\.php$/i.test(path) && q.username && q.password) {
+            return { type: 'xtream', server: normalizeServer(t), username: q.username, password: q.password };
+        }
+        // Alleen een server (met poort): gebruikersnaam en wachtwoord nodig
+        if (!path || path === '/' || /\/(get|player_api|panel_api)\.php$/i.test(path)) {
+            if (!user || !pass) return { error: T('Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)') };
+            return { type: 'xtream', server: normalizeServer(t), username: user, password: pass };
+        }
+        // Al het andere is een afspeellijst
+        return { type: 'm3u', url: t, server: t, username: '', password: '' };
+    }
+
+    function setProfile(p) {
+        prof = p || null; cache = {}; account = null;
+        mode = !p ? 'xtream' : p.type === 'm3u' ? 'm3u' : normalizeServer(p.server) === 'demo' ? 'demo' : 'xtream';
+        base = !p ? '' : mode === 'm3u' ? '' : normalizeServer(p.server);
+        M3U.reset();
+    }
+    function isDemo() { return mode === 'demo'; }
+    function isM3u() { return mode === 'm3u'; }
     function enc(s) { return encodeURIComponent(s || ''); }
 
     function request(params, timeout) {
         if (!prof) return Promise.reject(new Error(T('Geen profiel ingesteld')));
         if (isDemo()) return Demo.handle(params || {});
+        if (isM3u()) return M3U.handle(prof.url, params || {});
         var qs = 'username=' + enc(prof.username) + '&password=' + enc(prof.password);
         Object.keys(params || {}).forEach(function (k) { if (params[k] != null) qs += '&' + k + '=' + enc(String(params[k])); });
         var ctrl = window.AbortController ? new AbortController() : null;
@@ -55,7 +88,7 @@ var Api = (function () {
         if (!p) {
             var entry = { at: Date.now(), done: false };
             var net = function () { return request(params, timeout).then(map || function (x) { return x; }); };
-            p = (STORED[key] && !isDemo() ? fromStore(key, net) : net())
+            p = (STORED[key] && mode === 'xtream' ? fromStore(key, net) : net())
                 .then(function (x) { entry.done = true; return x; })
                 .catch(function (e) { if (cache[key] === entry) delete cache[key]; throw e; });
             entry.p = p;
@@ -132,6 +165,7 @@ var Api = (function () {
     function xmltvUrl() {
         if (!prof) return '';
         if (isDemo()) return 'demo:xmltv';
+        if (isM3u()) return M3U.epgUrl();
         return base + '/xmltv.php?username=' + enc(prof.username) + '&password=' + enc(prof.password);
     }
 
@@ -139,22 +173,45 @@ var Api = (function () {
     function path(kind, id, ext) {
         return base + '/' + kind + '/' + enc(prof.username) + '/' + enc(prof.password) + '/' + id + '.' + ext;
     }
+    // Streamformaat per zender: wat eerder werkte (onthouden), anders de instelling Live-streamformaat
+    function liveFormat(ch) {
+        var m = Store.getP('liveFmt', null) || {};
+        return m[ch.stream_id] || (Store.settings().liveFormat === 'ts' ? 'ts' : 'm3u8');
+    }
     function liveUrl(ch) {
         if (isDemo()) return Demo.src(ch.stream_id);
-        return path('live', ch.stream_id, Store.settings().liveFormat === 'ts' ? 'ts' : 'm3u8');
+        if (isM3u()) {
+            var u = ch.url || M3U.url('live', ch.stream_id), f = (Store.getP('liveFmt', null) || {})[ch.stream_id];
+            return f ? swapFormat(u, f) : u;
+        }
+        return path('live', ch.stream_id, liveFormat(ch));
     }
-    function movieUrl(item) { return isDemo() ? Demo.src(item.id) : path('movie', item.id, item.ext || 'mp4'); }
-    function episodeUrl(item) { return isDemo() ? Demo.src(item.id) : path('series', item.id, item.ext || 'mp4'); }
+    // .m3u8 <-> .ts in een adres (alleen als het adres zo eindigt)
+    function swapFormat(u, to) { return String(u).replace(/\.(m3u8|ts)(\?.*)?$/i, function (m, e, q) { return '.' + (to || (e.toLowerCase() === 'ts' ? 'm3u8' : 'ts')) + (q || ''); }); }
+    // Opties om een live-zender af te spelen: met het andere formaat als reserve, en onthouden wat werkt
+    function liveOpts(ch, extra) {
+        var url = liveUrl(ch), alt = isDemo() ? '' : swapFormat(url);
+        return Object.assign({
+            live: true, meta: ch, uhd: /4k|uhd/i.test(ch.name || ''), alt: alt !== url ? alt : '',
+            onAlt: function (u) {
+                var m = Object.assign({}, Store.getP('liveFmt', null) || {});
+                m[ch.stream_id] = /\.ts(\?|$)/i.test(u) ? 'ts' : 'm3u8';
+                Store.setP('liveFmt', m);
+            }
+        }, extra || {});
+    }
+    function movieUrl(item) { return isDemo() ? Demo.src(item.id) : isM3u() ? M3U.url('movie', item.id) : path('movie', item.id, item.ext || 'mp4'); }
+    function episodeUrl(item) { return isDemo() ? Demo.src(item.id) : isM3u() ? M3U.url('series', item.id) : path('series', item.id, item.ext || 'mp4'); }
 
     // Vernieuwen: ook de lokaal bewaarde lijsten negeren, alles opnieuw bij de provider ophalen
-    function clearCache() { cache = {}; bypassBefore = Date.now(); }
+    function clearCache() { cache = {}; bypassBefore = Date.now(); M3U.reset(true); }
 
     return {
-        normalizeServer: normalizeServer, setProfile: setProfile, isDemo: isDemo, login: login,
+        normalizeServer: normalizeServer, parseLink: parseLink, setProfile: setProfile, isDemo: isDemo, isM3u: isM3u, login: login,
         account: function () { return account; }, profile: function () { return prof; },
         liveCategories: liveCategories, liveStreams: liveStreams,
         vodCategories: vodCategories, vodStreams: vodStreams, vodInfo: vodInfo,
         seriesCategories: seriesCategories, series: series, seriesInfo: seriesInfo, shortEpg: shortEpg, fullEpg: fullEpg, xmltvUrl: xmltvUrl,
-        loaded: loaded, liveUrl: liveUrl, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
+        loaded: loaded, liveUrl: liveUrl, liveOpts: liveOpts, swapFormat: swapFormat, movieUrl: movieUrl, episodeUrl: episodeUrl, clearCache: clearCache
     };
 })();

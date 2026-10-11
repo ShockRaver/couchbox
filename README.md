@@ -4,6 +4,10 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 
 ## Features
 
+**Sources**
+- **Xtream** (server + username + password), **an Xtream link** (`…/get.php?username=…&password=…`: username and password are taken from the link, so you only type one field), or **an M3U/M3U8 playlist** (any link). M3U lists are downloaded once, read in parts (large lists are fine), kept for 6 hours and shown exactly like an Xtream server: `group-title` becomes the category, `tvg-logo` the logo, `tvg-id` the EPG id, and `x-tvg-url` in the playlist header is used as the XMLTV guide automatically. Movies and series are recognised from Xtream-style addresses, file extensions (.mp4/.mkv…) and `S01E02` in the name.
+- Note: M3U lists contain no TMDB ids, so movies and series from an M3U list get no TMDB posters or descriptions yet.
+
 **Watching**
 - **Live TV**: categories, a virtualised channel list (thousands of channels stay fast), now/next EPG with a progress bar, and a live preview window
 - **TV guide**: timeline grid, several days ahead (◀▶ through time, ▲▼ through channels). Pick a group (favourites, all channels, or any category), jump to *now*, *tonight* or another day, and set **reminders** for upcoming programmes (a pop-up with "Watch" when they start, while the app is open)
@@ -15,6 +19,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Channel management** (Live TV, hold OK on a channel or group): hide channels or whole groups, move groups and favourites with ▲▼, and make your **own channel lists** (e.g. Sports, Kids) that also show up in the TV guide. *Settings → Hidden channels and groups* brings things back and restores the group order.
 - **TV guide source** (*Settings → TV guide source*): the provider's guide per channel (default), the provider's full **XMLTV** file, or your **own XMLTV address** (also .gz; on-screen keyboard with capitals and punctuation). Channels are matched on the provider's EPG id or on name ("NL | NPO 1 HD" = "NPO 1"); channels without XMLTV data keep the provider's guide. Wrong match? In the TV guide, hold OK → *Match guide data…*. The file is streamed and parsed in parts, only your channels are kept (4 hours back to 3 days ahead), refreshed every 12 hours.
 - **Next episode**: automatically after 10 seconds, ask, or off (*Settings → Play next episode*)
+- **Live stream format fallback**: if a channel doesn't play as .m3u8, the player immediately tries .ts (and the other way round) before retrying, and remembers per channel what works
 - Number keys to jump to a channel, CH+/CH− to zap, previous channel (PRE-CH, or the *Vorige* button in the player menu), picture format (fit/stretch/auto), automatic reconnect when a stream drops
 
 **Personal**
@@ -178,4 +183,4 @@ scripts/make-icon.js    generates icon.png
 - **Subtitles** only appear when they are embedded in the stream (e.g. MKV/HLS). Xtream servers rarely provide separate .srt files. DVB bitmap subtitles are not supported.
 - **Catch-up / timeshift** (tv_archive) is deliberately not included.
 - EPG quality depends on the provider; providers with poor EPG data show empty programmes.
-- Only Xtream Codes is supported as a source (M3U/other sources are on the roadmap).
+- DRM-protected streams (ClearKey/PlayReady in M3U lists) are not supported yet.

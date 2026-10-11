@@ -13,7 +13,13 @@ var Player = (function () {
     function on(ev, fn) { (subs[ev] = subs[ev] || []).push(fn); return function () { off(ev, fn); }; }
     function off(ev, fn) { subs[ev] = (subs[ev] || []).filter(function (f) { return f !== fn; }); }
     function emit(ev, a, b) { (subs[ev] || []).slice().forEach(function (f) { try { f(a, b); } catch (e) { console.error(e); } }); }
-    function setState(s) { if (state !== s) { state = s; emit('state', s); } }
+    function setState(s) {
+        if (state === s) return;
+        state = s;
+        // Speelt het andere formaat wel (zie fail): laten weten, zodat het voor deze zender onthouden wordt
+        if (s === 'playing' && cur.altUsed && cur.opts.onAlt) { var f = cur.opts.onAlt; cur.opts.onAlt = null; try { f(cur.url); } catch (e) { /* negeren */ } }
+        emit('state', s);
+    }
 
     function init() {
         if (window.webapis && webapis.avplay) {
@@ -148,6 +154,15 @@ var Player = (function () {
         halt();
         lastTime = keepAt;
         var max = cur.opts.live ? 5 : 2;
+        // Live-zender speelt niet: eerst meteen het andere streamformaat proberen (.m3u8 <-> .ts), dan pas opnieuw proberen
+        if (cur.url && cur.opts.live && cur.opts.alt && !cur.altUsed) {
+            cur.altUsed = true;
+            cur.url = cur.opts.alt;
+            setState('retry');
+            emit('retry', 0);
+            retryTimer = setTimeout(start, 300);
+            return;
+        }
         if (cur.url && retries < max) {
             retries++;
             setState('retry');

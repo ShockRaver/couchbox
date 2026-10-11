@@ -12,7 +12,8 @@ var Xmltv = (function () {
     var meta = null, metaP = null, idx = null, running = null, progress = null, lastError = '';
 
     // ---- Bron ----
-    function source() { return Store.getP('epgSrc', null) || { mode: 'api' }; }
+    // Standaard de provider; bij een M3U-afspeellijst de XMLTV-gids uit de lijst (de lijst zelf heeft geen gids)
+    function source() { return Store.getP('epgSrc', null) || { mode: Api.isM3u() ? 'xmltv' : 'api' }; }
     function setSource(src) { Store.setP('epgSrc', src); reset(); }
     function url() {
         var s = source();

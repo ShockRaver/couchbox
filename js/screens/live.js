@@ -267,7 +267,7 @@ Screens.live = {
 
     previewPlay: function (s) {
         Player.setRect(this.preview.getBoundingClientRect());
-        Player.play(Api.liveUrl(s), { live: true, meta: s, uhd: /4k|uhd/i.test(s.name) });
+        Player.play(Api.liveUrl(s), Api.liveOpts(s));
         Store.setLastChannel(App.chMin(s));
         this.chans.refresh();
     },

@@ -490,5 +490,15 @@ I18N.add('en', {
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Enter the details from your IPTV provider. They are only stored locally on this TV.",
     "Onverwacht antwoord – klopt het serveradres?": "Unexpected response – is the server address correct?",
     "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Player for your own IPTV subscription. Kijkdoos itself contains no channels, movies or series.\nPlayback via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nYour data is only stored locally on this TV; nothing is sent to the makers of Kijkdoos.\n\nMovie and series data: The Movie Database (TMDB). This app uses the TMDB API but is not endorsed or certified by TMDB.",
-    "Privacyverklaring: {url}": "Privacy policy: {url}"
+    "Privacyverklaring: {url}": "Privacy policy: {url}",
+    "Afspeellijst (M3U) · {host}": "Playlist (M3U) · {host}",
+    "Dit lijkt geen M3U-afspeellijst": "This doesn't look like an M3U playlist",
+    "Gebruikersnaam (niet nodig bij een link)": "Username (not needed with a link)",
+    "Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul \"demo\" in om de app te proberen zonder abonnement.": "You can also enter a single link from your provider: an M3U playlist, or a link with get.php?username=…&password=…. Tip: enter \"demo\" to try the app without a subscription.",
+    "Kan de afspeellijst niet downloaden": "Can't download the playlist",
+    "Overig": "Other",
+    "Seizoen {n}": "Season {n}",
+    "Server-URL of afspeellijst-link": "Server URL or playlist link",
+    "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Enter a username and password, or a playlist link (M3U)",
+    "Wachtwoord (niet nodig bij een link)": "Password (not needed with a link)"
 });

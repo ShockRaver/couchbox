@@ -481,5 +481,15 @@ I18N.add('tr', {
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "IPTV sağlayıcının bilgilerini gir. Bilgiler yalnızca bu televizyonda saklanır.",
     "Onverwacht antwoord – klopt het serveradres?": "Beklenmeyen yanıt – sunucu adresi doğru mu?",
     "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Kendi IPTV aboneliğin için bir oynatıcı. Kijkdoos kanal, film veya dizi içermez.\nOynatma Samsung AVPlay ile (HLS, MPEG-TS, MP4, MKV).\n\nVerilerin yalnızca bu televizyonda saklanır; Kijkdoos'u yapanlara hiçbir şey gönderilmez.\n\nFilm ve dizi bilgileri: The Movie Database (TMDB). Bu uygulama TMDB API'sini kullanır ancak TMDB tarafından onaylanmamış veya sertifikalandırılmamıştır.",
-    "Privacyverklaring: {url}": "Gizlilik politikası: {url}"
+    "Privacyverklaring: {url}": "Gizlilik politikası: {url}",
+    "Afspeellijst (M3U) · {host}": "Oynatma listesi (M3U) · {host}",
+    "Dit lijkt geen M3U-afspeellijst": "Bu bir M3U oynatma listesine benzemiyor",
+    "Gebruikersnaam (niet nodig bij een link)": "Kullanıcı adı (bağlantıyla gerekmez)",
+    "Je kunt ook één link invullen die je van je provider kreeg: een M3U-afspeellijst, of een link met get.php?username=…&password=…. Tip: vul \"demo\" in om de app te proberen zonder abonnement.": "Sağlayıcından aldığın tek bir bağlantıyı da girebilirsin: bir M3U oynatma listesi ya da get.php?username=…&password=… içeren bir bağlantı. İpucu: uygulamayı abonelik olmadan denemek için \"demo\" yaz.",
+    "Kan de afspeellijst niet downloaden": "Oynatma listesi indirilemiyor",
+    "Overig": "Diğer",
+    "Seizoen {n}": "{n}. Sezon",
+    "Server-URL of afspeellijst-link": "Sunucu adresi veya oynatma listesi bağlantısı",
+    "Vul gebruikersnaam en wachtwoord in, of een afspeellijst-link (M3U)": "Kullanıcı adı ve şifre ya da bir oynatma listesi bağlantısı (M3U) gir",
+    "Wachtwoord (niet nodig bij een link)": "Şifre (bağlantıyla gerekmez)"
 });

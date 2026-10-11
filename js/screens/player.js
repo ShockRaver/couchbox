@@ -139,7 +139,7 @@ Screens.player = {
         this.ch = ch;
         var url = Api.liveUrl(ch), st = Player.state();
         if (!(Player.url() === url && (st === 'playing' || st === 'loading' || st === 'paused' || st === 'retry'))) {
-            Player.play(url, { live: true, meta: ch, uhd: /4k|uhd/i.test(ch.name) });
+            Player.play(url, Api.liveOpts(ch));
         }
         this.setMsg('');
         Store.setLastChannel(App.chMin(ch));
@@ -263,7 +263,7 @@ Screens.player = {
         var self = this;
         if (this.live) {
             // Live-streams die "eindigen" zijn meestal een haperende verbinding: opnieuw starten
-            setTimeout(function () { if (self.ch && App.screen() === self) Player.play(Api.liveUrl(self.ch), { live: true, meta: self.ch }); }, 1000);
+            setTimeout(function () { if (self.ch && App.screen() === self) Player.play(Api.liveUrl(self.ch), Api.liveOpts(self.ch)); }, 1000);
             return;
         }
         this.markDone();
