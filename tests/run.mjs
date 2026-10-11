@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Browser, sleep } from './lib/browser.mjs';
 import { serve } from './lib/server.mjs';
 import { m3uFixtures } from './fixtures/m3u.mjs';
+import { osFixtures } from './fixtures/opensubs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'build/test-out/run');
@@ -110,7 +111,7 @@ function context(b, base, name) {
 
 async function browserTests() {
   const specs = fs.readdirSync(path.join(root, 'tests/specs')).filter(f => f.endsWith('.mjs')).sort();
-  const srv = await serve(root, m3uFixtures());
+  const srv = await serve(root, { ...m3uFixtures(), ...osFixtures() });
   const b = new Browser();
   await b.start();
   try {

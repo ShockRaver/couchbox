@@ -121,12 +121,34 @@ var UI = {
     },
 
     // Aanbevelingsrij (Reco) als rij voor RowStack: items zijn { type: 'm'|'t', item }
+    // r.rank: Top 10-rij, met een groot cijfer naast elke poster
     recoRow: function (r, at) {
         return {
-            id: r.id, title: r.title, items: r.items, itemW: 184, itemH: 320, at: at,
-            render: function (x) { return UI.libCard(x.type, x.item, { small: true, sub: x.sub || '' }); },
+            id: r.id, title: r.title, items: r.items, itemW: r.rank ? 290 : 184, itemH: 320, at: at,
+            render: function (x, i) {
+                var card = UI.libCard(x.type, x.item, { small: true, sub: x.sub || '' });
+                return r.rank ? U.h('div', { class: 'rank-card' + (i === 9 ? ' ten' : '') }, [U.h('div', { class: 'rank-num', text: String(i + 1) }), card]) : card;
+            },
             onSelect: function (x) { UI.openLib(x.type, x.item); }
         };
+    },
+
+    // Categorie op slot zetten of het slot eraf halen. Zonder pincode eerst een pincode instellen;
+    // slot eraf vraagt de pincode. cb() na een wijziging. kind: 'live' | 'movie' | 'series'
+    setCatLock: function (kind, id, on, cb) {
+        var done = function () {
+            App.setLock(kind, id, on);
+            Genres.reset();
+            Toast.show(on ? T('Op slot gezet; openen kan met de pincode') : T('Slot eraf gehaald'));
+            if (cb) cb();
+        };
+        if (!Store.settings().pin) {
+            if (!on) { done(); return; }
+            Screens.settings.newPin(function (ok) { if (ok) { App.unlockedAt = 0; done(); } });
+            return;
+        }
+        if (on) { App.relock(); done(); return; }
+        App.unlock(function (ok) { if (ok) done(); });
     },
 
     // Film of serie uit de bibliotheek openen

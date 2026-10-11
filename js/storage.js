@@ -32,6 +32,9 @@ var Store = (function () {
         liveFormat: 'm3u8',     // 'm3u8' (HLS) of 'ts'
         audioLang: 'nl',        // 'auto' | 'nl' | 'en'
         subLang: 'off',         // 'off' | 'nl' | 'en'
+        subSize: 'm',           // grootte van ondertitels: 's' | 'm' | 'l' | 'xl'
+        osAuto: true,           // online ondertitels (OpenSubtitles) automatisch zoeken als de stream de voorkeurstaal niet heeft
+        osKey: '',              // eigen OpenSubtitles-sleutel
         aspect: 'letterbox',    // 'letterbox' | 'fill' | 'auto'
         hideAdult: false,
         pin: ''

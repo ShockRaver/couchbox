@@ -6,7 +6,7 @@ var Lineup = (function () {
 
     function data() {
         var d = Store.getP('lineup', null) || {};
-        return { hideCats: d.hideCats || [], hideCh: d.hideCh || [], order: d.order || [], lists: d.lists || [] };
+        return { hideCats: d.hideCats || [], hideCh: d.hideCh || [], order: d.order || [], lists: d.lists || [], sort: d.sort || 'num' };
     }
     function save(d) { Store.setP('lineup', d); }
     function setIn(arr, id, on) {
@@ -32,15 +32,20 @@ var Lineup = (function () {
     // Alles opbouwen uit de categorieën en zenders van de provider (zonder 18+)
     function build(cats, streams) {
         var d = data(), adult = App.adultIds(cats), hidden = hiddenFn(d), hideCh = map(d.hideCh);
+        // Op slot (kinderslot): de groep blijft zichtbaar met een slotje, de zenders pas na de pincode
+        var locks = App.lockIds('live', cats), shut = App.isUnlocked() ? null : locks;
         var full = {}, byId = {}, count = {}, all = [];
         streams.forEach(function (s) {
             if (adult && App.inCats(s, adult)) return;
             full[s.stream_id] = s;
             if (hidden(s)) return;
+            App.catIds(s).forEach(function (id) { count[id] = (count[id] || 0) + 1; });
+            if (shut && App.inCats(s, shut)) return;
             all.push(s);
             byId[s.stream_id] = s;
-            App.catIds(s).forEach(function (id) { count[id] = (count[id] || 0) + 1; });
         });
+        // A-Z (alle zenders en de categorieën; favorieten en eigen lijsten houden hun eigen volgorde)
+        if (d.sort === 'az') all.sort(function (a, b) { return azCmp(a.name, b.name); });
         // Favorieten en eigen lijsten tonen hun zenders ook als de groep verborgen is (wel niet als de zender zelf verborgen is)
         var pickFrom = function (favs) {
             return favs.filter(function (f) { return !hideCh[String(f.id)]; }).map(function (f) { return full[f.id] || App.chFromFav(f); });
@@ -61,7 +66,11 @@ var Lineup = (function () {
             .forEach(function (x) {
                 var id = String(x.c.category_id);
                 if ((adult && adult[id]) || hc[id] || !count[id]) return;
-                groups.push({ id: 'c:' + id, kind: 'cat', catId: id, name: x.c.category_name, n: count[id], items: function () { return all.filter(function (s) { return App.catIds(s).indexOf(id) >= 0; }); } });
+                var lockedNow = !!(shut && shut[id]);
+                groups.push({
+                    id: 'c:' + id, kind: 'cat', catId: id, name: x.c.category_name, n: count[id], lock: !!(locks && locks[id]), locked: lockedNow,
+                    items: function () { return lockedNow ? [] : all.filter(function (s) { return App.catIds(s).indexOf(id) >= 0; }); }
+                });
             });
         // Verborgen groepen en zenders (voor Instellingen)
         var catName = {};
@@ -76,7 +85,13 @@ var Lineup = (function () {
         return Promise.all([Api.liveCategories(), Api.liveStreams()]).then(function (r) { var L = build(r[0], r[1]); L.cats = r[0]; L.streams = r[1]; return L; });
     }
 
+    // Alfabetisch zonder landvoorvoegsel ("NL | ", "UK: "), cijfers op waarde ("NPO 2" voor "NPO 10")
+    function azKey(n) { return String(n || '').replace(/^\s*[|#]?[A-Za-z]{2,4}\s*(?:[|:]|\s-\s)\s*/, '').trim(); }
+    function azCmp(a, b) { return azKey(a).localeCompare(azKey(b), undefined, { numeric: true, sensitivity: 'base' }); }
+
     // ---- Wijzigen ----
+    function sortMode() { return data().sort; }
+    function setSort(m) { var d = data(); d.sort = m; save(d); }
     function hideCat(id, on) { var d = data(); setIn(d.hideCats, id, on); save(d); }
     function hideChannel(id, on) { var d = data(); setIn(d.hideCh, id, on); save(d); }
     function showAll() { var d = data(); d.hideCats = []; d.hideCh = []; save(d); }
@@ -125,7 +140,7 @@ var Lineup = (function () {
     }
 
     return {
-        build: build, load: load, visible: visible,
+        build: build, load: load, visible: visible, sortMode: sortMode, setSort: setSort,
         hideCat: hideCat, hideChannel: hideChannel, showAll: showAll, setOrder: setOrder, resetOrder: resetOrder, hasCustom: hasCustom,
         lists: lists, addList: addList, renameList: renameList, deleteList: deleteList, inList: inList, toggleInList: toggleInList,
         reorder: reorder, orderLists: orderLists

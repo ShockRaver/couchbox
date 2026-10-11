@@ -14,12 +14,13 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Movies & series**: Netflix-style pages with a hero banner, rows per genre, detail pages with cast, seasons/episodes, next episode played automatically
 - **Seasonal categories** (`js/season.js`): *Halloween*, *Christmas & Sinterklaas* and *Valentine's Day*. Always available under Categories; from 4 weeks before the date they also appear as a row on Home, Movies and Series. Titles come from TMDB keywords (only what's in your library), provider categories with such a name, and titles containing such a word.
 - **Ordering of genre rows** (`js/rank.js`): a mix of release year (recent first), weighted rating, TMDB popularity and how recently the provider added it, instead of "last added by the provider" (providers often add whole old catalogues at once). A title isn't shown up front in more than one row, titles you've watched move back, and the top of each row shifts a little every day. *Nieuw toegevoegd* stays ordered by date added, but titles released more than 15 years ago move to the back.
-- **Audio track & subtitles**: pick them while playing, plus a preferred language (NL/EN) in settings; for series your choice is remembered for all episodes
+- **Audio track & subtitles**: pick them while playing, plus a preferred language in settings; for series your choice is remembered for all episodes. Subtitle size: small to extra large (*Settings → Subtitle size*)
+- **Online subtitles** (`js/subs.js`, needs your own free [OpenSubtitles](https://www.opensubtitles.com) API key: *Settings → Online subtitles*): in the player ▼ → *Subtitles* → *Search online*. Searched by TMDB id (film, or series + season + episode), otherwise by title. The file (SRT/WebVTT, UTF-8 or Windows-1252) is shown on the player's clock, can be shifted in 0.5 s steps, and is stored locally with its offset per title, so resuming costs no new download (OpenSubtitles limits downloads per day). For series the language is remembered and the next episodes get subtitles automatically; with a preferred subtitle language set, films without that language get them automatically too (can be switched off). The API needs its query parameters sorted and lowercase, and browsers can't set User-Agent, so `X-User-Agent` is sent.
 - **Trailers** open in the TV's YouTube app. YouTube's embedded player needs an HTTP Referer, and a Tizen app runs from `file://` without one (error 153), so in-app playback only works in the browser test version; movie pages show other parts of the same **collection** ("Uit de reeks") that are in your library
 - **4K/HDR labels** on posters and channels (recognised from the name)
-- **Channel management** (Live TV, hold OK on a channel or group): hide channels or whole groups, move groups and favourites with ▲▼, and make your **own channel lists** (e.g. Sports, Kids) that also show up in the TV guide. *Settings → Hidden channels and groups* brings things back and restores the group order.
+- **Channel management** (Live TV, hold OK on a channel or group): hide channels or whole groups, sort channels **A-Z** or by number (ignores prefixes like "NL |", numbers by value; favourites and own lists keep their own order), move groups and favourites with ▲▼, and make your **own channel lists** (e.g. Sports, Kids) that also show up in the TV guide. *Settings → Hidden channels and groups* brings things back and restores the group order.
 - **TV guide source** (*Settings → TV guide source*): the provider's guide per channel (default), the provider's full **XMLTV** file, or your **own XMLTV address** (also .gz; on-screen keyboard with capitals and punctuation). Channels are matched on the provider's EPG id or on name ("NL | NPO 1 HD" = "NPO 1"); channels without XMLTV data keep the provider's guide. Wrong match? In the TV guide, hold OK → *Match guide data…*. The file is streamed and parsed in parts, only your channels are kept (4 hours back to 3 days ahead), refreshed every 12 hours.
-- **Next episode**: automatically after 10 seconds, ask, or off (*Settings → Play next episode*)
+- **Next episode**: automatically, ask, or off (*Settings → Play next episode*). With "automatically" the next episode is offered in the last 20 seconds (OK = now, Back = keep watching the credits) and starts right when the episode ends. The next stream is deliberately not pre-buffered: AVPlay has one player, and most providers allow only one connection, so a second request could break the episode that's playing.
 - **Live stream format fallback**: if a channel doesn't play as .m3u8, the player immediately tries .ts (and the other way round) before retrying, and remembers per channel what works
 - Number keys to jump to a channel, CH+/CH− to zap, previous channel (PRE-CH, or the *Vorige* button in the player menu), picture format (fit/stretch/auto), automatic reconnect when a stream drops
 
@@ -27,10 +28,10 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - **Continue watching**: position saved every 10 s, one entry per series (up-next episode), watched checkmarks
 - **My list** for movies and series, **favourites** for channels (hold OK)
 - **New episodes**: series in My list are checked for new episodes, with a notification and a "New episodes" row; *Binnenkort* shows episodes announced for the next 3 weeks (TMDB)
-- **Recommendations** on Home and on the Movies/Series pages: *Because you watched X*, *Trending this week*, *&lt;genre&gt; for you*, *Highest rated* (weighted), *Dutch & Flemish films*, *Under 90 minutes*. Only titles that are in your own library are shown; anything already watched is skipped.
+- **Recommendations** on Home and on the Movies/Series pages: *Because you watched X*, **Top 10 this week** (TMDB trending, only what's in your library, with large rank numbers; also titles you've watched), *Trending this week* (the rest), *&lt;genre&gt; for you*, *Highest rated* (weighted), *Dutch & Flemish films*, *Under 90 minutes*. Only titles that are in your own library are shown; anything already watched is skipped.
 - **Startup**: start screen, last channel, or ask
 - **Multiple profiles** (several servers/subscriptions), stored locally on the TV
-- **PIN lock** for settings, and a filter that hides 18+ categories
+- **PIN lock** for settings, and **parental lock** for categories: hold OK on a live group or a movie/series category → *Lock (PIN)*. *Settings → 18+ categories*: show, hide, or lock. Locked content stays out of "All", genres, recommendations and search until the PIN is entered once; it locks again when the app goes to the background (or after 4 hours). Simple parental lock, not real security.
 
 **Languages**
 - English (default), Dutch, German, French, Spanish, Greek, Italian, Polish and Turkish, chosen under *Settings → Language* (a confirmation, then the app restarts so every screen is built in the new language). TMDB data (descriptions, titles, genres, biographies, collections, search) follows the same language; after switching, titles are refreshed in the background. The "films in your language" row follows the app language too.
@@ -44,6 +45,7 @@ A Tizen web app (HTML5/JS, no build step) for Xtream Codes IPTV, styled like a s
 - Tolerates typos ("matirx" → The Matrix, "keanu reves" → Keanu Reeves) and partial words
 - Finds **actors and directors** (TMDB) and shows what you have with them ("Met Keanu Reeves in je bibliotheek")
 - Duplicates across language categories are merged; results are ranked by match quality, popularity, and your favourites/history
+- **"Did you mean …?"**: a word that matches nothing (not even as the start of a word) is replaced by the most common word in your library within a third of its letters; the suggestion appears below the keyboard
 - Recent searches per profile
 
 **Metadata (TMDB)**
@@ -159,6 +161,7 @@ js/find.js              search index (TMDB titles, typo tolerance, ranking)
 js/reco.js              recommendation rows
 js/follow.js            new-episode detection for series in My list
 js/remind.js            reminders for programmes in the TV guide
+js/subs.js              online subtitles (OpenSubtitles): search, download, SRT/WebVTT parsing, local cache
 js/player.js            AVPlay (TV) / HTML5 video (browser), audio/subtitle tracks, reconnect
 js/epg.js               EPG cache + queue (only fetches visible channels)
 js/xmltv.js             XMLTV guide: streaming download/parse (also .gz), channel matching, stored in IndexedDB
@@ -183,7 +186,7 @@ scripts/make-icon.js    generates icon.png
 ## Known limitations
 
 - **Multiview** (several streams at once) isn't possible: AVPlay allows one video player per app.
-- **Subtitles** only appear when they are embedded in the stream (e.g. MKV/HLS). Xtream servers rarely provide separate .srt files. DVB bitmap subtitles are not supported.
+- **Subtitles** from the stream only appear when they are embedded (e.g. MKV/HLS); DVB bitmap subtitles are not supported. Online subtitles (OpenSubtitles) need your own API key, aren't always in sync with your version of the film (use the 0.5 s shift), and OpenSubtitles limits the number of downloads per day (Kijkdoos shows how many are left; signing in to OpenSubtitles is not supported yet).
 - **Catch-up / timeshift** (tv_archive) is deliberately not included.
 - EPG quality depends on the provider; providers with poor EPG data show empty programmes.
 - DRM-protected streams (ClearKey/PlayReady in M3U lists) are not supported yet.

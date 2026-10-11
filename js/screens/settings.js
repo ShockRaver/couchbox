@@ -7,7 +7,9 @@ Screens.settings = {
         audioLang: [['auto', 'Automatisch'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks'], ['it', 'Italiaans'], ['pl', 'Pools'], ['tr', 'Turks']],
         subLang: [['off', 'Uit'], ['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans'], ['el', 'Grieks'], ['it', 'Italiaans'], ['pl', 'Pools'], ['tr', 'Turks']],
         aspect: [['letterbox', 'Passend (zwarte balken)'], ['fill', 'Uitrekken tot volledig scherm'], ['auto', 'Automatisch']],
-        hideAdult: [[false, 'Uit'], [true, 'Aan']],
+        subSize: [['s', 'Klein'], ['m', 'Normaal'], ['l', 'Groot'], ['xl', 'Extra groot']],
+        osAuto: [[true, 'Aan'], [false, 'Uit']],
+        hideAdult: [[false, 'Gewoon tonen'], [true, 'Verbergen'], ['lock', 'Op slot (pincode)']],
         trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']],
         autoNext: [['on', 'Automatisch na 10 seconden'], ['ask', 'Vragen'], ['off', 'Uit']]
     },
@@ -36,9 +38,12 @@ Screens.settings = {
             { id: 'liveFormat', label: T('Live-streamformaat') },
             { id: 'audioLang', label: T('Voorkeur audiotaal') },
             { id: 'subLang', label: T('Voorkeur ondertitels') },
+            { id: 'subSize', label: T('Grootte van ondertitels') },
+            { id: 'opensubs', label: T('Online ondertitels (OpenSubtitles)'), value: Subs.enabled() ? T('Aan') : T('Uit: druk op OK om een sleutel in te voeren'), action: true },
+            Subs.enabled() ? { id: 'osAuto', label: T('Automatisch online zoeken als de stream je taal niet heeft') } : null,
             { id: 'aspect', label: T('Beeldweergave') },
             { id: 'autoNext', label: T('Volgende aflevering afspelen') },
-            { id: 'hideAdult', label: T('Verberg 18+ categorieën') },
+            { id: 'hideAdult', label: T('18+ categorieën') },
             { id: 'lineup', label: T('Verborgen zenders en groepen'), value: this.lineupLabel(), action: true },
             { id: 'epgSrc', label: T('Bron van de tv-gids'), value: this.epgLabel(), action: true },
             App.canEmbed() ? { id: 'trailer', label: T('Trailers afspelen') } : null,
@@ -82,6 +87,15 @@ Screens.settings = {
         var n = o[(i + d + o.length) % o.length][0];
         Store.setSetting(id, n);
         if (id === 'aspect') Player.applyAspect();
+        if (id === 'hideAdult') {
+            App.relock();
+            Genres.reset();
+            // Op slot zonder pincode kan niet: eerst een pincode instellen (geannuleerd = terug naar de vorige keuze)
+            if (n === 'lock' && !Store.settings().pin) {
+                var self = this;
+                this.newPin(function (ok) { if (!ok) Store.setSetting(id, v); self.render(self.list.index); });
+            }
+        }
         this.list.refreshItem(this.list.index);
     },
 
@@ -110,6 +124,7 @@ Screens.settings = {
             case 'lang': I18N.choose(); break;
             case 'epgSrc': this.epgMenu(); break;
             case 'tmdb': this.tmdbMenu(); break;
+            case 'opensubs': this.osMenu(); break;
             case 'history':
                 Dialog.ask(T('Kijkgeschiedenis wissen?'), T('Verder kijken en de "bekeken"-vinkjes van dit profiel worden gewist.'), function (yes) {
                     if (yes) { Store.clearHistory(); Toast.show(T('Kijkgeschiedenis gewist')); }
@@ -185,6 +200,53 @@ Screens.settings = {
                 Loader.hide();
                 Store.setSetting('tmdbKey', old);
                 Dialog.notice(T('Sleutel werkt niet'), (e && e.message) || T('TMDB weigert deze sleutel.'));
+            });
+        });
+    },
+
+    // ---- OpenSubtitles: eigen API-sleutel (gratis account op opensubtitles.com) ----
+    osMenu: function () {
+        var self = this, own = (Store.settings().osKey || '').trim();
+        if (!Subs.enabled()) { this.osKeyEntry(function () { self.render(self.list.index); }); return; }
+        var items = [{ id: 'key', label: own ? T('Sleutel wijzigen') : T('Eigen sleutel invoeren') }];
+        if (own) items.push({ id: 'del', label: T('Sleutel van deze TV verwijderen'), danger: true });
+        Dialog.menu({
+            title: T('Online ondertitels (OpenSubtitles)'),
+            text: T('Ondertitels zoeken voor films en afleveringen die ze zelf niet hebben: in de speler ▼ → Ondertitels → Online zoeken. Gekozen ondertitels worden per titel onthouden; bij series ook de taal voor de volgende afleveringen. OpenSubtitles staat een beperkt aantal downloads per dag toe.'),
+            items: items
+        }, function (it) {
+            if (!it) return;
+            if (it.id === 'key') self.osKeyEntry(function () { self.render(self.list.index); });
+            else { Store.setSetting('osKey', ''); Toast.show(T('Sleutel verwijderd')); self.render(self.list.index); }
+        });
+    },
+    // Sleutel invoeren, eerst bij OpenSubtitles controleren, dan pas opslaan; cb(true) als het gelukt is
+    osKeyEntry: function (cb) {
+        Dialog.text({
+            title: T('OpenSubtitles-sleutel'),
+            text: T('Maak gratis een account op opensubtitles.com, ga naar "API consumers", maak een consumer aan en typ de "API key" hier over (ABC = hoofdletters).'),
+            value: Store.settings().osKey || '', placeholder: T('bv. AbC123…'), okLabel: T('Controleren en opslaan'), url: true
+        }, function (v) {
+            if (v == null) return cb && cb(false);
+            v = v.replace(/\s+/g, '');
+            if (!v) return cb && cb(false);
+            if (!/^[A-Za-z0-9]{16,64}$/.test(v)) {
+                Dialog.notice(T('Dit lijkt geen OpenSubtitles-sleutel'), T('Een sleutel bestaat uit letters en cijfers (meestal 32 tekens). Je typte {n} tekens.', { n: v.length }));
+                return cb && cb(false);
+            }
+            var old = Store.settings().osKey || '';
+            Store.setSetting('osKey', v);
+            Loader.show(T('Sleutel controleren bij OpenSubtitles…'));
+            // Zoeken kost geen download; met een verkeerde sleutel weigert de API
+            Subs.req('subtitles', { languages: 'en', tmdb_id: '603' }).then(function () {
+                Loader.hide();
+                Toast.show(T('Sleutel werkt en is opgeslagen'));
+                if (cb) cb(true);
+            }).catch(function (e) {
+                Loader.hide();
+                Store.setSetting('osKey', old);
+                Dialog.notice(T('Sleutel werkt niet'), e.message);
+                if (cb) cb(false);
             });
         });
     },
@@ -320,18 +382,28 @@ Screens.settings = {
     pinMenu: function () {
         var self = this, cur = Store.settings().pin;
         var items = cur ? [{ id: 'change', label: T('Pincode wijzigen') }, { id: 'off', label: T('Pincode uitschakelen'), danger: true }] : [{ id: 'set', label: T('Pincode instellen') }];
-        Dialog.menu({ title: T('Pincode'), text: T('De pincode beveiligt de instellingen (en daarmee profielen en het 18+-filter). Het is een eenvoudig kinderslot, geen echte beveiliging.'), items: items }, function (it) {
+        if (cur && App.isUnlocked()) items.unshift({ id: 'relock', label: T('Categorieën nu weer op slot') });
+        Dialog.menu({
+            title: T('Pincode'),
+            text: T('De pincode beveiligt de instellingen en categorieën die op slot staan (zet een categorie op slot: houd OK ingedrukt op de categorie). Eén keer de pincode invoeren ontgrendelt alles tot de app naar de achtergrond gaat. Het is een eenvoudig kinderslot, geen echte beveiliging.'),
+            items: items
+        }, function (it) {
             if (!it) return;
+            if (it.id === 'relock') { App.relock(); Toast.show(T('Weer op slot')); return; }
             if (it.id === 'off') { Store.setSetting('pin', ''); Toast.show(T('Pincode uitgeschakeld')); self.render(self.list.index); return; }
-            Dialog.pin(T('Nieuwe pincode'), function (a) {
-                if (!a) return;
-                Dialog.pin(T('Herhaal pincode'), function (b) {
-                    if (!b) return;
-                    if (a !== b) { Toast.show(T('Pincodes komen niet overeen')); return; }
-                    Store.setSetting('pin', a);
-                    Toast.show(T('Pincode ingesteld'));
-                    self.render(self.list.index);
-                });
+            self.newPin(function () { self.render(self.list.index); });
+        });
+    },
+    // Nieuwe pincode instellen (twee keer invoeren); cb(true) als het gelukt is
+    newPin: function (cb) {
+        Dialog.pin(T('Nieuwe pincode'), function (a) {
+            if (!a) return cb && cb(false);
+            Dialog.pin(T('Herhaal pincode'), function (b) {
+                if (!b) return cb && cb(false);
+                if (a !== b) { Toast.show(T('Pincodes komen niet overeen')); return cb && cb(false); }
+                Store.setSetting('pin', a);
+                Toast.show(T('Pincode ingesteld'));
+                if (cb) cb(true);
             });
         });
     },

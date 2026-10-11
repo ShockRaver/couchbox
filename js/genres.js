@@ -72,15 +72,19 @@ var Genres = (function () {
     }
 
     // Per categorie: taal, rangorde (voor dubbelen) en genres op basis van de naam
-    function catInfo(cats) {
-        var langs = activeLangs(cats), info = {};
+    // blocked = verborgen 18+ of op slot (zie App.blockedIds): titels daaruit tellen nergens mee
+    function catInfo(cats, type) {
+        var langs = activeLangs(cats), info = {}, blocked = App.blockedIds(type === 't' ? 'series' : 'movie', cats) || {};
         U.toArr(cats).forEach(function (c, i) {
-            var sp = splitName(c.category_name);
+            var sp = splitName(c.category_name), id = String(c.category_id);
             var ok = !langs || !sp.lang || langs.indexOf(sp.lang) >= 0;
             var rank = (langs && sp.lang ? langs.indexOf(sp.lang) : 50) * 10000 + i;
-            info[String(c.category_id)] = { ok: ok, rank: rank, genres: match(sp.rest) };
+            info[id] = { ok: ok && !blocked[id], blocked: !!blocked[id], rank: rank, genres: match(sp.rest) };
         });
         return info;
+    }
+    function isBlocked(it, info, adult) {
+        return (adult && String(it.is_adult) === '1') || App.catIds(it).some(function (id) { return info[id] && info[id].blocked; });
     }
 
     function tmdbKey(it) {
@@ -128,10 +132,10 @@ var Genres = (function () {
 
     // Licht: alleen de categorieën met dit genre in de naam laden
     function byCategory(genreId, cats) {
-        var info = catInfo(cats);
+        var info = catInfo(cats, 'm'), adult = App.hideIsAdult();
         var ids = Object.keys(info).filter(function (id) { return info[id].ok && info[id].genres.indexOf(genreId) >= 0; });
         return Promise.all(ids.map(function (id) { return Api.vodStreams(id).catch(function () { return []; }); })).then(function (lists) {
-            var all = [].concat.apply([], lists);
+            var all = [].concat.apply([], lists).filter(function (it) { return !isBlocked(it, info, adult); });
             return dedupe(all, info).sort(newest('added'));
         });
     }
@@ -152,9 +156,10 @@ var Genres = (function () {
     // Bronnen: genre van de provider (series), categorienaam, TMDB (als bekend), anders trefwoorden in titel/beschrijving.
     // In stukjes, zodat de TV blijft reageren (tienduizenden titels).
     function build(type, all, info) {
-        var visible = [], best = {}, idx = {}, list;
+        var visible = [], best = {}, idx = {}, list, adult = App.hideIsAdult();
         var field = type === 't' ? 'last_modified' : 'added';
         return U.each(all, function (s) {
+            if (isBlocked(s, info, adult)) return;
             if (App.catIds(s).some(function (id) { return !info[id] || info[id].ok; })) visible.push(s);
         }, 5000).then(function () {
             // Dubbelen samenvoegen: versie uit de categorie met de hoogste voorkeur wint
@@ -190,7 +195,7 @@ var Genres = (function () {
     // Alleen TMDB-gegevens veranderd? Dan op de achtergrond herbouwen en zolang de vorige index gebruiken.
     var built = { m: null, t: null };
     function index(type, cats) {
-        var info = catInfo(cats), key = JSON.stringify(activeLangs(cats));
+        var info = catInfo(cats, type), key = JSON.stringify(activeLangs(cats)) + App.blockSig();
         return (type === 't' ? Api.series(null) : Api.vodStreams(null)).then(function (all) {
             var c = built[type], v = Tmdb.version(), old = null;
             if (c && c.key === key && c.src === all) {

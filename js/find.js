@@ -194,8 +194,37 @@ var Find = (function () {
         return total / terms.length * 3 + phraseBonus([toks.join(' ')], words(q).join(' '));
     }
 
+    // "Bedoelde je …?": zoekwoorden die nergens mee beginnen of overeenkomen vervangen door het meest voorkomende woord
+    // dat er het dichtst bij ligt (tot een derde van de letters anders). null = niets beters gevonden
+    function suggest(q) {
+        if (!idx) return null;
+        var terms = words(q), changed = false;
+        var out = terms.map(function (term) {
+            if (term.length < 3 || STOP[term] || /^\d+$/.test(term) || idx.tokens.has(term)) return term;
+            var lo = 0, hi = idx.sorted.length;
+            while (lo < hi) { var mid = (lo + hi) >> 1; if (idx.sorted[mid] < term) lo = mid + 1; else hi = mid; }
+            if (lo < idx.sorted.length && idx.sorted[lo].lastIndexOf(term, 0) === 0) return term;   // nog aan het typen
+            var k = Math.max(1, Math.min(3, Math.floor(term.length / 3))), best = null, bestD = k + 1, bestN = 0;
+            for (var len = term.length - k; len <= term.length + k; len++) {
+                (idx.byLen[len] || []).forEach(function (t) {
+                    if (/^\d+$/.test(t)) return;
+                    var d = dist(term, t, k);
+                    if (d > k) return;
+                    var n = idx.tokens.get(t).length;
+                    if (d < bestD || (d === bestD && n > bestN)) { best = t; bestD = d; bestN = n; }
+                });
+            }
+            if (!best) return term;
+            changed = true;
+            return best;
+        });
+        if (!changed) return null;
+        var s = out.join(' '), r = query(s);
+        return r.live.length + r.movie.length + r.series.length ? s : null;
+    }
+
     return {
-        build: build, query: query, score: score, words: words, dist: dist,
+        build: build, query: query, score: score, words: words, dist: dist, suggest: suggest,
         ready: function () { return !!idx; },
         // Opnieuw opbouwen als er sindsdien veel TMDB-titels bij zijn gekomen
         stale: function () { return !idx || Meta.count() > idx.metaCount * 1.05 + 50; },

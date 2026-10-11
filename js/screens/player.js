@@ -45,6 +45,7 @@ Screens.player = {
         this.live = p.mode === 'live';
         this.el.classList.toggle('is-live', this.live);
         this.overlay = null;   // 'list' | 'next' | null
+        this.nextEarly = false;
         this.osdMode = null;   // null | 'info' | 'menu'
         this.seekTarget = null;
         this.doneKey = null;
@@ -52,6 +53,8 @@ Screens.player = {
         this.listBox.classList.remove('show');
         this.nextBox.classList.remove('show');
         this.subEl.innerHTML = '';
+        this.ext = null;
+        this.el.className = this.el.className.replace(/\bsubs-\w+/g, '') + ' subs-' + (Store.settings().subSize || 'm');
         this.setMsg('');
         Player.setRect(null);
         this.attach();
@@ -86,13 +89,15 @@ Screens.player = {
             : T('<b>OK</b> pauze · ◀▶ spoelen · ▼ menu (audio, ondertitels)');
         this.buildButtons();
         this.showOsd('info');
-        this.tickT = setInterval(function () { self.updateOsd(); }, 500);
+        this.upNextFor = null;
+        this.tickT = setInterval(function () { self.updateOsd(); self.checkUpNext(); }, 500);
     },
 
     hide: function () {
         if (!this.live) this.saveProgress();
         clearInterval(this.tickT); clearInterval(this.saveT); clearInterval(this.nextT);
         clearTimeout(this.osdT); clearTimeout(this.zapT); clearTimeout(this.seekT); clearTimeout(this.numT); clearTimeout(this.subT); clearTimeout(this.leT); clearTimeout(this.preT);
+        clearTimeout(this.autoSubT); clearInterval(this.extT);
         if (this.seekTarget != null) { Player.seek(this.seekTarget); this.seekTarget = null; }
         this.detach();
         this.hideOsd();
@@ -199,7 +204,10 @@ Screens.player = {
         var it = this.item;
         var url = this.mode === 'movie' ? Api.movieUrl(it) : Api.episodeUrl(it);
         var pref = this.seriesPrefs() || {};
-        Player.play(url, { live: false, startAt: startAt || 0, meta: it, uhd: /4k|uhd/i.test(it.name || ''), audioLang: pref.audio, subLang: pref.sub });
+        this.setExt(null);
+        // 'os:nl' = online gekozen; heeft de stream zelf Nederlandse ondertitels, dan gaan die voor
+        Player.play(url, { live: false, startAt: startAt || 0, meta: it, uhd: /4k|uhd/i.test(it.name || ''), audioLang: pref.audio, subLang: pref.sub ? String(pref.sub).replace(/^os:/, '') : pref.sub });
+        this.restoreExt();
         if (this.mode === 'episode' && this.p.series) Follow.clear(this.p.series.id, it.id);
         this.fillVod();
     },
@@ -267,19 +275,24 @@ Screens.player = {
             return;
         }
         this.markDone();
+        // Volgende aflevering werd al aangeboden (laatste seconden): meteen starten
+        if (this.overlay === 'next' && this.nextEarly) { this.playEpisode(this.nextEp); return; }
         // Instelling "Volgende aflevering afspelen": automatisch, vragen of uit (terug naar de serie)
         var next = this.nextEpisode(), mode = Store.settings().autoNext;
         if (next && mode !== 'off') this.askNext(next, mode !== 'ask'); else App.back();
     },
 
-    // Volgende aflevering aanbieden; auto = na 10 seconden vanzelf starten
-    askNext: function (next, auto) {
-        var self = this, left = 10;
+    // Volgende aflevering aanbieden; auto = na 10 seconden (of na 'secs') vanzelf starten.
+    // early = nog tijdens de aftiteling: Terug sluit alleen de melding, andere toetsen werken gewoon
+    askNext: function (next, auto, secs, early) {
+        var self = this, left = secs || 10;
         this.overlay = 'next';
         this.nextEp = next;
+        this.nextEarly = !!early;
         var draw = function () {
             self.nextBox.innerHTML = '<div class="p-next-label">' + T('Volgende aflevering') + '</div><div class="p-next-title">S' + next.season + ' E' + next.episode + ' · ' + U.esc(next.name) +
-                '</div><div class="p-next-hint">' + (auto ? T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen', { n: left })
+                '</div><div class="p-next-hint">' + (early ? T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> verder kijken', { n: left })
+                    : auto ? T('Start over {n} s &nbsp;·&nbsp; <b>OK</b> nu starten &nbsp;·&nbsp; <b>Terug</b> stoppen', { n: left })
                     : T('<b>OK</b> starten &nbsp;·&nbsp; <b>Terug</b> stoppen')) + '</div>';
         };
         draw();
@@ -287,7 +300,17 @@ Screens.player = {
         clearInterval(this.nextT);
         if (auto) this.nextT = setInterval(function () { left--; if (left <= 0) self.playEpisode(next); else draw(); }, 1000);
     },
-    closeNext: function () { clearInterval(this.nextT); this.overlay = null; this.nextBox.classList.remove('show'); },
+    closeNext: function () { clearInterval(this.nextT); this.overlay = null; this.nextEarly = false; this.nextBox.classList.remove('show'); },
+
+    // Laatste 20 seconden van een aflevering (bij "automatisch"): de volgende alvast aanbieden, zodat hij zonder wachten start
+    checkUpNext: function () {
+        if (this.mode !== 'episode' || this.overlay || !this.item || this.upNextFor === this.item.id) return;
+        if (Store.settings().autoNext !== 'on' || Player.state() !== 'playing' || this.seekTarget != null) return;
+        var d = Player.duration(), left = d - Player.time(), next = d >= 300000 && left <= 20000 && left > 2000 && this.nextEpisode();
+        if (!next) return;
+        this.upNextFor = this.item.id;
+        this.askNext(next, true, Math.ceil(left / 1000), true);
+    },
 
     playEpisode: function (ep) {
         this.closeNext();
@@ -420,17 +443,142 @@ Screens.player = {
         });
     },
 
-    subsMenu: function () {
-        var tr = Player.tracks('TEXT');
-        if (!tr.length) { Toast.show(T('Deze stream bevat geen ondertitels')); return; }
-        var on = Player.subtitlesActive(), cur = on ? Player.currentTrack('TEXT') : -1;
-        var self = this;
-        var items = [{ id: -1, label: T('Uit'), lang: 'off', checked: !on }].concat(tr.map(function (t) { return { id: t.index, label: t.label, lang: t.lang, checked: on && t.index === cur }; }));
-        Dialog.menu({ title: T('Ondertitels'), items: items }, function (it) {
+    subsMenu: function (index) {
+        var self = this, tr = Player.tracks('TEXT'), online = !this.live, x = this.ext;
+        if (!tr.length && !online) { Toast.show(T('Deze stream bevat geen ondertitels')); return; }
+        var on = Player.subtitlesActive() && !x, cur = on ? Player.currentTrack('TEXT') : -1;
+        var items = [{ id: 'off', label: T('Uit'), lang: 'off', checked: !on && !x }].concat(tr.map(function (t) {
+            return { id: 'tr', index: t.index, label: t.label, lang: t.lang, checked: on && t.index === cur };
+        }));
+        if (x) {
+            var off = (x.offset > 0 ? '+' : '') + I18N.num(x.offset / 1000) + ' s';
+            items.push({ id: 'ext', label: x.label, hint: 'OpenSubtitles', checked: true },
+                { id: 'earlier', label: T('Ondertitels eerder tonen (−0,5 s)'), hint: off },
+                { id: 'later', label: T('Ondertitels later tonen (+0,5 s)'), hint: off });
+        }
+        if (online) items.push({ id: 'search', label: x ? T('Andere ondertitels zoeken (OpenSubtitles)…') : T('Online zoeken (OpenSubtitles)…') });
+        Dialog.menu({ title: T('Ondertitels'), items: items, index: index }, function (it, i) {
             if (!it) return;
-            if (it.id === -1) { Player.subtitlesOff(); Toast.show(T('Ondertitels uit')); self.rememberTrack('sub', 'off'); }
-            else if (Player.selectTrack('TEXT', it.id)) { Toast.show(T('Ondertitels: {track}', { track: it.label })); self.rememberTrack('sub', it.lang); }
+            if (it.id === 'off') { self.dropExt(); Player.subtitlesOff(); Toast.show(T('Ondertitels uit')); self.rememberTrack('sub', 'off'); }
+            else if (it.id === 'tr') {
+                self.dropExt();
+                if (Player.selectTrack('TEXT', it.index)) { Toast.show(T('Ondertitels: {track}', { track: it.label })); self.rememberTrack('sub', it.lang); }
+            }
+            else if (it.id === 'earlier' || it.id === 'later') {
+                x.offset += it.id === 'later' ? 500 : -500;
+                self.extSave({ fileId: x.fileId, lang: x.lang, label: x.label, offset: x.offset });
+                self.extText = null;
+                self.tickExt();
+                self.subsMenu(i);
+            }
+            else if (it.id === 'search') self.searchSubs();
         });
+    },
+
+    // ---- Externe ondertitels (OpenSubtitles); zelf getoond op de tijd van de speler ----
+    // Gekozen bestand en synchronisatie per film/aflevering onthouden (de 100 meest recente)
+    extKey: function () { return this.mode + ':' + this.item.id; },
+    extSaved: function () { return (Store.getP('extSubs', {}) || {})[this.extKey()] || null; },
+    extSave: function (v) {
+        var all = Store.getP('extSubs', {}) || {}, k = this.extKey();
+        if (v) { v.t = Date.now(); all[k] = v; } else delete all[k];
+        var keys = Object.keys(all);
+        if (keys.length > 100) keys.sort(function (a, b) { return (all[a].t || 0) - (all[b].t || 0); }).slice(0, keys.length - 100).forEach(function (o) { delete all[o]; });
+        Store.setP('extSubs', all);
+    },
+    setExt: function (x) {
+        var self = this;
+        clearInterval(this.extT);
+        clearTimeout(this.autoSubT);
+        this.ext = x;
+        this.extText = null;
+        this.drawSub('');
+        if (!x) return;
+        Player.subtitlesOff();
+        this.extT = setInterval(function () { self.tickExt(); }, 200);
+        this.tickExt();
+    },
+    dropExt: function () { if (this.ext) { this.setExt(null); this.extSave(null); } },
+    tickExt: function () {
+        var x = this.ext;
+        if (!x) return;
+        var txt = Subs.at(x.cues, Player.time() - x.offset);
+        if (txt !== this.extText) { this.extText = txt; this.drawSub(txt); }
+    },
+
+    // Zoekgegevens voor OpenSubtitles: TMDB-id als dat er is, anders de titel
+    subsQuery: function (langs) {
+        var it = this.item, s = this.mode === 'episode' && this.p.series;
+        return { kind: s ? 't' : 'm', tmdb: it.tmdb, seriesTmdb: s && s.tmdb, season: it.season, episode: it.episode, name: s ? s.name : it.name, langs: langs };
+    },
+    // Talen om te zoeken: wat je voor deze serie koos, je voorkeur, de taal van de app, Engels
+    subLangs: function () {
+        var out = [], pref = (this.seriesPrefs() || {}).sub;
+        [pref && String(pref).replace(/^os:/, ''), Store.settings().subLang, I18N.lang(), 'en'].forEach(function (l) {
+            if (l && l !== 'off' && out.indexOf(l) < 0) out.push(l);
+        });
+        return out;
+    },
+    searchSubs: function () {
+        var self = this, item = this.item, langs = this.subLangs();
+        if (!Subs.enabled()) { Screens.settings.osKeyEntry(function (ok) { if (ok) self.searchSubs(); }); return; }
+        Loader.show(T('Ondertitels zoeken…'));
+        Subs.search(this.subsQuery(langs)).then(function (list) {
+            Loader.hide();
+            if (self.item !== item || App.screen() !== self) return;
+            if (!list.length) {
+                Dialog.notice(T('Geen ondertitels gevonden'), T('OpenSubtitles heeft niets gevonden voor deze titel in: {langs}.', { langs: langs.map(U.langLabel).join(', ') }));
+                return;
+            }
+            Dialog.menu({
+                title: T('Ondertitels (OpenSubtitles)'),
+                items: list.slice(0, 40).map(function (s) {
+                    var rel = s.release.length > 48 ? s.release.slice(0, 47) + '…' : s.release;
+                    return {
+                        id: s.fileId, sub: s, label: s.label + (rel ? ' · ' + rel : ''),
+                        hint: [s.hi ? T('slechthorenden') : '', s.ai ? T('automatisch vertaald') : '', T('{n}× gedownload', { n: I18N.num(s.downloads) })].filter(Boolean).join(' · ')
+                    };
+                })
+            }, function (it) { if (it) self.loadExt(it.sub, true); });
+        }).catch(function (e) { Loader.hide(); Dialog.notice(T('Ondertitels zoeken mislukt'), e.message); });
+    },
+    // s: { fileId, lang, label }; manual = zelf gekozen (melding bij fouten, taal onthouden voor de serie)
+    loadExt: function (s, manual, offset) {
+        var self = this, item = this.item;
+        if (manual) Loader.show(T('Ondertitels downloaden…'));
+        return Subs.load(s.fileId).then(function (r) {
+            if (manual) Loader.hide();
+            if (self.item !== item || App.screen() !== self) return;
+            self.setExt({ fileId: s.fileId, lang: s.lang, label: s.label, offset: offset || 0, cues: r.cues });
+            self.extSave({ fileId: s.fileId, lang: s.lang, label: s.label, offset: offset || 0 });
+            if (manual) self.rememberTrack('sub', 'os:' + s.lang);
+            if (manual || r.remaining != null) Toast.show(T('Ondertitels: {track}', { track: s.label + ' (OpenSubtitles)' }) +
+                (r.remaining != null ? ' · ' + T('nog {n} downloads vandaag', { n: r.remaining }) : ''), 4000);
+        }).catch(function (e) {
+            if (manual) { Loader.hide(); Dialog.notice(T('Ondertitels laden mislukt'), e.message); }
+            else console.warn('Ondertitels laden mislukt', e);
+        });
+    },
+    // Bij het starten: eerder gekozen ondertitels terugzetten, of automatisch zoeken als de stream je voorkeurstaal niet heeft
+    restoreExt: function () {
+        var self = this, item = this.item, saved = this.extSaved();
+        if (this.live || !item) return;
+        if (saved) { this.loadExt(saved, false, saved.offset); return; }
+        var pref = (this.seriesPrefs() || {}).sub, st = Store.settings();
+        var lang = String(pref || st.subLang || 'off').replace(/^os:/, '');
+        if (lang === 'off' || !Subs.enabled() || st.osAuto === false) return;
+        var tries = 0;
+        var check = function () {
+            if (self.item !== item || self.ext || App.screen() !== self) return;
+            var ps = Player.state();
+            if (ps !== 'playing' && ps !== 'paused') { if (++tries < 10) self.autoSubT = setTimeout(check, 3000); return; }
+            if (Player.subtitlesActive()) return;   // de stream heeft ze zelf
+            Subs.search(self.subsQuery([lang])).then(function (list) {
+                var s = list.filter(function (x) { return x.lang === lang; })[0];
+                if (s && self.item === item && !self.ext) self.loadExt(s, false);
+            }).catch(function (e) { console.warn('Ondertitels zoeken mislukt', e); });
+        };
+        this.autoSubT = setTimeout(check, 4000);
     },
 
     cycleAspect: function () {
@@ -451,12 +599,15 @@ Screens.player = {
         this.fillLive();
     },
 
+    // Ondertitels uit de stream (AVPlay); genegeerd zolang er externe ondertitels lopen
     showSub: function (t, d) {
         var self = this, clean = String(t || '').replace(/<[^>]*>/g, '').trim();
+        if (this.ext) return;
         clearTimeout(this.subT);
-        this.subEl.innerHTML = clean ? '<span>' + U.esc(clean).replace(/\n/g, '<br>') + '</span>' : '';
-        if (clean && d) this.subT = setTimeout(function () { self.subEl.innerHTML = ''; }, +d);
+        this.drawSub(clean);
+        if (clean && d) this.subT = setTimeout(function () { self.drawSub(''); }, +d);
     },
+    drawSub: function (clean) { this.subEl.innerHTML = clean ? '<span>' + U.esc(clean).replace(/\n/g, '<br>') + '</span>' : ''; },
 
     // ---- Zenderlijst-overlay ----
     showList: function () {
@@ -529,7 +680,7 @@ Screens.player = {
 
     // ---- Toetsen ----
     onKey: function (k) {
-        if (this.overlay === 'next') return this.keyNext(k);
+        if (this.overlay === 'next' && (!this.nextEarly || k === 'ok' || k === 'back')) return this.keyNext(k);
         if (this.overlay === 'list') return this.keyList(k);
         if (this.live && Keys.isDigit(k)) { this.numInput(k); return true; }
         if (this.osdMode === 'menu' && this.keyMenu(k)) return true;
@@ -605,6 +756,7 @@ Screens.player = {
 
     keyNext: function (k) {
         if (k === 'ok') this.playEpisode(this.nextEp);
+        else if (k === 'back' && this.nextEarly) this.closeNext();
         else if (k === 'back' || k === 'stop') { this.closeNext(); App.back(); }
         return true;
     }

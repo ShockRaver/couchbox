@@ -38,6 +38,8 @@ Screens.search = {
     // Catalogus ophalen (zonder 18+ en dubbelen) en de zoekindex opbouwen
     load: function () {
         var self = this;
+        // Verborgen 18+ of slot gewijzigd (bv. ontgrendeld): catalogus opnieuw filteren
+        if (this.data && this.dataSig !== App.blockSig()) this.data = null;
         if (this.data && !Find.stale()) { this.run(); return; }
         if (this.loading) return;
         this.loading = true;
@@ -48,9 +50,12 @@ Screens.search = {
         this.setStatus(T('Catalogus laden voor zoeken… (kan even duren bij grote abonnementen)'));
         get.then(function (r) {
             if (r) {
-                var a = [App.adultIds(r[3]), App.adultIds(r[4]), App.adultIds(r[5])];
-                var f = function (list, ad) { return ad ? list.filter(function (x) { return !App.inCats(x, ad); }) : list; };
+                var a = [App.blockedIds('live', r[3]), App.blockedIds('movie', r[4]), App.blockedIds('series', r[5])], adult = App.hideIsAdult();
+                var f = function (list, ad) {
+                    return ad || adult ? list.filter(function (x) { return !(ad && App.inCats(x, ad)) && !(adult && String(x.is_adult) === '1'); }) : list;
+                };
                 self.data = { live: Lineup.visible(f(r[0], a[0])), movie: Genres.unique(f(r[1], a[1]), r[4]), series: Genres.unique(f(r[2], a[2]), r[5]) };
+                self.dataSig = App.blockSig();
             }
             return Find.build(self.data, function (n, total) { self.setStatus(T('Zoekindex opbouwen… {pct}%', { pct: Math.round(n / Math.max(1, total) * 100) })); });
         }).then(function () {
@@ -106,13 +111,18 @@ Screens.search = {
         list.unshift(q);
         Store.setP('recentSearch', list.slice(0, this.RECENT_MAX));
     },
+    // Onder het toetsenbord: eerst "Bedoelde je …?" (als er een betere spelling is), dan recent gezocht
+    picks: function () {
+        var out = this.suggestion ? [{ q: this.suggestion, sug: true }] : [];
+        return out.concat(this.recent().map(function (q) { return { q: q }; }));
+    },
     drawRecent: function () {
-        var self = this, list = this.recent();
+        var self = this, list = this.picks(), head = false;
         this.recentBox.innerHTML = '';
-        if (!list.length) return;
-        this.recentBox.appendChild(U.h('h4', { text: T('Recent gezocht') }));
-        list.forEach(function (q, i) {
-            self.recentBox.appendChild(U.h('div', { class: 'sk-ritem' + (self.zone === 'recent' && i === self.ri ? ' focus' : ''), html: Icons.get('restart') }, U.h('span', { text: q })));
+        list.forEach(function (p, i) {
+            if (p.sug) self.recentBox.appendChild(U.h('h4', { text: T('Bedoelde je') }));
+            else if (!head) { head = true; self.recentBox.appendChild(U.h('h4', { text: T('Recent gezocht') })); }
+            self.recentBox.appendChild(U.h('div', { class: 'sk-ritem' + (p.sug ? ' sug' : '') + (self.zone === 'recent' && i === self.ri ? ' focus' : ''), html: Icons.get(p.sug ? 'search' : 'restart') }, U.h('span', { text: p.q })));
         });
     },
 
@@ -134,6 +144,7 @@ Screens.search = {
         var self = this, raw = this.q.trim(), q = U.norm(raw), my = ++this.qToken;
         clearTimeout(this.onlineT);
         this.res = null;
+        if (this.suggestion) { this.suggestion = null; this.drawRecent(); }
         this.rows.clear();
         if (!Find.ready()) return;
         if (q.length < 2) {
@@ -143,6 +154,8 @@ Screens.search = {
         }
         var r = Find.query(q, this.boost());
         this.res = { q: raw, live: r.live, movie: r.movie, series: r.series, people: [], withP: null };
+        this.suggestion = Find.suggest(raw);
+        this.drawRecent();
         this.render();
         // Online aanvullen (personen, nog niet gekoppelde titels) als de gebruiker even stopt met typen
         if (Tmdb.enabled() && q.length >= 3) this.onlineT = setTimeout(function () { self.online(raw, my); }, 400);
@@ -237,7 +250,9 @@ Screens.search = {
         rows.forEach(function (row) { self.rows.add(row); });
         this.rows.restore(st);
         this.rows.setActive(this.zone === 'rows');
-        this.setStatus(rows.length ? '' : T('Niets gevonden voor "{query}"', { query: r.q }) + (Tmdb.enabled() ? '' : '\n' + T('(zoeken op acteurs werkt met een TMDB-sleutel)')));
+        this.setStatus(rows.length ? '' : T('Niets gevonden voor "{query}"', { query: r.q }) +
+            (this.suggestion ? '\n' + T('Bedoelde je "{query}"? Kies het onder het toetsenbord.', { query: this.suggestion }) : '') +
+            (Tmdb.enabled() ? '' : '\n' + T('(zoeken op acteurs werkt met een TMDB-sleutel)')));
     },
 
     onKey: function (k) {
@@ -263,12 +278,12 @@ Screens.search = {
         var r = this.kb.key(k);
         if (r === 'right') { if (this.rows.rows.length) this.setZone('rows'); return true; }
         if (r === 'up') { this.setZone('nav'); return true; }
-        if (r === 'down') { if (this.recent().length) { this.ri = 0; this.setZone('recent'); } return true; }
+        if (r === 'down') { if (this.picks().length) { this.ri = 0; this.setZone('recent'); } return true; }
         return r;
     },
 
     recentKey: function (k) {
-        var list = this.recent();
+        var list = this.picks().map(function (p) { return p.q; });
         switch (k) {
             case 'up': if (this.ri > 0) { this.ri--; this.drawRecent(); } else this.setZone('keys'); return true;
             case 'down': if (this.ri < list.length - 1) { this.ri++; this.drawRecent(); } return true;

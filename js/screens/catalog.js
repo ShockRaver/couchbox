@@ -22,6 +22,7 @@ Screens.catalog = {
                 return U.h('div', { class: 'cat' + (c.genre ? ' genre' : '') + (c.action ? ' action' : '') }, [
                     c.id === 'fav' ? U.h('span', { class: 'cat-ic', html: Icons.get('star') }) : null,
                     c.action ? U.h('span', { class: 'cat-ic', html: Icons.get('restart') }) : null,
+                    c.provider && App.isLocked(self.mode, c.id) ? U.h('span', { class: 'cat-ic' + (App.isUnlocked() ? ' open' : ''), html: Icons.get('lock') }) : null,
                     U.h('span', { class: 'cat-name', text: c.name })
                 ]);
             }
@@ -66,7 +67,7 @@ Screens.catalog = {
             list.push({ header: true, name: T('Categorieën van provider') });
             cats.forEach(function (c) {
                 var id = String(c.category_id);
-                if (!(adult && adult[id])) list.push({ id: id, name: c.category_name });
+                if (!(adult && adult[id])) list.push({ id: id, name: c.category_name, provider: true });
             });
             self.catList = list;
             var saved = self.lastCat[self.mode], start = saved ? list.findIndex(function (c) { return !c.header && c.id === saved; }) : -1;
@@ -92,11 +93,19 @@ Screens.catalog = {
 
     setStatus: function (t) { this.status.textContent = t || ''; this.status.style.display = t ? '' : 'none'; },
 
+    // Categorie op slot (zelf gekozen, of 18+ bij "Op slot") en nog niet ontgrendeld?
+    catLocked: function (cat) {
+        var l = cat && cat.provider && !App.isUnlocked() && App.lockIds(this.mode, this.cats_raw);
+        return !!(l && l[cat.id]);
+    },
+
     loadCat: function (cat, keepIndex) {
         var self = this, movie = this.mode === 'movie', my = this.token = (this.token || 0) + 1, p;
         this.cat = cat;
         this.lastCat[this.mode] = cat.id;
         this.grid.setItems([]);
+        this.items = [];
+        if (this.catLocked(cat)) { this.setStatus(T('Op slot. Druk op OK en voer de pincode in.')); this.hdr.sub.textContent = cat.name; return; }
         this.setStatus(T('Laden…'));
         if (cat.id === 'fav') p = Promise.resolve(Store.favorites(this.mode).map(movie ? App.vodFromFav : App.seriesFromFav));
         else if (cat.id === 'cont') p = Promise.resolve(Store.history().filter(function (h) { return h.mode === 'movie'; }).map(function (h) {
@@ -114,8 +123,10 @@ Screens.catalog = {
         else p = movie ? Api.vodStreams(cat.id === 'all' ? null : cat.id) : Api.series(cat.id === 'all' ? null : cat.id);
         p.then(function (items) {
             if (my !== self.token) return;
-            if (self.adult && (cat.id === 'all' || cat.genre || cat.season)) items = items.filter(function (x) { return !App.inCats(x, self.adult); });
-            if (Store.settings().hideAdult) items = items.filter(function (x) { return String(x.is_adult) !== '1'; });
+            // Verborgen 18+ en categorieën op slot niet in "Alle", genres en seizoenen
+            var blocked = App.blockedIds(self.mode, self.cats_raw);
+            if (blocked && !cat.provider) items = items.filter(function (x) { return !App.inCats(x, blocked); });
+            if (App.hideIsAdult()) items = items.filter(function (x) { return String(x.is_adult) !== '1'; });
             self.items = items;
             self.grid.setItems(items, keepIndex || 0);
             self.setStatus(items.length ? '' : cat.id === 'fav' ? T('Je lijst is nog leeg. Houd OK ingedrukt op een poster om hem toe te voegen.')
@@ -191,10 +202,30 @@ Screens.catalog = {
                     if (this.cats.current().header) this.moveCat(k === 'chup' ? 'up' : 'down');
                     this.schedCat();
                     return true;
-                case 'right': case 'ok': case 'longok':
+                case 'longok':
+                    // Categorie van de provider: op slot zetten of het slot eraf halen
+                    var pc = this.cats.current();
+                    if (pc && pc.provider) {
+                        clearTimeout(this.catT);
+                        var locked = App.isLocked(this.mode, pc.id);
+                        Dialog.menu({ title: pc.name, items: [{ id: 'open', label: T('Openen') }, locked ? { id: 'unlock', label: T('Slot eraf halen') } : { id: 'lock', label: T('Op slot zetten (pincode)') }] }, function (x) {
+                            if (!x) return;
+                            if (x.id === 'open') { self.onKey('ok'); return; }
+                            UI.setCatLock(self.mode, pc.id, x.id === 'lock', function () { self.cats.refresh(); self.loadCat(pc); });
+                        });
+                        return true;
+                    }
+                    k = 'ok';
+                    /* valt door */
+                case 'right': case 'ok':
                     clearTimeout(this.catT);
                     if (this.cats.current().action) {
                         if (k !== 'right') App.refreshCatalog(function () { Screens.catalog.show({ mode: self.mode }); });
+                        return true;
+                    }
+                    if (k === 'ok' && this.catLocked(this.cats.current())) {
+                        var lc = this.cats.current();
+                        App.unlock(function (ok) { if (ok) { self.cats.refresh(); self.loadCat(lc); } });
                         return true;
                     }
                     if (this.cats.current() !== this.cat) this.loadCat(this.cats.current());

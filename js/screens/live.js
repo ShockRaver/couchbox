@@ -78,8 +78,9 @@ Screens.live = {
             var j = items.findIndex(function (s) { return String(s.stream_id) === String(pid); });
             if (j >= 0) idx = j;
         }
+        this.chans.setEmpty(cat.locked ? T('Op slot. Druk op OK en voer de pincode in.') : T('Geen zenders in deze categorie'));
         this.chans.setItems(items, idx);
-        this.hdr.sub.textContent = cat.name + ' · ' + (items.length === 1 ? T('{n} zender', { n: items.length }) : T('{n} zenders', { n: items.length }));
+        this.hdr.sub.textContent = cat.locked ? cat.name : cat.name + ' · ' + (items.length === 1 ? T('{n} zender', { n: items.length }) : T('{n} zenders', { n: items.length }));
         this.updateInfo();
         this.requestEpg();
     },
@@ -129,7 +130,7 @@ Screens.live = {
         var moving = this.moving === 'cat' && c === this.cats.current();
         return U.h('div', { class: 'cat' + (moving ? ' moving' : '') }, [
             moving ? U.h('span', { class: 'cat-ic', html: Icons.get('move') }) : c.id === 'fav' ? U.h('span', { class: 'cat-ic', html: Icons.get('star') })
-                : c.kind === 'list' ? U.h('span', { class: 'cat-ic', html: Icons.get('list') }) : null,
+                : c.kind === 'list' ? U.h('span', { class: 'cat-ic', html: Icons.get('list') }) : c.lock ? U.h('span', { class: 'cat-ic' + (c.locked ? '' : ' open'), html: Icons.get('lock') }) : null,
             U.h('span', { class: 'cat-name', text: c.name }),
             U.h('span', { class: 'cnt', text: c.count != null ? String(c.count) : '' })
         ]);
@@ -235,6 +236,7 @@ Screens.live = {
                 case 'longok': case 'red': this.flushCat(); this.catMenu(); return true;
                 case 'right': case 'ok':
                     this.flushCat();
+                    if (this.cat.locked && k === 'ok') { this.unlockCat(); return true; }
                     if (this.items.length) this.setZone('chans');
                     return true;
             }
@@ -337,16 +339,30 @@ Screens.live = {
         var self = this, c = this.cats.current();
         if (!c) return;
         var items = [];
-        if (c.kind === 'cat') items.push({ id: 'move', label: T('Verplaatsen') }, { id: 'hide', label: T('Groep verbergen') });
+        if (c.kind === 'cat') items.push({ id: 'move', label: T('Verplaatsen') }, { id: 'hide', label: T('Groep verbergen') },
+            App.isLocked('live', c.catId) ? { id: 'unlock', label: T('Slot eraf halen') } : { id: 'lock', label: T('Op slot zetten (pincode)') });
         if (c.kind === 'list') {
             items.push({ id: 'rename', label: T('Naam wijzigen') });
             if (Lineup.lists().length > 1) items.push({ id: 'move', label: T('Verplaatsen') });
             items.push({ id: 'del', label: T('Lijst verwijderen'), danger: true });
         }
         items.push({ id: 'new', label: T('Nieuwe zenderlijst…') });
+        var az = Lineup.sortMode() === 'az';
+        items.push({ id: 'sort', label: az ? T('Zenders sorteren op nummer') : T('Zenders sorteren van A tot Z'), hint: T('favorieten en eigen lijsten niet') });
         Dialog.menu({ title: c.name, items: items }, function (it) {
             if (!it) return;
             var here = self.cat.id === c.id;
+            if (it.id === 'lock' || it.id === 'unlock') {
+                UI.setCatLock('live', c.catId, it.id === 'lock', function () { self.applyLineup(self.cat.id); });
+                return;
+            }
+            if (it.id === 'sort') {
+                var cur = self.chans.current();
+                Lineup.setSort(az ? 'num' : 'az');
+                Toast.show(az ? T('Zenders op nummer') : T('Zenders van A tot Z'));
+                self.applyLineup(self.cat.id, cur && cur.stream_id);
+                return;
+            }
             if (it.id === 'move') self.startMove('cat');
             else if (it.id === 'hide') {
                 Lineup.hideCat(c.catId, true);
@@ -361,6 +377,12 @@ Screens.live = {
             }, T('Verwijderen'));
             else if (it.id === 'new') self.newList(null);
         });
+    },
+
+    // Groep op slot: pincode vragen, daarna alles ontgrendeld (tot de app naar de achtergrond gaat)
+    unlockCat: function () {
+        var self = this, id = this.cat.id;
+        App.unlock(function (ok) { if (ok) { self.applyLineup(id); self.setZone('chans'); } });
     },
 
     // ---- Verplaatsen: ▲▼ schuift de groep of zender, OK of Terug = klaar ----

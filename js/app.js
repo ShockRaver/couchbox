@@ -44,9 +44,54 @@ var App = {
         if (!pin) { open(); return; }
         Dialog.pin(T('Voer je pincode in'), function (v) {
             if (v == null) return;
-            if (v === pin) open(); else Toast.show(T('Onjuiste pincode'));
+            if (v === pin) { self.unlockedAt = Date.now(); open(); } else Toast.show(T('Onjuiste pincode'));
         });
     },
+
+    // ---- Categorieën op slot (kinderslot met de pincode van de instellingen) ----
+    // Eén keer ontgrendelen geldt voor alles, tot de app naar de achtergrond gaat of na 4 uur
+    unlockedAt: 0,
+    isUnlocked: function () { return !!this.unlockedAt && Date.now() - this.unlockedAt < 4 * 3600e3; },
+    relock: function () { this.unlockedAt = 0; },
+    // Pincode vragen als dat nodig is; cb(true) = ontgrendeld (of geen pincode ingesteld)
+    unlock: function (cb) {
+        var pin = Store.settings().pin, self = this;
+        if (!pin || this.isUnlocked()) { cb(true); return; }
+        Dialog.pin(T('Voer je pincode in'), function (v) {
+            if (v == null) { cb(false); return; }
+            if (v !== pin) { Toast.show(T('Onjuiste pincode')); cb(false); return; }
+            self.unlockedAt = Date.now();
+            cb(true);
+        });
+    },
+    // Categorieën op slot (ook als ontgrendeld, voor het slotje): zelf gekozen, of 18+ als die instelling op "Op slot" staat.
+    // Zonder pincode is er geen slot. kind: 'live' | 'movie' | 'series'
+    lockIds: function (kind, cats) {
+        var s = Store.settings();
+        if (!s.pin) return null;
+        var mine = (Store.getP('locks', {}) || {})[kind] || [], map = {}, any = false;
+        U.toArr(cats).forEach(function (c) {
+            var id = String(c.category_id);
+            if (mine.indexOf(id) >= 0 || (s.hideAdult === 'lock' && App.ADULT_RE.test(c.category_name || ''))) { map[id] = true; any = true; }
+        });
+        return any ? map : null;
+    },
+    isLocked: function (kind, id) { return ((Store.getP('locks', {}) || {})[kind] || []).indexOf(String(id)) >= 0; },
+    setLock: function (kind, id, on) {
+        var all = Store.getP('locks', {}) || {}, l = (all[kind] || []).filter(function (x) { return x !== String(id); });
+        if (on) l.push(String(id));
+        all[kind] = l;
+        Store.setP('locks', all);
+    },
+    // Wat niet in overzichten, genres en zoeken mag: verborgen 18+, en zolang niet ontgrendeld de categorieën op slot
+    blockedIds: function (kind, cats) {
+        var a = this.adultIds(cats), l = this.isUnlocked() ? null : this.lockIds(kind, cats);
+        return a && l ? Object.assign({}, a, l) : a || l;
+    },
+    // Titels die de provider als 18+ markeert (is_adult) weglaten?
+    hideIsAdult: function () { var h = Store.settings().hideAdult; return h === true || (h === 'lock' && !!Store.settings().pin && !this.isUnlocked()); },
+    // Verandert als er iets aan verbergen/slot verandert (voor caches zoals de genre-index en de zoekindex)
+    blockSig: function () { return [Store.settings().hideAdult, !!Store.settings().pin, this.isUnlocked(), JSON.stringify(Store.getP('locks', {}) || {})].join('|'); },
 
     // De ingebouwde YouTube-speler werkt alleen als de pagina via http(s) draait: YouTube eist een Referer
     // (anders fout 153). Op de TV is de app een lokaal bestand (file://) zonder Referer, dus daar de YouTube-app.
@@ -247,10 +292,11 @@ var App = {
     inCats: function (s, map) { return App.catIds(s).some(function (id) { return map[id]; }); },
 
     // Categorie-id's met volwassenencontent (alleen als het filter aan staat)
+    ADULT_RE: /(adult|xxx|18\s*\+|\+\s*18|porn|erotic|for adults)/i,
     adultIds: function (cats) {
-        if (!Store.settings().hideAdult) return null;
-        var re = /(adult|xxx|18\s*\+|\+\s*18|porn|erotic|for adults)/i, map = {}, any = false;
-        U.toArr(cats).forEach(function (c) { if (re.test(c.category_name || '')) { map[String(c.category_id)] = true; any = true; } });
+        if (Store.settings().hideAdult !== true) return null;
+        var map = {}, any = false;
+        U.toArr(cats).forEach(function (c) { if (App.ADULT_RE.test(c.category_name || '')) { map[String(c.category_id)] = true; any = true; } });
         return any ? map : null;
     },
 
@@ -396,6 +442,8 @@ var App = {
         I18N.init();   // taal (standaard Engels) vóór er schermen worden opgebouwd
         Keys.register();
         Dialog.init();
+        // Categorieën op slot: weer op slot als de app naar de achtergrond gaat
+        document.addEventListener('visibilitychange', function () { if (document.hidden) App.relock(); });
         Meta.ready(); // basisgegevens (posters, ratings) uit de lokale database laden
         fit();
         window.addEventListener('resize', fit);

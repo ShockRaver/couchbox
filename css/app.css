@@ -170,11 +170,18 @@ b { font-weight: 700; }
 .card-tag { position: absolute; top: 226px; left: 10px; background: var(--accent); color: var(--accent-ink); font-size: 17px; font-weight: 700; padding: 3px 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
 .ep-new { display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: 16px; font-weight: 800; padding: 2px 9px; border-radius: 6px; margin-left: 12px; vertical-align: 3px; }
 .ml-empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: var(--muted); font-size: 28px; line-height: 1.6; }
-.card.focus .poster { box-shadow: 0 0 0 5px #fff, 0 16px 36px rgba(0, 0, 0, .6); }
-.card.focus .card-title { color: var(--text); }
-.card { transition: transform var(--t-med) var(--ease); }
+.card.focus .poster, .rank-card.focus .poster { box-shadow: 0 0 0 5px #fff, 0 16px 36px rgba(0, 0, 0, .6); }
+.card.focus .card-title, .rank-card.focus .card-title { color: var(--text); }
+/* Top 10: groot cijfer (alleen omlijnd) half achter de poster */
+.rank-card { width: 290px; display: flex; align-items: flex-start; }
+.rank-num { flex: 0 0 120px; height: 276px; margin-right: -18px; text-align: right; font-size: 250px; line-height: 290px; font-weight: 900; letter-spacing: -10px;
+    color: var(--bg); -webkit-text-stroke: 4px #5c6068; }
+.rank-card.ten .rank-num { font-size: 200px; letter-spacing: -22px; }
+.rank-card .card { position: relative; flex: 0 0 184px; }
+.rank-card.focus .rank-num { -webkit-text-stroke-color: #fff; }
+.card, .rank-card { transition: transform var(--t-med) var(--ease); }
 .card .poster, .wcard-img, .lcard-logo, .pcard-img { transition: box-shadow var(--t-fast); }
-.card.focus { transform: translateY(-4px); }
+.card.focus, .rank-card.focus { transform: translateY(-4px); }
 
 /* Zenderkaart */
 .lcard { width: 226px; }
@@ -191,6 +198,7 @@ b { font-weight: 700; }
 .cat { height: 64px; padding: 0 20px; display: flex; align-items: center; gap: 12px; border-radius: 14px; font-size: 25px; color: var(--muted); transition: background var(--t-fast), color var(--t-fast); }
 .cat-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cat-ic { color: var(--gold); display: flex; }
+.cat-ic.open { opacity: .45; }
 .cnt { font-size: 20px; color: var(--subtle); }
 .cat-hdr { height: 64px; padding: 26px 20px 0; font-size: 19px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--subtle); border-top: 1px solid var(--line); }
 .cat.sel { background: var(--panel2); color: var(--text); box-shadow: inset 4px 0 0 var(--accent); }
@@ -346,6 +354,9 @@ b { font-weight: 700; }
 .subs { position: absolute; left: 8%; right: 8%; bottom: 80px; z-index: 2; text-align: center; font-size: 46px; line-height: 1.3; font-weight: 600; transition: bottom .25s; }
 .subs span { background: rgba(0, 0, 0, .55); padding: 4px 16px; border-radius: 8px; -webkit-box-decoration-break: clone; box-decoration-break: clone; text-shadow: 0 2px 4px #000; }
 .player.osd-on .subs { bottom: 400px; }
+.player.subs-s .subs { font-size: 36px; }
+.player.subs-l .subs { font-size: 58px; }
+.player.subs-xl .subs { font-size: 70px; }
 .spinner.big { position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; margin: -45px 0 0 -45px; display: none; border-width: 8px; }
 .player.buffering .spinner.big { display: block; }
 .p-msg { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 32px; white-space: pre-line; text-shadow: 0 2px 8px #000; line-height: 1.5; }
@@ -508,7 +519,7 @@ b { font-weight: 700; }
 /* Minder beweging als het systeem daarom vraagt (spinners blijven draaien) */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; }
-    .card.focus, .wcard.focus, .btn.focus, .tile.focus { transform: none !important; }
+    .card.focus, .rank-card.focus, .wcard.focus, .btn.focus, .tile.focus { transform: none !important; }
 }
 /* Waardering met ster-icoon i.p.v. teken */
 .rating .ic, .badge .ic { width: .85em; height: .85em; margin: -3px 6px 0 0; }
@@ -535,8 +546,8 @@ b { font-weight: 700; }
 .nav-on .set-row.focus .set-val, .nav-on .g-prog.focus .g-tm { color: var(--muted); }
 .nav-on .ch-row.focus .pbar { background: rgba(255, 255, 255, .16); }
 .nav-on .ch-row.focus .pbar i { background: var(--accent); }
-.nav-on .card.focus .poster { box-shadow: 0 8px 20px rgba(0, 0, 0, .35); }
-.nav-on .card.focus { transform: none; }
+.nav-on .card.focus .poster, .nav-on .rank-card.focus .poster { box-shadow: 0 8px 20px rgba(0, 0, 0, .35); }
+.nav-on .card.focus, .nav-on .rank-card.focus { transform: none; }
 
 /* Seriepagina: backdrop beter zichtbaar, maar tekst en afleveringen blijven leesbaar */
 .series3 .detail-bg { opacity: .6; }
@@ -561,6 +572,7 @@ b { font-weight: 700; }
 .sk-recent h4 { font-size: 19px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--subtle); margin: 0 0 6px 14px; }
 .sk-ritem { height: 52px; padding: 0 14px; border-radius: 10px; display: flex; align-items: center; gap: 14px; font-size: 24px; color: var(--muted); white-space: nowrap; overflow: hidden; }
 .sk-ritem .ic { width: 22px; height: 22px; }
+.sk-ritem.sug { color: var(--text); font-weight: 600; }
 .sk-ritem.focus { background: var(--focus); color: var(--focus-ink); }
 .search-res { left: 660px; top: 118px; }
 .search-res .hrow { padding: 0 40px 0 20px; }

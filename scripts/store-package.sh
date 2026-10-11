@@ -21,8 +21,8 @@ check_profile "$PROFILE"
 prepare_build "$BUILD" store
 
 # Veiligheid: nergens in het pakket een TMDB-sleutel of andere 32-tekens-sleutel in een toewijzing
-if grep -rEq "(tmdbKey|api_key)[\"']?\s*[:=]\s*[\"'][0-9a-fA-F]{32}[\"']" "$BUILD/js"; then
-    echo "STOP: er staat een TMDB-sleutel in het pakket:"; grep -rEn "(tmdbKey|api_key)[\"']?\s*[:=]\s*[\"'][0-9a-fA-F]{32}" "$BUILD/js" | cut -c1-120; exit 1
+if grep -rEq "(tmdbKey|api_key|osKey)[\"']?\s*[:=]\s*[\"'][0-9a-zA-Z]{16,64}[\"']" "$BUILD/js"; then
+    echo "STOP: er staat een TMDB- of OpenSubtitles-sleutel in het pakket:"; grep -rEn "(tmdbKey|api_key|osKey)[\"']?\s*[:=]\s*[\"'][0-9a-zA-Z]{16,64}" "$BUILD/js" | cut -c1-120; exit 1
 fi
 
 echo "» Verpakken en signeren met profiel '$PROFILE' (versie $STORE_VERSION)…"

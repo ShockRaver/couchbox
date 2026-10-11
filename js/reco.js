@@ -75,7 +75,7 @@ var Reco = (function () {
         }));
     }
 
-    // Trending deze week (TMDB), alleen wat jij hebt
+    // Trending deze week (TMDB), alleen wat jij hebt: de eerste 10 als "Top 10" (ook als je ze al kijkt), de rest als "Trending"
     function trending(w, types) {
         var kind = types.length > 1 ? 'all' : types[0] === 'm' ? 'movie' : 'tv';
         var key = 'reco.trend.' + kind + '.' + I18N.lang(), c = Store.getGlobal(key, null);
@@ -94,9 +94,20 @@ var Reco = (function () {
             return ids;
         });
         return get.then(function (ids) { return Meta.inLibrary(ids); }).then(function (found) {
-            var list = pick(found.map(function (f) { return { type: f.type, item: f.item, id: Tmdb.idOf(f.item) }; }), w, types);
-            return list.length >= 3 ? { id: 'trend', title: T('Trending deze week'), items: list } : null;
-        }).catch(function () { return null; });
+            var all = [], seen = {};
+            found.forEach(function (f) {
+                var k = f.type + Tmdb.idOf(f.item);
+                if (types.indexOf(f.type) < 0 || seen[k]) return;
+                seen[k] = 1;
+                all.push({ type: f.type, item: f.item, id: Tmdb.idOf(f.item) });
+            });
+            var top = all.length >= 5 ? all.slice(0, 10) : [];
+            var list = pick(all.slice(top.length), w, types);
+            return {
+                top: top.length ? { id: 'top10', rank: true, title: types.length > 1 ? T('Top 10 deze week') : types[0] === 'm' ? T('Top 10 films deze week') : T('Top 10 series deze week'), items: top } : null,
+                trend: list.length >= 3 ? { id: 'trend', title: T('Trending deze week'), items: list } : null
+            };
+        }).catch(function () { return {}; });
     }
 
     // Jouw favoriete genres (uit wat je kijkt en bewaart)
@@ -257,7 +268,8 @@ var Reco = (function () {
             return Promise.all([because(w, types, 2), trending(w, types), soon]).then(function (r) {
                 var bc = r[0].filter(Boolean), out = [];
                 if (bc[0]) out.push(bc[0]);
-                if (r[1]) out.push(r[1]);
+                if (r[1].top) out.push(r[1].top);
+                if (r[1].trend) out.push(r[1].trend);
                 if (r[2]) out.push(r[2]);
                 if (bc[1]) out.push(bc[1]);
                 genreRows(list, w, types, 2).forEach(function (g) { if (g) out.push(g); });
@@ -277,7 +289,7 @@ var Reco = (function () {
     // Kenmerk van je kijkgedrag: verandert dit, dan opnieuw berekenen
     function sig() {
         return Store.history().slice(0, 6).map(function (h) { return h.key; }).join(',') + '|' +
-            Store.favorites('movie').length + ',' + Store.favorites('series').length + '|' + Math.floor(Meta.count() / 500);
+            Store.favorites('movie').length + ',' + Store.favorites('series').length + '|' + Math.floor(Meta.count() / 500) + '|' + App.blockSig();
     }
 
     var pending = {};
