@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bouwt, signeert en installeert Kijkdoos op de Samsung TV (Developer Mode).
+# Bouwt, signeert en installeert Couchbox op de Samsung TV (Developer Mode).
 # Gebruik: scripts/deploy.sh <TV-IP> [certificaatprofiel]
 #   bv.   scripts/deploy.sh 192.168.1.50 iptv
 # Winkelpakket voor de Samsung Seller Office: scripts/store-package.sh

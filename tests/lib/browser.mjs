@@ -23,7 +23,7 @@ export class Browser {
   constructor() { this.id = 0; this.pending = new Map(); this.logs = []; }
 
   async start() {
-    this.profile = fs.mkdtempSync(path.join(os.tmpdir(), 'kijkdoos-chrome-'));
+    this.profile = fs.mkdtempSync(path.join(os.tmpdir(), 'couchbox-chrome-'));
     // CHROME_OLD=1: oude Chromium (bv. 76, zoals op 2021-TV's) kent alleen de oude headless-modus
     const args = [process.env.CHROME_OLD ? '--headless' : '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${this.profile}`, '--window-size=1920,1080',
       '--hide-scrollbars', '--autoplay-policy=no-user-gesture-required', '--mute-audio', '--no-first-run', '--no-default-browser-check'];

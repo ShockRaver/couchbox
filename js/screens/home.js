@@ -36,7 +36,7 @@ Screens.home = {
             this.showHero();
         } else {
             this.setZone('nav');
-            this.hero.message(T('Welkom bij Kijkdoos'), T('Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.'));
+            this.hero.message(T('Welkom bij Couchbox'), T('Kies Films, Series of Live TV in het menu bovenaan. Wat je kijkt en bewaart in Mijn lijst verschijnt daarna hier, samen met tips voor jou.'));
         }
     },
 

@@ -48,14 +48,14 @@ export default [
     }
   },
   {
-    name: 'Trailer: in de browser in Kijkdoos zelf, op de TV in de YouTube-app',
+    name: 'Trailer: in de browser in Couchbox zelf, op de TV in de YouTube-app',
     async run(t) {
       await t.demo();
       t.ok(await t.eval('App.canEmbed()'), 'via http moet de ingebouwde speler kunnen');
       // YouTube niet echt laden: alleen controleren waar de trailer naartoe gaat
       await t.eval("window.__app = []; App.trailerApp = function (k) { window.__app.push(k); }; var g = App.go; App.go = function (n, p) { if (n === 'trailer') { window.__emb = p.key; return; } return g.apply(App, arguments); }; 1");
       await t.eval("App.trailer('abc123', 'Test'); 1");
-      t.eq(await t.eval('window.__emb'), 'abc123', 'trailer niet in Kijkdoos');
+      t.eq(await t.eval('window.__emb'), 'abc123', 'trailer niet in Couchbox');
       await t.eval("Store.setSetting('trailer', 'youtube'); App.trailer('def456', 'Test'); 1");
       t.eq(await t.eval('window.__app'), ['def456'], 'instelling YouTube-app wordt genegeerd');
       // Op de TV (file://) kan de ingebouwde speler niet: altijd de YouTube-app

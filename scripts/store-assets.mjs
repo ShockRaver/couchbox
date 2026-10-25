@@ -27,7 +27,7 @@ const LOGO_CSS = `html,body{background:transparent!important}
   .wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:56px}
   .wrap svg{width:520px;height:455px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.35))}
   .name{font-size:210px;font-weight:700;letter-spacing:-4px;color:#fff;text-shadow:0 10px 36px rgba(0,0,0,.45)}`;
-const LOGO_HTML = '<div class="wrap">LOGO<div class="name">Kijkdoos</div></div>';
+const LOGO_HTML = '<div class="wrap">LOGO<div class="name">Couchbox</div></div>';
 
 // Achtergrond: donker zoals de app, warme gloed in de merkkleur, vage rijen kaarten (zoals de app eruitziet), geen tekst
 const tiles = (top, n, w, h, op) => Array.from({ length: n }, (_, i) =>

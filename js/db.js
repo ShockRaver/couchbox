@@ -2,6 +2,7 @@
 var Db = (function () {
     'use strict';
 
+    // Naam uit de tijd dat de app Kijkdoos heette: zo blijven de gegevens van bestaande installaties bewaard
     var NAME = 'kijkdoos', VERSION = 3, STORES = ['titles', 'details', 'people', 'lists', 'epg'];
     var dbp = null;
 

@@ -4,7 +4,7 @@ Screens.login = {
         var self = this;
         this.el = UI.screen('login');
         var card = U.h('div', { class: 'login-card' });
-        card.appendChild(U.h('div', { class: 'login-logo', html: Icons.logo() + '<span>Kijkdoos</span>' }));
+        card.appendChild(U.h('div', { class: 'login-logo', html: Icons.logo() + '<span>Couchbox</span>' }));
         this.titleEl = U.h('h1', { text: T('Verbinden met je IPTV-server') });
         card.appendChild(this.titleEl);
         card.appendChild(U.h('p', { class: 'muted', text: T('Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.') }));

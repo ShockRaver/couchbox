@@ -33,7 +33,7 @@ var Icons = (function () {
             : 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
         return '<svg class="ic" viewBox="0 0 24 24" ' + attrs + '>' + (P[name] || '') + '</svg>';
     }
-    // Logo van Kijkdoos: kartonnen doosje met ogen (zelfde ontwerp als icon.png)
+    // Logo van Couchbox: kartonnen doosje met ogen (zelfde ontwerp als icon.png)
     function logo() {
         return '<svg class="logo" viewBox="0 0 64 56">' +
             '<path d="M12 20L7 11l10 1.5 1.5 7.5zM52 20l5-9-10 1.5-1.5 7.5z" fill="#e8992c"/>' +
@@ -362,7 +362,7 @@ function TopNav(active) {
         return U.h('div', { class: 'tn-item' + (x.icon ? ' tn-icon' : ''), html: x.icon ? Icons.get(x.icon) : U.esc(x.label) });
     });
     this.el = U.h('nav', { class: 'topnav' }, [
-        U.h('div', { class: 'tn-brand', html: Icons.logo() + '<span>Kijkdoos</span>' }),
+        U.h('div', { class: 'tn-brand', html: Icons.logo() + '<span>Couchbox</span>' }),
         U.h('div', { class: 'tn-items' }, this.itemEls),
         U.h('div', { class: 'tn-right' }, [U.h('div', { class: 'clock', text: U.fmtClock(Date.now()) })])
     ]);

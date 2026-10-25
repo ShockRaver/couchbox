@@ -1,4 +1,4 @@
-# Kijkdoos – ontwerpregels
+# Couchbox – ontwerpregels
 
 Gebaseerd op de skill *ui-ux-pro-max* (profiel "Video Streaming/OTT": **Dark Mode (OLED)**, de posters geven de kleur, één merkaccent), aangepast voor een 10-foot UI met afstandsbediening.
 

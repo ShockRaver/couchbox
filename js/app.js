@@ -31,7 +31,7 @@ var App = {
 
     exitPrompt: function () {
         var self = this;
-        Dialog.ask(T('Afsluiten'), T('Wil je Kijkdoos afsluiten?'), function (yes) { if (yes) self.exit(); }, T('Afsluiten'));
+        Dialog.ask(T('Afsluiten'), T('Wil je Couchbox afsluiten?'), function (yes) { if (yes) self.exit(); }, T('Afsluiten'));
     },
     exit: function () {
         Player.stop();
@@ -97,7 +97,7 @@ var App = {
     // (anders fout 153). Op de TV is de app een lokaal bestand (file://) zonder Referer, dus daar de YouTube-app.
     canEmbed: function () { return /^https?:$/.test(location.protocol); },
 
-    // Trailer (YouTube-id van TMDB) afspelen: in Kijkdoos zelf als dat kan, anders in de YouTube-app.
+    // Trailer (YouTube-id van TMDB) afspelen: in Couchbox zelf als dat kan, anders in de YouTube-app.
     trailer: function (key, title) {
         if (!this.canEmbed() || Store.settings().trailer === 'youtube') this.trailerApp(key, title);
         else this.go('trailer', { key: key, title: title });

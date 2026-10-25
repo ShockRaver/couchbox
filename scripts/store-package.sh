@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Winkelpakket (.wgt) voor de Samsung TV Seller Office.
-# Gebruik: scripts/store-package.sh [certificaatprofiel]      → build/store/kijkdoos-<versie>.wgt (kleine letters, zoals Samsung vraagt)
+# Gebruik: scripts/store-package.sh [certificaatprofiel]      → build/store/couchbox-<versie>.wgt (kleine letters, zoals Samsung vraagt)
 # - Alleen vanaf een schone, gepushte commit waarvan de tests op GitHub geslaagd zijn
 # - Zonder eigen TMDB-sleutel (die zou anders in een openbare app zitten); gebruikers voeren hun eigen sleutel in
 # - Versie in config.xml: 1.<aantal commits>.0 (Samsung wil bij elke update een hogere versie)
@@ -28,7 +28,7 @@ fi
 echo "» Verpakken en signeren met profiel '$PROFILE' (versie $STORE_VERSION)…"
 "$TIZEN" package -t wgt -s "$PROFILE" -- "$BUILD"
 WGT="$(ls "$BUILD"/*.wgt | head -1)"
-DEST="$OUT/kijkdoos-$STORE_VERSION.wgt"
+DEST="$OUT/couchbox-$STORE_VERSION.wgt"
 mv "$WGT" "$DEST"
 
 # Controle van het pakket: handtekeningen en manifest aanwezig, geen ontwikkelbestanden

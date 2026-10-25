@@ -1,8 +1,8 @@
-# Kijkdoos for Samsung Tizen TV
+# Couchbox for Samsung Tizen TV
 
 A Tizen web app (HTML5/JS, no build step) for IPTV subscriptions (Xtream Codes or M3U), styled like a streaming service. It was built for a Samsung QE50QN90D (2024, Tizen 9) and runs on **Samsung TVs from 2017 onward** (Tizen 3.0+, see [Older TVs](#older-tvs-2017-2020)). The app is available in English, Dutch, German, French, Spanish, Greek, Italian, Polish and Turkish.
 
-Kijkdoos contains no channels, movies or series itself: it plays what your own subscription provides.
+Couchbox contains no channels, movies or series itself: it plays what your own subscription provides.
 
 ## Features
 
@@ -84,7 +84,7 @@ Without a key the app still works with provider data only; Home then shows recom
 
 **TMDB terms** ([API terms of use](https://www.themoviedb.org/api-terms-of-use)):
 - Attribution: *Settings → About this app* and the TMDB settings show the approved TMDB logo (`img/tmdb.svg`, unmodified, from [TMDB's logo page](https://www.themoviedb.org/about/logos-attribution)) with the required notice: *This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.*
-- Caching: TMDB data may be kept for at most 6 months. Kijkdoos keeps it for 150 days (`KEEP_DAYS` in `js/meta.js`): older titles, genres, details, people and lists are deleted and fetched again when needed.
+- Caching: TMDB data may be kept for at most 6 months. Couchbox keeps it for 150 days (`KEEP_DAYS` in `js/meta.js`): older titles, genres, details, people and lists are deleted and fetched again when needed.
 - Your key is yours: never commit it (`js/config.local.js` is ignored by git). Commercial use (e.g. charging for the app or showing ads) needs a separate agreement with TMDB.
 
 **OpenSubtitles key (optional)**: *Settings → Online subtitles*, or `CONFIG.osKey = 'your-key';` in `js/config.local.js`.
@@ -165,7 +165,7 @@ scripts/deploy.sh <TV-IP> iptv
 
 The script stamps a version (1.&lt;commit count&gt;), date and commit into the app (*Settings → About this app*). The app then appears in the TV's app list. Your login details stay on the TV. After installing you don't need the Mac any more, not even to start the app. You only need it again for updates, or if the certificate expires or the TV is reset. The script checks that the profile uses the distributor certificate (a common cause of "Invalid certificate chain").
 
-**Samsung store**: `scripts/store-package.sh iptv` builds `build/store/kijkdoos-<version>.wgt` for the TV Seller Office (without a built-in TMDB or OpenSubtitles key, only from a clean commit whose GitHub tests passed). Store text, test account, screenshots and privacy policy: see `store/README.md`.
+**Samsung store**: `scripts/store-package.sh iptv` builds `build/store/couchbox-<version>.wgt` for the TV Seller Office (without a built-in TMDB or OpenSubtitles key, only from a clean commit whose GitHub tests passed). Store text, test account, screenshots and privacy policy: see `store/README.md`.
 
 ## Performance
 
@@ -177,7 +177,7 @@ Large subscriptions (50,000+ titles) are handled without freezing the TV:
 ## Project structure
 
 ```
-config.xml              Tizen manifest (privileges, app ID EbIPTVpl01.Kijkdoos, required Tizen version)
+config.xml              Tizen manifest (privileges, app ID EbIPTVpl01.Kijkdoos (kept from the former name, so existing installs keep their data), required Tizen version)
 index.html              entry point
 css/app.css             all styling (1920x1080), design tokens in :root
 css/compat.css          generated: fallbacks for older TVs (no flexbox gap / no CSS grid)
@@ -237,7 +237,7 @@ Code comments are in Dutch.
 ## Known limitations
 
 - **Multiview** (several streams at once) isn't possible: AVPlay allows one video player per app.
-- **Subtitles** from the stream only appear when they are embedded (e.g. MKV/HLS); DVB bitmap subtitles are not supported. Online subtitles (OpenSubtitles) need your own API key, aren't always in sync with your version of the film (use the 0.5 s shift), and OpenSubtitles limits the number of downloads per day (Kijkdoos shows how many are left; signing in to OpenSubtitles is not supported yet).
+- **Subtitles** from the stream only appear when they are embedded (e.g. MKV/HLS); DVB bitmap subtitles are not supported. Online subtitles (OpenSubtitles) need your own API key, aren't always in sync with your version of the film (use the 0.5 s shift), and OpenSubtitles limits the number of downloads per day (Couchbox shows how many are left; signing in to OpenSubtitles is not supported yet).
 - **Catch-up / timeshift** (tv_archive) is deliberately not included.
 - EPG quality depends on the provider; providers with poor EPG data show empty programmes.
 - DRM-protected streams (ClearKey/PlayReady in M3U lists) are not supported yet.

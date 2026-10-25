@@ -617,7 +617,7 @@ b { font-weight: 700; }
 .qtag { font-size: 15px; font-weight: 800; letter-spacing: .5px; padding: 2px 7px; border-radius: 6px; background: rgba(0, 0, 0, .72); color: #fff; border: 1px solid rgba(255, 255, 255, .5); }
 .ch-row.focus .qtag { background: var(--focus-ink); }
 
-/* Trailer in Kijkdoos (ingebouwde YouTube-speler) */
+/* Trailer in Couchbox (ingebouwde YouTube-speler) */
 .screen.trailer { background: #000; }
 .tr-frame, .tr-frame iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; }
 .tr-bar { position: absolute; left: 0; right: 0; top: 0; padding: 40px 80px 80px; display: flex; align-items: baseline; gap: 32px; z-index: 2;

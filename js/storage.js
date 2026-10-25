@@ -26,7 +26,7 @@ var Store = (function () {
     var DEFAULTS = {
         lang: 'en',
         // taal van de app en van TMDB-gegevens: 'en' | 'nl'
-        trailer: 'app',         // trailers: 'app' (in Kijkdoos) | 'youtube' (YouTube-app van de TV)
+        trailer: 'app',         // trailers: 'app' (in Couchbox) | 'youtube' (YouTube-app van de TV)
         autoNext: 'on',         // na een aflevering: 'on' (volgende na 10 s) | 'ask' (vragen, niet vanzelf) | 'off' (terug naar de serie)
         startup: 'none',        // bij opstarten: 'none' (startscherm) | 'live' (laatste zender) | 'ask' (verder kijken?)
         liveFormat: 'm3u8',     // 'm3u8' (HLS) of 'ts'

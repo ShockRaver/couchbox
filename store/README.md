@@ -1,4 +1,4 @@
-# Kijkdoos in de Samsung-winkel (TV Seller Office)
+# Couchbox in de Samsung-winkel (TV Seller Office)
 
 ## 1. Pakket maken
 
@@ -7,7 +7,7 @@ scripts/store-package.sh iptv
 ```
 
 - Alleen vanaf een schone, gepushte commit waarvan de tests op GitHub geslaagd zijn.
-- Resultaat: `build/store/kijkdoos-<versie>.wgt`, verpakt en gesigneerd met de Tizen Studio-CLI en het Samsung-certificaatprofiel `iptv`.
+- Resultaat: `build/store/couchbox-<versie>.wgt`, verpakt en gesigneerd met de Tizen Studio-CLI en het Samsung-certificaatprofiel `iptv`.
 - Zonder ingebouwde TMDB-sleutel; het script stopt als er toch een sleutel in het pakket zit.
 - Versie in `config.xml`: `1.<aantal commits>.0`. Die moet bij elke update hoger zijn, dus commit iets voor een nieuwe versie.
 
@@ -24,9 +24,9 @@ Niet gebruiken: free, movies, channels, sports, Netflix, namen van zenders of pr
 
 **Description:**
 
-> Kijkdoos is a player for the IPTV subscription you already have. Sign in with the server address, username and password from your provider and watch it in a clean, fast interface made for the TV remote.
+> Couchbox is a player for the IPTV subscription you already have. Sign in with the server address, username and password from your provider and watch it in a clean, fast interface made for the TV remote.
 >
-> IMPORTANT: Kijkdoos does not contain or provide any channels, movies or series. You need your own subscription from a provider. We do not endorse streaming copyrighted content without permission from the rights holder.
+> IMPORTANT: Couchbox does not contain or provide any channels, movies or series. You need your own subscription from a provider. We do not endorse streaming copyrighted content without permission from the rights holder.
 >
 > LIVE TV & TV GUIDE
 > • Channel list with now/next info and a preview window
@@ -58,9 +58,9 @@ Niet gebruiken: free, movies, channels, sports, Netflix, namen van zenders of pr
 
 **Beschrijving:**
 
-> Kijkdoos is een speler voor het IPTV-abonnement dat je al hebt. Log in met het serveradres, de gebruikersnaam en het wachtwoord van je provider en kijk via een overzichtelijke, snelle interface die gemaakt is voor de afstandsbediening.
+> Couchbox is een speler voor het IPTV-abonnement dat je al hebt. Log in met het serveradres, de gebruikersnaam en het wachtwoord van je provider en kijk via een overzichtelijke, snelle interface die gemaakt is voor de afstandsbediening.
 >
-> LET OP: Kijkdoos bevat en levert geen zenders, films of series. Je hebt een eigen abonnement bij een provider nodig. We keuren het streamen van auteursrechtelijk beschermd materiaal zonder toestemming van de rechthebbende niet goed.
+> LET OP: Couchbox bevat en levert geen zenders, films of series. Je hebt een eigen abonnement bij een provider nodig. We keuren het streamen van auteursrechtelijk beschermd materiaal zonder toestemming van de rechthebbende niet goed.
 >
 > LIVE TV & TV-GIDS
 > • Zenderlijst met nu/straks en een voorbeeldvenster

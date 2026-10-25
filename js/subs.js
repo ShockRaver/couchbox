@@ -21,7 +21,7 @@ var Subs = (function () {
         var o = {
             method: body ? 'POST' : 'GET',
             // Browsers mogen User-Agent niet zetten; OpenSubtitles accepteert daarom X-User-Agent
-            headers: { 'Api-Key': key(), 'X-User-Agent': 'Kijkdoos v' + ((window.App && App.VERSION) || '1'), 'Accept': 'application/json' }
+            headers: { 'Api-Key': key(), 'X-User-Agent': 'Couchbox v' + ((window.App && App.VERSION) || '1'), 'Accept': 'application/json' }
         };
         if (body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
         return fetch(base() + path + (qs ? '?' + qs : ''), o).then(function (r) {

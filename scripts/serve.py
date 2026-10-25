@@ -19,5 +19,5 @@ class NoCache(http.server.SimpleHTTPRequestHandler):
 
 
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-print('Kijkdoos testserver: http://127.0.0.1:%d/' % PORT)
+print('Couchbox testserver: http://127.0.0.1:%d/' % PORT)
 http.server.ThreadingHTTPServer(('127.0.0.1', PORT), NoCache).serve_forever()

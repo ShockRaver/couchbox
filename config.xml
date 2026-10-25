@@ -3,7 +3,7 @@
     <tizen:application id="EbIPTVpl01.Kijkdoos" package="EbIPTVpl01" required_version="3.0"/>
     <content src="index.html"/>
     <icon src="icon.png"/>
-    <name>Kijkdoos</name>
+    <name>Couchbox</name>
     <description>Xtream Codes IPTV-speler voor Samsung Tizen TV</description>
 
     <!-- Netwerktoegang naar elke IPTV-server (http en https) -->

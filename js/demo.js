@@ -86,7 +86,7 @@ var Demo = (function () {
             return { id: c.num % 2 ? 'x' + c.num + '.demo' : c.epg_channel_id, name: c.name.replace(/ HD$/, ''), num: c.num };
         });
         chans.push({ id: 'extra.demo', name: 'Extra Zender', num: 99 });
-        var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv generator-info-name="Kijkdoos demo">'];
+        var out = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv generator-info-name="Couchbox demo">'];
         chans.forEach(function (c) { out.push('<channel id="' + c.id + '"><display-name lang="nl">' + esc(c.name) + '</display-name></channel>'); });
         var day = new Date(); day.setMinutes(0, 0, 0);
         var t0 = day.getTime() - 3 * 3600e3, end = Date.now() + 30 * 3600e3;

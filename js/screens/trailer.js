@@ -1,4 +1,4 @@
-/* Trailer afspelen in Kijkdoos zelf, met de ingebouwde YouTube-speler (geen inlogscherm van de YouTube-app).
+/* Trailer afspelen in Couchbox zelf, met de ingebouwde YouTube-speler (geen inlogscherm van de YouTube-app).
    Blokkeert YouTube het afspelen (foutmelding van de speler), dan openen we de trailer alsnog in de YouTube-app.
    OK = pauze, ▼ = in de YouTube-app openen, Terug = sluiten. */
 Screens.trailer = {
@@ -79,7 +79,7 @@ Screens.trailer = {
         this.failed = true;
         var p = this.p;
         if (App.screen() === this) App.back();
-        Toast.show(T('Deze trailer kan niet in Kijkdoos spelen; hij opent in de YouTube-app'), 4000);
+        Toast.show(T('Deze trailer kan niet in Couchbox spelen; hij opent in de YouTube-app'), 4000);
         App.trailerApp(p.key, p.title);
     },
 

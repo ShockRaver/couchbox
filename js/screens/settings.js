@@ -10,7 +10,7 @@ Screens.settings = {
         subSize: [['s', 'Klein'], ['m', 'Normaal'], ['l', 'Groot'], ['xl', 'Extra groot']],
         osAuto: [[true, 'Aan'], [false, 'Uit']],
         hideAdult: [[false, 'Gewoon tonen'], [true, 'Verbergen'], ['lock', 'Op slot (pincode)']],
-        trailer: [['app', 'In Kijkdoos'], ['youtube', 'In de YouTube-app']],
+        trailer: [['app', 'In Couchbox'], ['youtube', 'In de YouTube-app']],
         autoNext: [['on', 'Automatisch na 10 seconden'], ['ask', 'Vragen'], ['off', 'Uit']]
     },
 
@@ -132,8 +132,8 @@ Screens.settings = {
                 break;
             case 'about':
                 Dialog.menu({
-                    title: 'Kijkdoos ' + App.VERSION, tmdb: true, items: [{ id: 'ok', label: 'OK' }],
-                    text: (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.') + '\n\n' + T('Film- en seriegegevens: The Movie Database (TMDB).') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : '')
+                    title: 'Couchbox ' + App.VERSION, tmdb: true, items: [{ id: 'ok', label: 'OK' }],
+                    text: (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Couchbox bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Couchbox.') + '\n\n' + T('Film- en seriegegevens: The Movie Database (TMDB).') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : '')
                 });
                 break;
         }
@@ -152,7 +152,7 @@ Screens.settings = {
             title: T('TMDB-gegevens'), tmdb: true,
             text: Tmdb.status() + '\n' +
                 (Meta.persistent() ? T('{n} titels met posters/info opgeslagen', { n: I18N.num(Meta.count()) }) : T('{n} titels met posters/info opgeslagen (alleen tijdelijk: opslag niet beschikbaar)', { n: I18N.num(Meta.count()) })) +
-                '\n\n' + T('Kijkdoos zoekt op de achtergrond per film en serie genre, rating, jaar, speelduur en poster op bij TMDB. Cast en beschrijving worden opgehaald zodra je een titel opent.'),
+                '\n\n' + T('Couchbox zoekt op de achtergrond per film en serie genre, rating, jaar, speelduur en poster op bij TMDB. Cast en beschrijving worden opgehaald zodra je een titel opent.'),
             items: items
         }, function (it) {
             if (!it) return;
@@ -311,7 +311,7 @@ Screens.settings = {
             if (App.screen() === self) self.render(self.list.index);
         }).catch(function (e) {
             if (App.screen() === self) self.render(self.list.index);
-            Dialog.notice(T('Tv-gids laden mislukt'), e.message + '\n\n' + T('Zolang gebruikt Kijkdoos de gids van de provider.'));
+            Dialog.notice(T('Tv-gids laden mislukt'), e.message + '\n\n' + T('Zolang gebruikt Couchbox de gids van de provider.'));
         });
     },
 
