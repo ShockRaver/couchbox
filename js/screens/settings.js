@@ -131,7 +131,10 @@ Screens.settings = {
                 }, T('Wissen'));
                 break;
             case 'about':
-                Dialog.notice('Kijkdoos ' + App.VERSION, (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : ''));
+                Dialog.menu({
+                    title: 'Kijkdoos ' + App.VERSION, tmdb: true, items: [{ id: 'ok', label: 'OK' }],
+                    text: (BUILD.date ? T('Geïnstalleerd op {date} (commit {commit})', { date: BUILD.date, commit: BUILD.commit }) + '\n\n' : '') + T('Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.') + '\n\n' + T('Film- en seriegegevens: The Movie Database (TMDB).') + (CONFIG.privacyUrl ? '\n\n' + T('Privacyverklaring: {url}', { url: CONFIG.privacyUrl }) : '')
+                });
                 break;
         }
     },
@@ -146,7 +149,7 @@ Screens.settings = {
         if (own) items.push({ id: 'delkey', label: T('Sleutel van deze TV verwijderen'), danger: true });
         items.push({ id: 'clear', label: T('Alles opnieuw opzoeken'), danger: true });
         Dialog.menu({
-            title: T('TMDB-gegevens'),
+            title: T('TMDB-gegevens'), tmdb: true,
             text: Tmdb.status() + '\n' +
                 (Meta.persistent() ? T('{n} titels met posters/info opgeslagen', { n: I18N.num(Meta.count()) }) : T('{n} titels met posters/info opgeslagen (alleen tijdelijk: opslag niet beschikbaar)', { n: I18N.num(Meta.count()) })) +
                 '\n\n' + T('Kijkdoos zoekt op de achtergrond per film en serie genre, rating, jaar, speelduur en poster op bij TMDB. Cast en beschrijving worden opgehaald zodra je een titel opent.'),

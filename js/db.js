@@ -50,6 +50,20 @@ var Db = (function () {
     }
     function clear(store) { return tx(store, 'readwrite', function (s) { s.clear(); }); }
     function del(store, key) { return tx(store, 'readwrite', function (s) { s.delete(key); }); }
+    function delMany(store, keys) { return tx(store, 'readwrite', function (s) { keys.forEach(function (k) { s.delete(k); }); }); }
+    // Alles verwijderen waarvoor old(waarde) waar is (met een cursor; geeft het aantal)
+    function purge(store, old) {
+        return tx(store, 'readwrite', function (s) {
+            var res = { n: 0 }, c = s.openCursor();
+            c.onsuccess = function () {
+                var cur = c.result;
+                if (!cur) return;
+                if (old(cur.value)) { cur['delete'](); res.n++; }
+                cur['continue']();
+            };
+            return res;
+        }).then(function (r) { return r.n; });
+    }
 
     // Gebruikte en beschikbare opslag (als de browser dat ondersteunt)
     function estimate() {
@@ -57,5 +71,5 @@ var Db = (function () {
         return Promise.resolve(null);
     }
 
-    return { get: get, put: put, putMany: putMany, all: all, clear: clear, del: del, estimate: estimate };
+    return { get: get, put: put, putMany: putMany, all: all, clear: clear, del: del, delMany: delMany, purge: purge, estimate: estimate };
 })();

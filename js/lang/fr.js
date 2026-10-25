@@ -478,7 +478,7 @@ I18N.add('fr', {
     "Italiaanse films": "Films italiens",
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Saisissez les informations de votre fournisseur IPTV. Elles sont enregistrées uniquement sur ce téléviseur.",
     "Onverwacht antwoord – klopt het serveradres?": "Réponse inattendue – l'adresse du serveur est-elle correcte ?",
-    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Lecteur pour votre propre abonnement IPTV. Kijkdoos ne contient aucune chaîne, aucun film ni aucune série.\nLecture via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nVos données sont enregistrées uniquement sur ce téléviseur ; rien n'est envoyé aux créateurs de Kijkdoos.\n\nDonnées des films et séries : The Movie Database (TMDB). Cette application utilise l'API TMDB mais n'est ni approuvée ni certifiée par TMDB.",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.": "Lecteur pour votre propre abonnement IPTV. Kijkdoos ne contient aucune chaîne, aucun film ni aucune série.\nLecture via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nVos données sont enregistrées uniquement sur ce téléviseur ; rien n'est envoyé aux créateurs de Kijkdoos.",
     "Privacyverklaring: {url}": "Politique de confidentialité : {url}",
     "Afspeellijst (M3U) · {host}": "Playlist (M3U) · {host}",
     "Dit lijkt geen M3U-afspeellijst": "Cela ne ressemble pas à une playlist M3U",
@@ -565,5 +565,6 @@ I18N.add('fr', {
     "Beoordeling verwijderd": "Note supprimée",
     // ---- Seizoenen beschikbaar, automatische ondertitels ----
     "{n} van {total} seizoenen beschikbaar": "{n} saisons sur {total} disponibles",
-    "Automatisch (als er maar één is)": "Automatique (s'il n'y en a qu'un)"
+    "Automatisch (als er maar één is)": "Automatique (s'il n'y en a qu'un)",
+    "Film- en seriegegevens: The Movie Database (TMDB).": "Données des films et séries : The Movie Database (TMDB)."
 });

@@ -59,7 +59,7 @@ prepare_build() {
     local dir="$1" store="${2:-}"
     rm -rf "$dir"
     mkdir -p "$dir"
-    cp -R "$ROOT/config.xml" "$ROOT/index.html" "$ROOT/icon.png" "$ROOT/css" "$ROOT/js" "$dir/"
+    cp -R "$ROOT/config.xml" "$ROOT/index.html" "$ROOT/icon.png" "$ROOT/css" "$ROOT/js" "$ROOT/img" "$dir/"
     if [ -n "$store" ]; then
         printf "// Winkelversie: geen ingebouwde TMDB-sleutel; gebruikers voeren hun eigen sleutel in (Instellingen → TMDB-gegevens)\n" > "$dir/js/config.local.js"
     fi

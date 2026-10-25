@@ -7,6 +7,7 @@ html.no-flexgap .brand > * + * { margin-left: 16px; }
 html.no-flexgap .btn > * + * { margin-left: 14px; }
 html.no-flexgap .dialog.has-img > * + * { margin-left: 40px; }
 html.no-flexgap .dialog-item > * + * { margin-left: 16px; }
+html.no-flexgap .tmdb-credit > * + * { margin-left: 22px; }
 html.no-flexgap .pin-row > * + * { margin-left: 22px; }
 html.no-flexgap #loader > * + * { margin-top: 28px; }
 html.no-flexgap .login-logo > * + * { margin-left: 16px; }

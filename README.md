@@ -80,7 +80,12 @@ Recent Samsung SolarCell remotes have **no colour or number buttons** (the **123
 - On the TV: *Settings → TMDB data* opens an on-screen keyboard; the key is checked with TMDB before it's saved.
 - Built in (your own builds only): put it in `js/config.local.js`, which is not in git: `CONFIG.tmdbKey = 'your-key';`
 
-Without a key the app still works with provider data only; Home then shows recommendations based on your provider's categories, ratings and newest titles. This product uses the TMDB API but is not endorsed or certified by TMDB. A personal key is for personal use; commercial use needs a TMDB agreement.
+Without a key the app still works with provider data only; Home then shows recommendations based on your provider's categories, ratings and newest titles.
+
+**TMDB terms** ([API terms of use](https://www.themoviedb.org/api-terms-of-use)):
+- Attribution: *Settings → About this app* and the TMDB settings show the approved TMDB logo (`img/tmdb.svg`, unmodified, from [TMDB's logo page](https://www.themoviedb.org/about/logos-attribution)) with the required notice: *This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.*
+- Caching: TMDB data may be kept for at most 6 months. Kijkdoos keeps it for 150 days (`KEEP_DAYS` in `js/meta.js`): older titles, genres, details, people and lists are deleted and fetched again when needed.
+- Your key is yours: never commit it (`js/config.local.js` is ignored by git). Commercial use (e.g. charging for the app or showing ads) needs a separate agreement with TMDB.
 
 **OpenSubtitles key (optional)**: *Settings → Online subtitles*, or `CONFIG.osKey = 'your-key';` in `js/config.local.js`.
 
@@ -203,6 +208,7 @@ js/lineup.js            channel management: hidden channels/groups, group order,
 js/vlist.js             virtual list/grid with focus handling
 js/ui.js                icons, cards, rows, top menu, hero banner
 js/storage.js           localStorage: profiles, settings, favourites, history
+img/tmdb.svg            official TMDB logo (attribution)
 js/i18n.js              translations (T()), dates and numbers per language; js/lang/*.js = dictionaries (en, de, fr, es, el, it, pl, tr)
 js/screens/*.js         screens (home, section, live, guide, catalog, movie, series, person, search, settings, player, …)
 js/demo.js              demo server ("demo") for testing without a subscription
@@ -223,6 +229,10 @@ tests/drive.mjs         ad-hoc: run JSON steps in headless Chrome and take scree
 ```
 
 Code comments are in Dutch.
+
+## License
+
+[MIT](LICENSE). TMDB data and logos are not covered by this license; they are subject to TMDB's terms.
 
 ## Known limitations
 

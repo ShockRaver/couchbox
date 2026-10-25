@@ -135,6 +135,15 @@ var UI = {
         };
     },
 
+    // Naamsvermelding van TMDB (verplicht volgens de API-voorwaarden §3): goedgekeurd logo (img/tmdb.svg, ongewijzigd) en vaste tekst
+    tmdbCredit: function () {
+        return U.h('div', { class: 'tmdb-credit' }, [
+            U.h('img', { class: 'tmdb-logo', src: 'img/tmdb.svg', alt: 'The Movie Database (TMDB)' }),
+            // Letterlijk de tekst uit de voorwaarden, daarom niet vertaald
+            U.h('p', { text: 'This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB. www.themoviedb.org' })
+        ]);
+    },
+
     // Knop "Beoordelen" op de film- en seriepagina (toont de huidige keuze)
     rateButton: function (type, it) {
         var v = Taste.get(type, it);

@@ -134,6 +134,13 @@ var Store = (function () {
         // Algemene opslag, los van profielen (bv. TMDB-genres per titel)
         getGlobal: function (k, def) { return get('g.' + k, def); },
         setGlobal: function (k, v) { return set('g.' + k, v); },
+        delGlobal: function (k) { del('g.' + k); },
+        // Namen van algemene sleutels die met prefix beginnen (zonder 'g.')
+        globalKeys: function (prefix) {
+            var out = [], p = P + 'g.' + (prefix || '');
+            try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.lastIndexOf(p, 0) === 0) out.push(k.slice(P.length + 2)); } } catch (e) { /* geen opslag */ }
+            return out;
+        },
         // Opslag per actief profiel (bv. gevolgde series)
         getP: function (k, def) { return get(pk(k), def); },
         setP: function (k, v) { return set(pk(k), v); },

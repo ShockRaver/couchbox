@@ -9,10 +9,15 @@ var Meta = (function () {
     var IMG = 'https://image.tmdb.org/t/p/';
     var MISSING = 0;           // TMDB kent deze titel niet
     var FRESH = 30 * 86400e3;  // details/personen na 30 dagen opnieuw ophalen
+    // Bewaartermijn: TMDB staat hooguit 6 maanden toe (API-voorwaarden §1.C); wij houden 150 dagen aan.
+    // Daarna wordt alles van TMDB verwijderd (basisgegevens, genres, details, personen, lijsten) en zo nodig opnieuw opgehaald.
+    var KEEP_DAYS = 150;
+    function today() { return Math.floor(Date.now() / 864e5); }
 
     // Compacte opslag per titel (array, scheelt geheugen bij ±70.000 titels). Volgorde nooit wijzigen.
     // ul = taal waarin titel/gegevens zijn opgehaald ('nl'/'en'; oude records zonder = 'nl')
-    var F = { title: 0, otitle: 1, year: 2, runtime: 3, rating: 4, votes: 5, pop: 6, lang: 7, countries: 8, poster: 9, backdrop: 10, seasons: 11, status: 12, ul: 13 };
+    // at = dag van ophalen (dagen sinds 1970); oudere records zonder datum tellen vanaf 'meta.epoch'
+    var F = { title: 0, otitle: 1, year: 2, runtime: 3, rating: 4, votes: 5, pop: 6, lang: 7, countries: 8, poster: 9, backdrop: 10, seasons: 11, status: 12, ul: 13, at: 14 };
 
     var mem = null, readyP = null, queue = [], flushT = null, persist = true;
 
@@ -23,7 +28,14 @@ var Meta = (function () {
         if (!readyP) {
             readyP = Db.all('titles').then(function (r) {
                 mem = new Map();
-                r.keys.forEach(function (key, i) { mem.set(key, r.values[i]); });
+                var now = today(), epoch = Store.getGlobal('meta.epoch', 0), old = [];
+                if (!epoch) { epoch = now; Store.setGlobal('meta.epoch', now); }
+                r.keys.forEach(function (key, i) {
+                    var v = r.values[i];
+                    if (v && v.length && (v[F.at] || epoch) < now - KEEP_DAYS) old.push(key); else mem.set(key, v);
+                });
+                if (old.length) expire(old);
+                setTimeout(retention, 60000);   // de rest even later, niet tijdens het opstarten
             }).catch(function (e) {
                 console.warn('Metadata: geen IndexedDB, alleen in geheugen', e);
                 persist = false;
@@ -31,6 +43,26 @@ var Meta = (function () {
             });
         }
         return readyP;
+    }
+
+    // Verlopen basisgegevens weg uit de database en de genres vergeten: de achtergrondtaak zoekt ze opnieuw op
+    function expire(keys) {
+        Db.delMany('titles', keys).catch(function () {});
+        var ids = { m: [], t: [] };
+        keys.forEach(function (key) { var p = String(key).split(':'); if (ids[p[0]]) ids[p[0]].push(p[1]); });
+        if (window.Tmdb) { Tmdb.forget('m', ids.m); Tmdb.forget('t', ids.t); }
+        console.log('TMDB-bewaartermijn: ' + keys.length + ' titels verlopen');
+    }
+    // Details, personen, reeksen en kleine TMDB-lijsten (trending, seizoenen, aangekondigde afleveringen) ouder dan de termijn opruimen
+    function retention() {
+        var max = Date.now() - KEEP_DAYS * 864e5, old = function (v) { return !v || !(v.at > max); };
+        ['details', 'people'].forEach(function (s) { Db.purge(s, old).catch(function () {}); });
+        Store.globalKeys('reco.trend.').concat(Store.globalKeys('season.')).forEach(function (k) {
+            if (old(Store.getGlobal(k, null))) Store.delGlobal(k);
+        });
+        var next = Store.getGlobal('reco.next', null), changed = false;
+        if (next) Object.keys(next).forEach(function (id) { if (old(next[id])) { delete next[id]; changed = true; } });
+        if (changed) Store.setGlobal('reco.next', next);
     }
 
     function has(type, id) { return !!(mem && mem.has(k(type, id))); }
@@ -73,7 +105,7 @@ var Meta = (function () {
             tv ? ((d.episode_run_time || [])[0] || 0) : (d.runtime || 0),
             Math.round((d.vote_average || 0) * 10), d.vote_count || 0, Math.round(d.popularity || 0),
             d.original_language || '', countries.join(','), d.poster_path || '', d.backdrop_path || '',
-            tv ? (d.number_of_seasons || 0) : 0, tv ? (d.status || '') : '', I18N.lang()
+            tv ? (d.number_of_seasons || 0) : 0, tv ? (d.status || '') : '', I18N.lang(), today()
         ];
     }
 
@@ -239,6 +271,8 @@ var Meta = (function () {
     return {
         MISSING: MISSING, ready: ready, has: has, put: put, flush: flush, clear: clear, fromTmdb: fromTmdb,
         info: info, byId: byId, langOf: langOf, img: img, rating: rating, poster: poster, details: details, collection: collection, person: person, roleText: roleText,
-        library: library, inLibrary: inLibrary, count: count, persistent: function () { return persist; }
+        library: library, inLibrary: inLibrary, count: count, persistent: function () { return persist; },
+        // Bewaartermijn (ook voor de tests): opnieuw laden uit de database, en oude gegevens opruimen
+        KEEP_DAYS: KEEP_DAYS, reload: function () { readyP = null; return ready(); }, retention: retention
     };
 })();

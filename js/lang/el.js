@@ -478,7 +478,7 @@ I18N.add('el', {
     "Italiaanse films": "Ιταλικές ταινίες",
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Εισαγάγετε τα στοιχεία του παρόχου IPTV. Αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση.",
     "Onverwacht antwoord – klopt het serveradres?": "Μη αναμενόμενη απάντηση – είναι σωστή η διεύθυνση του διακομιστή;",
-    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Πρόγραμμα αναπαραγωγής για τη δική σας συνδρομή IPTV. Το Kijkdoos δεν περιέχει κανάλια, ταινίες ή σειρές.\nΑναπαραγωγή μέσω Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nΤα δεδομένα σας αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση· τίποτα δεν αποστέλλεται στους δημιουργούς του Kijkdoos.\n\nΣτοιχεία ταινιών και σειρών: The Movie Database (TMDB). Αυτή η εφαρμογή χρησιμοποιεί το API του TMDB, αλλά δεν εγκρίνεται ούτε πιστοποιείται από το TMDB.",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.": "Πρόγραμμα αναπαραγωγής για τη δική σας συνδρομή IPTV. Το Kijkdoos δεν περιέχει κανάλια, ταινίες ή σειρές.\nΑναπαραγωγή μέσω Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nΤα δεδομένα σας αποθηκεύονται μόνο τοπικά σε αυτήν την τηλεόραση· τίποτα δεν αποστέλλεται στους δημιουργούς του Kijkdoos.",
     "Privacyverklaring: {url}": "Πολιτική απορρήτου: {url}",
     "Afspeellijst (M3U) · {host}": "Λίστα (M3U) · {host}",
     "Dit lijkt geen M3U-afspeellijst": "Αυτό δεν μοιάζει με λίστα M3U",
@@ -565,5 +565,6 @@ I18N.add('el', {
     "Beoordeling verwijderd": "Η αξιολόγηση αφαιρέθηκε",
     // ---- Seizoenen beschikbaar, automatische ondertitels ----
     "{n} van {total} seizoenen beschikbaar": "{n} από {total} σεζόν διαθέσιμες",
-    "Automatisch (als er maar één is)": "Αυτόματα (αν υπάρχει μόνο ένας)"
+    "Automatisch (als er maar één is)": "Αυτόματα (αν υπάρχει μόνο ένας)",
+    "Film- en seriegegevens: The Movie Database (TMDB).": "Στοιχεία ταινιών και σειρών: The Movie Database (TMDB)."
 });

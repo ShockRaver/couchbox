@@ -167,6 +167,12 @@ var Tmdb = (function () {
     }
 
     function stop() { runId++; state.running = false; }
+    // Genres van deze titels vergeten (verlopen volgens de bewaartermijn), zodat ze opnieuw worden opgezocht
+    function forget(type, ids) {
+        var d = load(type), n = 0;
+        ids.forEach(function (id) { if (id in d) { delete d[id]; n++; } });
+        if (n) { dirty[type] = 1; flush(type); }
+    }
     function clear() { stop(); db = { m: {}, t: {} }; dirty = { m: 1, t: 1 }; flush('m'); flush('t'); Meta.clear(); state.done = 0; state.total = 0; state.phase = ''; }
 
     function status() {
@@ -181,7 +187,7 @@ var Tmdb = (function () {
     }
 
     return {
-        enabled: enabled, genres: genres, hasData: hasData, start: start, stop: stop, clear: clear, api: api, idOf: idOf,
+        enabled: enabled, genres: genres, hasData: hasData, start: start, stop: stop, clear: clear, api: api, idOf: idOf, forget: forget,
         status: status, running: function () { return state.running; }, version: function () { return version; }
     };
 })();

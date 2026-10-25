@@ -26,6 +26,7 @@ var Dialog = (function () {
         if (o.title) main.appendChild(U.h('h2', { text: o.title }));
         if (o.text) main.appendChild(U.h('p', { class: 'dialog-text', text: o.text }));
         if (o.progress) { var pb = UI.pbar(o.progress); pb.classList.add('dialog-pbar'); main.appendChild(pb); }
+        if (o.tmdb) main.appendChild(UI.tmdbCredit());
         var vis = Math.min(o.items.length, 8);
         var listEl = U.h('div', { class: 'dialog-list' });
         listEl.style.height = (vis * 76) + 'px';

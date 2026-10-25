@@ -487,7 +487,7 @@ I18N.add('en', {
     "Italiaanse films": "Italian films",
     "Vul de gegevens van je IPTV-provider in. Ze worden alleen lokaal op deze TV opgeslagen.": "Enter the details from your IPTV provider. They are only stored locally on this TV.",
     "Onverwacht antwoord – klopt het serveradres?": "Unexpected response – is the server address correct?",
-    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.\n\nFilm- en seriegegevens: The Movie Database (TMDB). Deze app gebruikt de TMDB API, maar wordt niet door TMDB onderschreven of gecertificeerd.": "Player for your own IPTV subscription. Kijkdoos itself contains no channels, movies or series.\nPlayback via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nYour data is only stored locally on this TV; nothing is sent to the makers of Kijkdoos.\n\nMovie and series data: The Movie Database (TMDB). This app uses the TMDB API but is not endorsed or certified by TMDB.",
+    "Speler voor je eigen IPTV-abonnement. Kijkdoos bevat zelf geen zenders, films of series.\nAfspelen via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nJe gegevens worden alleen lokaal op deze TV opgeslagen; er gaat niets naar de makers van Kijkdoos.": "Player for your own IPTV subscription. Kijkdoos itself contains no channels, movies or series.\nPlayback via Samsung AVPlay (HLS, MPEG-TS, MP4, MKV).\n\nYour data is only stored locally on this TV; nothing is sent to the makers of Kijkdoos.",
     "Privacyverklaring: {url}": "Privacy policy: {url}",
     "Afspeellijst (M3U) · {host}": "Playlist (M3U) · {host}",
     "Dit lijkt geen M3U-afspeellijst": "This doesn't look like an M3U playlist",
@@ -574,5 +574,6 @@ I18N.add('en', {
     "Beoordeling verwijderd": "Rating removed",
     // ---- Seizoenen beschikbaar, automatische ondertitels ----
     "{n} van {total} seizoenen beschikbaar": "{n} of {total} seasons available",
-    "Automatisch (als er maar één is)": "Automatic (if there is only one)"
+    "Automatisch (als er maar één is)": "Automatic (if there is only one)",
+    "Film- en seriegegevens: The Movie Database (TMDB).": "Movie and series data: The Movie Database (TMDB)."
 });
