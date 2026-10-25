@@ -562,5 +562,8 @@ I18N.add('fr', {
     "Geen beoordeling": "Pas de note",
     "Je krijgt vaker titels zoals deze te zien": "Tu verras plus de titres comme celui-ci",
     "Je krijgt minder titels zoals deze te zien": "Tu verras moins de titres comme celui-ci",
-    "Beoordeling verwijderd": "Note supprimée"
+    "Beoordeling verwijderd": "Note supprimée",
+    // ---- Seizoenen beschikbaar, automatische ondertitels ----
+    "{n} van {total} seizoenen beschikbaar": "{n} saisons sur {total} disponibles",
+    "Automatisch (als er maar één is)": "Automatique (s'il n'y en a qu'un)"
 });

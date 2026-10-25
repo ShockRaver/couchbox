@@ -515,11 +515,15 @@ Hero.prototype.set = function (d) {
 // Ontbreekt het TMDB-id (bv. oude "Verder kijken"-regels), dan wordt het via de provider opgezocht; onTmdb(id) kan het bewaren.
 Hero.prototype.forItem = function (type, item, extra, onTmdb) {
     var self = this, my = ++this.token, m = Meta.info(type, item), id = Tmdb.idOf(item);
+    clearTimeout(this.seasonT);
     var meta = [], r = Meta.rating(type, item);
     if (r > 0) meta.push(UI.rating(r));
     if (m && m.year) meta.push(String(m.year));
     if (m && type === 'm' && m.runtime) meta.push(App.durText(m.runtime * 60));
-    if (m && type === 't' && m.seasons) meta.push(m.seasons === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: m.seasons }));
+    // Seizoenen: wat je provider heeft (niet wat er volgens TMDB bestaat); onbekend = na een korte pauze opvragen
+    var seasonText = function (n) { return n === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: n }); };
+    var avail = type === 't' && item.series_id != null ? App.seasonsAvail(item.series_id) : 0;
+    if (avail) meta.push(seasonText(avail));
     var bd = (m && m.backdrop && Meta.img(m.backdrop, 'w1280')) || U.toArr(item.backdrop_path)[0] || '';
     // Geen backdrop? Dan in elk geval de poster tonen
     var poster = bd ? '' : ((m && m.poster && Meta.img(m.poster, 'w500')) || (type === 'm' ? item.stream_icon : item.cover) || item.icon || '');
@@ -536,6 +540,16 @@ Hero.prototype.forItem = function (type, item, extra, onTmdb) {
         return;
     }
     var needBasics = !m || !m.backdrop;
+    if (type === 't' && !avail && item.series_id != null) this.seasonT = setTimeout(function () {
+        Api.seriesInfo(item.series_id).then(function (res) {
+            var n = App.countSeasons(App.parseSeries(res));
+            if (!n) return;
+            App.setSeasonsAvail(item.series_id, n);
+            if (my !== self.token) return;
+            meta.splice(m && m.year ? (r > 0 ? 2 : 1) : (r > 0 ? 1 : 0), 0, seasonText(n));
+            self.metaEl.innerHTML = meta.join('<span class="dot">·</span>');
+        }).catch(function () { /* geen aantal */ });
+    }, 700);
     this.detT = setTimeout(function () {
         Meta.details(type, id).then(function (det) {
             if (!det || my !== self.token) return;

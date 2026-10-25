@@ -320,6 +320,63 @@ var App = {
     },
 
     // Xtream get_series_info -> seizoenen + platte lijst van afleveringen
+    // ---- Dezelfde serie in meerdere items bij de provider (andere taalcategorie, losse seizoenen) ----
+    // Sleutel om namen te vergelijken: zonder taalvoorvoegsel, haakjes, jaartal, seizoen en kwaliteit
+    // ("NL | Breaking Bad S05 (2008) [HD]" -> "breakingbad")
+    seriesKey: function (name) {
+        return U.norm(name).replace(/^\s*[a-z]{2,5}\s*[|:\-–]\s*/, '').replace(/\[[^\]]*\]|\([^)]*\)/g, ' ')
+            .replace(/\b(19|20)\d{2}\b/g, ' ').replace(/\b(s\d{1,2}(e\d{1,3})?|(season|seizoen|staffel|saison|temporada|stagione)\s*\d+)\b/g, ' ')
+            .replace(/\b(4k|uhd|fhd|hd|sd|multi|sub|subs)\b/g, ' ').replace(/[^a-z0-9]+/g, '');
+    },
+    // Andere items van dezelfde serie: zelfde TMDB-id, of zelfde naam (maar niet als TMDB-id's of jaartallen verschillen).
+    // Geen verborgen of vergrendelde categorieën. -> [{ item, lang }] (lang = taal van de categorie als die anders is)
+    seriesSiblings: function (it, tmdb) {
+        var key = App.seriesKey(it.name), tid = String(tmdb || Tmdb.idOf(it) || ''), year = (String(it.name).match(/\b(19|20)\d{2}\b/) || [])[0];
+        if (!key && !tid) return Promise.resolve([]);
+        return Promise.all([Api.series(null), Api.seriesCategories()]).then(function (r) {
+            var blocked = App.blockedIds('series', r[1]), langOf = {};
+            r[1].forEach(function (c) { langOf[String(c.category_id)] = Genres.splitName(c.category_name).lang || ''; });
+            var mine = langOf[String(it.category_id)] || '';
+            return r[0].filter(function (s) {
+                if (String(s.series_id) === String(it.series_id) || (blocked && App.inCats(s, blocked))) return false;
+                var st = String(Tmdb.idOf(s) || '');
+                if (tid && st) return st === tid;
+                var y = (String(s.name).match(/\b(19|20)\d{2}\b/) || [])[0];
+                return !!key && App.seriesKey(s.name) === key && !(year && y && y !== year);
+            }).map(function (s) {
+                var l = langOf[String(s.category_id)] || '';
+                return { item: s, lang: l && l !== mine ? l : '' };
+            }).sort(function (a, b) { return (a.lang ? 1 : 0) - (b.lang ? 1 : 0); });
+        }).catch(function () { return []; });
+    },
+    // Seizoenen en afleveringen uit b die in a ontbreken, toevoegen aan a (uitkomst van parseSeries). true = iets toegevoegd
+    mergeSeries: function (a, b, tag) {
+        var changed = false;
+        b.seasons.forEach(function (s) {
+            var t = a.seasons.filter(function (x) { return x.num === s.num; })[0];
+            if (!t) { a.seasons.push({ num: s.num, name: s.name + (tag ? ' · ' + tag : ''), eps: s.eps.slice() }); changed = true; return; }
+            var have = {};
+            t.eps.forEach(function (e) { have[e.episode] = 1; });
+            s.eps.forEach(function (e) { if (!have[e.episode]) { t.eps.push(e); have[e.episode] = 1; changed = true; } });
+            t.eps.sort(function (x, y) { return x.episode - y.episode; });
+        });
+        if (!changed) return false;
+        a.seasons.sort(function (x, y) { return (x.num || 999) - (y.num || 999); });
+        a.flat = [];
+        a.seasons.forEach(function (s) { a.flat.push.apply(a.flat, s.eps); });
+        return true;
+    },
+    // Aantal seizoenen dat je provider heeft (zonder specials); onthouden na het openen van de serie
+    seasonsAvail: function (id) { return (Store.getP('seasonCount', {}) || {})[String(id)] || 0; },
+    setSeasonsAvail: function (id, n) {
+        var all = Store.getP('seasonCount', {}) || {}, keys = Object.keys(all);
+        if (all[String(id)] === n) return;
+        if (keys.length > 800) keys.slice(0, keys.length - 800).forEach(function (k) { delete all[k]; });
+        all[String(id)] = n;
+        Store.setP('seasonCount', all);
+    },
+    countSeasons: function (data) { var n = data.seasons.filter(function (s) { return s.num > 0; }).length; return n || data.seasons.length; },
+
     parseSeries: function (res) {
         var eps = (res && res.episodes) || {}, groups = {};
         function add(e) { var s = String(e.season || 1); (groups[s] = groups[s] || []).push(e); }

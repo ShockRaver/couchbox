@@ -562,5 +562,8 @@ I18N.add('el', {
     "Geen beoordeling": "Χωρίς αξιολόγηση",
     "Je krijgt vaker titels zoals deze te zien": "Θα βλέπεις περισσότερους τίτλους σαν αυτόν",
     "Je krijgt minder titels zoals deze te zien": "Θα βλέπεις λιγότερους τίτλους σαν αυτόν",
-    "Beoordeling verwijderd": "Η αξιολόγηση αφαιρέθηκε"
+    "Beoordeling verwijderd": "Η αξιολόγηση αφαιρέθηκε",
+    // ---- Seizoenen beschikbaar, automatische ondertitels ----
+    "{n} van {total} seizoenen beschikbaar": "{n} από {total} σεζόν διαθέσιμες",
+    "Automatisch (als er maar één is)": "Αυτόματα (αν υπάρχει μόνο ένας)"
 });

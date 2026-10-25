@@ -562,5 +562,8 @@ I18N.add('tr', {
     "Geen beoordeling": "Değerlendirme yok",
     "Je krijgt vaker titels zoals deze te zien": "Bunun gibi daha fazla başlık göreceksin",
     "Je krijgt minder titels zoals deze te zien": "Bunun gibi daha az başlık göreceksin",
-    "Beoordeling verwijderd": "Değerlendirme kaldırıldı"
+    "Beoordeling verwijderd": "Değerlendirme kaldırıldı",
+    // ---- Seizoenen beschikbaar, automatische ondertitels ----
+    "{n} van {total} seizoenen beschikbaar": "{total} sezondan {n} tanesi mevcut",
+    "Automatisch (als er maar één is)": "Otomatik (yalnızca bir tane varsa)"
 });

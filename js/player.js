@@ -316,10 +316,15 @@ var Player = (function () {
             var a = tracks('AUDIO').filter(function (t) { return t.lang === aud; })[0];
             if (a && a.index !== currentTrack('AUDIO')) selectTrack('AUDIO', a.index);
         }
-        if (sub && sub !== 'off') {
-            var t = tracks('TEXT').filter(function (x) { return x.lang === sub; })[0];
-            if (t) selectTrack('TEXT', t.index); else subtitlesOff();
-        } else subtitlesOff();
+        var t = pickText(tracks('TEXT'), sub, o.live);
+        if (t) selectTrack('TEXT', t.index); else subtitlesOff();
+    }
+    // Welke ondertiteling aan (of null = uit). sub: 'auto' = alleen als er precies één is (niet bij live-zenders),
+    // 'off', of een taal
+    function pickText(text, sub, live) {
+        if (sub === 'auto') return text.length === 1 && !live ? text[0] : null;
+        if (!sub || sub === 'off') return null;
+        return text.filter(function (x) { return x.lang === sub; })[0] || null;
     }
 
     // TV-app naar de achtergrond (bv. Home-knop): stream stoppen en daarna hervatten
@@ -339,7 +344,7 @@ var Player = (function () {
     return {
         init: init, isNative: isNative, play: play, stop: stop, pause: pause, resume: resume, toggle: toggle,
         seek: seek, time: time, duration: duration, setRect: setRect, applyAspect: applyAspect,
-        tracks: tracks, currentTrack: currentTrack, selectTrack: selectTrack, subtitlesOff: subtitlesOff,
+        tracks: tracks, currentTrack: currentTrack, selectTrack: selectTrack, subtitlesOff: subtitlesOff, pickText: pickText,
         subtitlesActive: function () { return subsOn; },
         state: function () { return state; }, url: function () { return cur.url; }, meta: function () { return cur.opts.meta || null; },
         on: on, off: off

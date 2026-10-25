@@ -42,16 +42,42 @@ Screens.series = {
             if (!self.tmdbId) { self.tmdbId = Tmdb.idOf({ tmdb: self.data.info.tmdb || self.data.info.tmdb_id }); self.loadDetails(); }
             // In Mijn lijst? Dan meteen een nulmeting voor "nieuwe afleveringen" (zonder extra verzoek)
             if (Store.isFav('series', it.series_id)) Follow.track({ id: it.series_id, name: it.name, icon: it.cover }, res);
+            App.setSeasonsAvail(it.series_id, App.countSeasons(self.data));
             self.setInfo(self.data.info);
             self.seasons.setItems(self.data.seasons);
             self.eps.setEmpty(T('Geen afleveringen gevonden'));
             self.focusTarget();
             self.renderButtons();
+            self.mergeSiblings(it);
         }).catch(function (e) {
             if (self.item !== it) return;
             self.loadFailed = true;
             self.eps.setEmpty(T('Laden mislukt: {error}', { error: e.message }));
             self.renderButtons();
+        });
+    },
+
+    // Zelfde serie in andere items bij de provider (andere taal, losse seizoenen): ontbrekende seizoenen en afleveringen aanvullen.
+    // Eén voor één opgehaald (hooguit 6); de focus blijft op het seizoen waar je stond.
+    mergeSiblings: function (it) {
+        var self = this, changed = false;
+        App.seriesSiblings(it, this.tmdbId).then(function (sibs) {
+            return sibs.slice(0, 6).reduce(function (p, s) {
+                return p.then(function () {
+                    if (self.item !== it) return;
+                    return Api.seriesInfo(s.item.series_id).then(function (res) {
+                        if (self.item === it && App.mergeSeries(self.data, App.parseSeries(res), s.lang)) changed = true;
+                    }).catch(function () { /* dit item overslaan */ });
+                });
+            }, Promise.resolve());
+        }).then(function () {
+            if (self.item !== it || !changed) return;
+            App.setSeasonsAvail(it.series_id, App.countSeasons(self.data));
+            var cur = self.seasons.current(), ep = self.eps.current();
+            var si = Math.max(0, self.data.seasons.indexOf(cur));
+            self.seasons.setItems(self.data.seasons, si);
+            self.eps.setItems(self.data.seasons[si].eps, Math.max(0, self.data.seasons[si].eps.indexOf(ep)));
+            self.setInfo(self.data.info);
         });
     },
 
@@ -92,7 +118,12 @@ Screens.series = {
         if (/^\d{4}$/.test(String(year))) meta.push(U.esc(year));
         var genres = det && det.genres.length ? det.genres.slice(0, 3).join(', ') : (inf.genre || it.genre);
         if (genres) meta.push(U.esc(genres));
-        if (this.data) meta.push(this.data.seasons.length === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: this.data.seasons.length }));
+        if (this.data) {
+            // Bestaan er volgens TMDB meer seizoenen dan je provider heeft? Dan dat eerlijk melden
+            var have = App.countSeasons(this.data), all = m && m.seasons;
+            meta.push(all > have ? T('{n} van {total} seizoenen beschikbaar', { n: have, total: all })
+                : have === 1 ? T('{n} seizoen', { n: 1 }) : T('{n} seizoenen', { n: have }));
+        }
         this.metaEl.innerHTML = meta.join('<span class="dot">·</span>');
         this.plotEl.textContent = (det && det.overview) || inf.plot || it.plot || '';
         this.renderButtons();

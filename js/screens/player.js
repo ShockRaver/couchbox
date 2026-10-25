@@ -515,7 +515,7 @@ Screens.player = {
     subLangs: function () {
         var out = [], pref = (this.seriesPrefs() || {}).sub;
         [pref && String(pref).replace(/^os:/, ''), Store.settings().subLang, I18N.lang(), 'en'].forEach(function (l) {
-            if (l && l !== 'off' && out.indexOf(l) < 0) out.push(l);
+            if (l && l !== 'off' && l !== 'auto' && out.indexOf(l) < 0) out.push(l);
         });
         return out;
     },
@@ -566,7 +566,7 @@ Screens.player = {
         if (saved) { this.loadExt(saved, false, saved.offset); return; }
         var pref = (this.seriesPrefs() || {}).sub, st = Store.settings();
         var lang = String(pref || st.subLang || 'off').replace(/^os:/, '');
-        if (lang === 'off' || !Subs.enabled() || st.osAuto === false) return;
+        if (lang === 'off' || lang === 'auto' || !Subs.enabled() || st.osAuto === false) return;
         var tries = 0;
         var check = function () {
             if (self.item !== item || self.ext || App.screen() !== self) return;

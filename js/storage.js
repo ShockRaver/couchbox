@@ -31,7 +31,7 @@ var Store = (function () {
         startup: 'none',        // bij opstarten: 'none' (startscherm) | 'live' (laatste zender) | 'ask' (verder kijken?)
         liveFormat: 'm3u8',     // 'm3u8' (HLS) of 'ts'
         audioLang: 'nl',        // 'auto' | 'nl' | 'en'
-        subLang: 'off',         // 'off' | 'nl' | 'en'
+        subLang: 'auto',        // 'auto' (aan als de stream er maar één heeft) | 'off' | 'nl' | 'en' | …
         subSize: 'm',           // grootte van ondertitels: 's' | 'm' | 'l' | 'xl'
         osAuto: true,           // online ondertitels (OpenSubtitles) automatisch zoeken als de stream de voorkeurstaal niet heeft
         osKey: '',              // eigen OpenSubtitles-sleutel
@@ -43,6 +43,8 @@ var Store = (function () {
         var s = Object.assign({}, DEFAULTS, get('settings', {}));
         // Oude instelling "laatste zender afspelen" overnemen
         if (s.autoplay === true && get('settings', {}).startup == null) s.startup = 'live';
+        // Eén keer: "Uit" (de oude standaard) wordt "Automatisch", zodat een enkele ondertiteling vanzelf aangaat
+        if (!s.subAuto) { if (s.subLang === 'off') s.subLang = 'auto'; s.subAuto = 1; set('settings', s); }
         return s;
     }
     function setSetting(key, val) { var s = settings(); s[key] = val; set('settings', s); return s; }
