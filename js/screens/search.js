@@ -84,7 +84,7 @@ Screens.search = {
         // Lange zoekopdracht: het einde blijft zichtbaar
         var q = this.q;
         this.qText.textContent = q ? (q.length > 24 ? '…' + q.slice(-23) : q) : T('Titel, zender, persoon');
-        this.qText.classList.toggle('ph', !q);
+        this.qText.classList.toggle('empty', !q);
     },
     press: function (id) {
         if (id === 'space') { if (this.q && this.q.slice(-1) !== ' ') this.q += ' '; }

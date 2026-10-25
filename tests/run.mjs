@@ -10,6 +10,7 @@ import { Browser, sleep } from './lib/browser.mjs';
 import { serve } from './lib/server.mjs';
 import { m3uFixtures } from './fixtures/m3u.mjs';
 import { osFixtures } from './fixtures/opensubs.mjs';
+import { gzFixtures } from './fixtures/gz.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'build/test-out/run');
@@ -61,6 +62,10 @@ function staticChecks() {
   })('js');
   report(banned.length ? { name: 'Geen alert/confirm/prompt (Samsung-keuring)', status: 'fail', error: banned.join('\n') } : { name: 'Geen alert/confirm/prompt (Samsung-keuring)', status: 'ok' });
 
+  // Stylesheets voor oudere TV's moeten bij app.css passen (gemaakt door scripts/compat-css.mjs)
+  const cc = spawnSync(process.execPath, ['scripts/compat-css.mjs', '--check'], { cwd: root, encoding: 'utf8' });
+  report(cc.status === 0 ? { name: 'CSS voor oudere TV\'s actueel', status: 'ok' } : { name: 'CSS voor oudere TV\'s actueel', status: 'fail', error: (cc.stdout + cc.stderr).trim() });
+
   const i18n = spawnSync(process.execPath, ['scripts/i18n-check.js'], { cwd: root, encoding: 'utf8' });
   const miss = (i18n.stdout.match(/Zonder Engelse vertaling \((\d+)\)/) || [])[1];
   report(i18n.status === 0 ? { name: 'Vertalingen compleet (i18n-check)', status: 'ok' }
@@ -111,7 +116,7 @@ function context(b, base, name) {
 
 async function browserTests() {
   const specs = fs.readdirSync(path.join(root, 'tests/specs')).filter(f => f.endsWith('.mjs')).sort();
-  const srv = await serve(root, { ...m3uFixtures(), ...osFixtures() });
+  const srv = await serve(root, { ...m3uFixtures(), ...osFixtures(), ...gzFixtures() });
   const b = new Browser();
   await b.start();
   try {

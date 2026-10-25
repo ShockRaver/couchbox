@@ -24,7 +24,8 @@ export class Browser {
 
   async start() {
     this.profile = fs.mkdtempSync(path.join(os.tmpdir(), 'kijkdoos-chrome-'));
-    const args = ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${this.profile}`, '--window-size=1920,1080',
+    // CHROME_OLD=1: oude Chromium (bv. 76, zoals op 2021-TV's) kent alleen de oude headless-modus
+    const args = [process.env.CHROME_OLD ? '--headless' : '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${this.profile}`, '--window-size=1920,1080',
       '--hide-scrollbars', '--autoplay-policy=no-user-gesture-required', '--mute-audio', '--no-first-run', '--no-default-browser-check'];
     // Op GitHub (Ubuntu 24.04) staat de Chrome-sandbox voor gewone gebruikers uit
     if (process.env.CI) args.push('--no-sandbox', '--disable-dev-shm-usage');

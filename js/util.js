@@ -108,7 +108,7 @@ var U = (function () {
 
     // Initialen als placeholder voor ontbrekende logo's/posters ("NL | NPO 1" -> "N1")
     function initials(name) {
-        var s = String(name || '').replace(/^[A-Z]{2,4}\s*[|:\-]\s*/, '').replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/)
+        var s = String(name || '').replace(/^[A-Z]{2,4}\s*[|:\-]\s*/, '').replace(/[!-\/:-@\[-`{-~\u00a0-\u00bf\u00d7\u00f7\u2000-\u2bff\u3000-\u303f\ufe30-\ufe4f\uff00-\uff0f\ud800-\udfff]/g, ' ').trim().split(/\s+/)
             .filter(function (w, i) { return i === 0 || !/^(of|the|and|a|an|de|het|een|en|van|der|la|le)$/i.test(w); });
         return (((s[0] || '')[0] || '') + ((s[1] || '')[0] || '')).toUpperCase();
     }

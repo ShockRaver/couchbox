@@ -80,7 +80,7 @@ var Dialog = (function () {
         var d = { el: U.h('div', { class: 'dialog-wrap' }, box) };
         function draw() {
             shown.textContent = value || o.placeholder || '';
-            shown.classList.toggle('ph', !value);
+            shown.classList.toggle('empty', !value);
             kb.setActive(zone === 'keys');
             btns.forEach(function (b, i) { b.el.classList.toggle('focus', zone === 'btns' && i === btnIdx); });
         }

@@ -49,19 +49,21 @@ export default [
     name: 'XMLTV: ingepakte gids (.gz), tijdzones en tekens',
     async run(t) {
       await t.demo();
-      const r = await t.eval(`(function () {
-        var xml = '<?xml version="1.0"?><tv><channel id="A.nl"><display-name>NPO 1</display-name></channel>' +
-          '<programme start="' + 'X1' + '" stop="' + 'X2' + '" channel="A.nl"><title>Kaas &amp; Wijn &#233;</title><desc><![CDATA[Tekst <b>vet</b>]]></desc></programme></tv>';
-        var p = function (t) { var d = new Date(t), z = function (n) { return (n < 10 ? '0' : '') + n; }; return d.getUTCFullYear() + z(d.getUTCMonth() + 1) + z(d.getUTCDate()) + z(d.getUTCHours()) + z(d.getUTCMinutes()) + '00 +0000'; };
-        var t0 = Math.floor(Date.now() / 60000) * 60000;
-        xml = xml.replace('X1', p(t0)).replace('X2', p(t0 + 3600e3));
-        var gz = new Response(xml).body.pipeThrough(new CompressionStream('gzip'));
-        return Xmltv.parse(gz, { ids: {}, names: { npo1: 1 } }).then(function (res) {
-          var l = res.progs['a.nl'] || [];
-          return { ch: res.channels.length, n: l.length, title: l[0] && l[0][2], desc: l[0] && l[0][3], ok: l[0] && l[0][0] === t0 };
+      // Twee keer: met de ingebouwde DecompressionStream (als de browser die heeft) en met js/inflate.js (oudere TV's)
+      const run = (fallback) => t.eval(`fetch('/test/epg-t0.json').then(function (r) { return r.json(); }).then(function (meta) {
+        return fetch('/test/epg.xml.gz').then(function (r) {
+          var keep = window.DecompressionStream;
+          if (${fallback}) window.DecompressionStream = undefined;
+          return Xmltv.parse(r.body, { ids: {}, names: { npo1: 1 } }).then(function (res) {
+            window.DecompressionStream = keep;
+            var l = res.progs['a.nl'] || [];
+            return { ch: res.channels.length, n: l.length, title: l[0] && l[0][2], desc: l[0] && l[0][3], ok: l[0] && l[0][0] === meta.t0 };
+          }, function (e) { window.DecompressionStream = keep; throw e; });
         });
-      })()`);
-      t.eq(r, { ch: 1, n: 1, title: 'Kaas & Wijn é', desc: 'Tekst <b>vet</b>', ok: true }, 'ingepakte gids');
+      })`);
+      const r = await run(true);
+      if (await t.eval('!!window.DecompressionStream')) t.eq(await run(false), r, 'ingebouwd uitpakken anders dan inflate.js');
+      t.eq(r, { ch: 1, n: 1, title: 'Kaas & Wijn é', desc: 'Tekst <b>vet</b>', ok: true }, 'ingepakte gids (inflate.js)');
       t.eq(await t.eval("[Xmltv.time('20261007153000 +0200') === Date.UTC(2026, 9, 7, 13, 30), Xmltv.time('20261007153000 -0130') === Date.UTC(2026, 9, 7, 17, 0), Xmltv.time('20261007153000') === Date.UTC(2026, 9, 7, 15, 30)]"), [true, true, true], 'tijdzones');
       t.eq(await t.eval("['NL | NPO 1 HD', 'NPO 1', 'NPO1 FHD', 'RTL 4 (backup)'].map(Xmltv.nm)"), ['npo1', 'npo1', 'npo1', 'rtl4'], 'namen vergelijken');
     }

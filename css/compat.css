@@ -1,0 +1,63 @@
+/* GEGENEREERD door scripts/compat-css.mjs uit css/app.css – niet met de hand aanpassen */
+/* Oudere TV's: flexbox zonder gap (Chromium < 84) en geen CSS-grid (Chromium < 57). Zie js/compat.js. */
+html.no-flexgap .hdr > * + * { margin-left: 28px; }
+html.no-flexgap .hdr-right > * + * { margin-left: 36px; }
+html.no-flexgap .hdr-profile > * + * { margin-left: 12px; }
+html.no-flexgap .brand > * + * { margin-left: 16px; }
+html.no-flexgap .btn > * + * { margin-left: 14px; }
+html.no-flexgap .dialog.has-img > * + * { margin-left: 40px; }
+html.no-flexgap .dialog-item > * + * { margin-left: 16px; }
+html.no-flexgap .pin-row > * + * { margin-left: 22px; }
+html.no-flexgap #loader > * + * { margin-top: 28px; }
+html.no-flexgap .login-logo > * + * { margin-left: 16px; }
+html.no-flexgap .btn-row > * + * { margin-left: 20px; }
+html.no-flexgap .tile > * + * { margin-top: 16px; }
+html.no-flexgap .cat > * + * { margin-left: 12px; }
+html.no-flexgap .live-body > * + * { margin-left: 24px; }
+html.no-flexgap .preview-msg > * + * { margin-top: 18px; }
+html.no-flexgap .ci-head > * + * { margin-left: 20px; }
+html.no-flexgap .ci-next > * + * { margin-left: 16px; }
+html.no-flexgap .ch-row > * + * { margin-left: 16px; }
+html.no-flexgap .cat-body > * + * { margin-left: 28px; }
+html.no-flexgap .detail-content > * + * { margin-left: 70px; }
+html.no-flexgap .meta { margin-left: -7px; }
+html.no-flexgap .meta > * { margin-left: 7px; margin-right: 7px; margin-bottom: 14px; }
+html.no-flexgap .detail-btns > * + * { margin-left: 22px; }
+html.no-flexgap .series-btns > * + * { margin-top: 16px; }
+html.no-flexgap .ep > * + * { margin-left: 24px; }
+html.no-flexgap .g-ch > * + * { margin-left: 12px; }
+html.no-flexgap .search-field > * + * { margin-left: 20px; }
+html.no-flexgap .set-val > * + * { margin-left: 18px; }
+html.no-flexgap .prof-row > * + * { margin-left: 24px; }
+html.no-flexgap .osd-top > * + * { margin-left: 28px; }
+html.no-flexgap .osd-btns > * + * { margin-left: 16px; }
+html.no-flexgap .osd-btn > * + * { margin-left: 12px; }
+html.no-flexgap .series-btns > * + * { margin-top: 12px; }
+html.no-flexgap .topnav > * + * { margin-left: 36px; }
+html.no-flexgap .tn-brand > * + * { margin-left: 12px; }
+html.no-flexgap .tn-items > * + * { margin-left: 6px; }
+html.no-flexgap .sec-chip > * + * { margin-left: 12px; }
+html.no-flexgap .sec-loading > * + * { margin-left: 12px; }
+html.no-flexgap .has-nav .hdr > * + * { margin-left: 20px; }
+html.no-flexgap .sk-query > * + * { margin-left: 16px; }
+html.no-flexgap .sk-keys { grid-gap: 8px 8px; }
+html.no-flexgap .sk-ritem > * + * { margin-left: 14px; }
+html.no-flexgap .g-bar > * + * { margin-left: 12px; }
+html.no-flexgap .g-chip > * + * { margin-left: 12px; }
+html.no-flexgap .qtags > * + * { margin-left: 4px; }
+html.no-flexgap .tr-bar > * + * { margin-left: 32px; }
+/* Automatische marges terugzetten */
+html.no-flexgap .hdr-right { margin-left: auto; }
+html.no-flexgap .login-card { margin: 40px auto 0; }
+html.no-flexgap .ci-hint { margin-top: auto; }
+html.no-flexgap .osd-clock { margin-left: auto; }
+html.no-flexgap .pcard-img { margin: 0 auto; }
+html.no-flexgap .tn-right { margin-left: auto; }
+html.no-flexgap .tr-hint { margin-left: auto; }
+/* Zoekveld: cursor na de tekst, of (lege zoekregel) vooraan, 10px vóór het icoon */
+html.no-flexgap .sk-query > .sk-caret { margin-left: 6px; }
+html.no-flexgap .sk-query > .sk-text.empty + .sk-caret { margin-left: 0; margin-right: 10px; }
+/* Zoektoetsenbord zonder CSS-grid: 6 kolommen van 84px */
+html.no-grid .sk-keys { display: flex; flex-wrap: wrap; width: 552px; margin-right: -8px; }
+html.no-grid .sk-keys > * { width: 84px; margin: 0 8px 8px 0; }
+html.no-grid .sk-keys > .wide { width: 176px; }

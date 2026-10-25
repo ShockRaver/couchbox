@@ -410,7 +410,7 @@ I18N.add('en', {
     "Bron van de tv-gids": "TV guide source",
     "De zenders zelf blijven gewoon bestaan.": "The channels themselves are not removed.",
     "Deze TV kan de gids niet in delen lezen": "This TV can't read the guide in parts",
-    "Deze TV kan geen ingepakte (.gz) gids uitpakken; gebruik een .xml-adres": "This TV can't unpack a compressed (.gz) guide; use an .xml address",
+    "Deze ingepakte gids is te groot voor deze TV; gebruik een .xml-adres": "This compressed guide is too large for this TV; use an .xml address",
     "Dit lijkt geen XMLTV-gids": "This doesn't look like an XMLTV guide",
     "Downloaden duurde te lang": "Download took too long",
     "Downloaden… {mb} MB": "Downloading… {mb} MB",

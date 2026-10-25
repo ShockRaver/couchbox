@@ -9,6 +9,7 @@ var Xmltv = (function () {
 
     var STORE = 'epg', META = '__meta';
     var BACK = 4 * 3600e3, AHEAD = 3 * 86400e3, MAX_AGE = 12 * 3600e3, DESC = 300;
+    var MAX_GZ = 12e6;   // oudere TV's: grootste ingepakte gids die in het geheugen wordt uitgepakt
     var meta = null, metaP = null, idx = null, running = null, progress = null, lastError = '';
 
     // ---- Bron ----
@@ -132,12 +133,37 @@ var Xmltv = (function () {
                 return read(r);
             });
         }
+        // Oudere TV's (geen DecompressionStream): het hele ingepakte bestand ophalen, in JavaScript uitpakken (js/inflate.js)
+        // en dan in stukken van 1 MB lezen. Dat kost meer geheugen, dus alleen tot MAX_GZ ingepakt.
+        function gunzipAll(r, head) {
+            var parts = [head], size = head.length;
+            var more = function () {
+                return r.read().then(function (y) {
+                    if (y.done) return;
+                    size += y.value.length;
+                    if (size > MAX_GZ) throw new Error(T('Deze ingepakte gids is te groot voor deze TV; gebruik een .xml-adres'));
+                    if (onBytes) onBytes(size);
+                    parts.push(y.value);
+                    return more();
+                });
+            };
+            return more().then(function () {
+                var all = new Uint8Array(size), at = 0;
+                parts.forEach(function (p) { all.set(p, at); at += p.length; });
+                parts = null;
+                var out = Inflate.gunzip(all), step = 1 << 20;
+                bytes = size;
+                for (var i = 0; i < out.length; i += step) { buf += dec.decode(out.subarray(i, i + step), { stream: true }); eat(); }
+                buf += dec.decode();
+                eat();
+            });
+        }
         // Eerste bytes 1f 8b = gzip: uitpakken (ook als de server dat niet zelf aangeeft)
         return reader.read().then(function (x) {
             if (x.done) return;
             var gz = x.value[0] === 0x1f && x.value[1] === 0x8b;
             if (!gz) { bytes = x.value.length; buf = dec.decode(x.value, { stream: true }); eat(); return read(reader); }
-            if (!window.DecompressionStream) throw new Error(T('Deze TV kan geen ingepakte (.gz) gids uitpakken; gebruik een .xml-adres'));
+            if (!window.DecompressionStream) return gunzipAll(reader, x.value);
             var head = x.value, raw = new ReadableStream({
                 start: function (c) { c.enqueue(head); },
                 pull: function (c) { return reader.read().then(function (y) { if (y.done) c.close(); else c.enqueue(y.value); }); }

@@ -78,7 +78,7 @@ I18N.add('fr', {
     "Deze stream bevat geen ondertitels": "Ce flux ne contient pas de sous-titres",
     "Deze trailer kan niet in Kijkdoos spelen; hij opent in de YouTube-app": "Cette bande-annonce ne peut pas être lue dans Kijkdoos ; ouverture dans l'app YouTube",
     "Deze TV kan de gids niet in delen lezen": "Cette TV ne peut pas lire le guide par morceaux",
-    "Deze TV kan geen ingepakte (.gz) gids uitpakken; gebruik een .xml-adres": "Cette TV ne peut pas décompresser un guide (.gz) ; utilisez une adresse .xml",
+    "Deze ingepakte gids is te groot voor deze TV; gebruik een .xml-adres": "Ce guide compressé est trop volumineux pour ce téléviseur ; utilise une adresse .xml",
     "Deze video kan niet worden afgespeeld.\n({error})": "Impossible de lire cette vidéo.\n({error})",
     "Deze zender kan niet worden afgespeeld": "Impossible de lire cette chaîne",
     "Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.": "Impossible de lire cette chaîne pour le moment.\nEssayez une autre chaîne avec ▲ / ▼.",

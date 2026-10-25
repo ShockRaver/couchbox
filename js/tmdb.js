@@ -83,7 +83,7 @@ var Tmdb = (function () {
             if (r.status === 429) { var e2 = new Error(T('Te veel verzoeken')); e2.retry = 10000; throw e2; }
             if (!r.ok) throw new Error(T('TMDB-fout {code}', { code: r.status }));
             return r.json();
-        }).finally(function () { clearTimeout(timer); });
+        }).then(function (x) { clearTimeout(timer); return x; }, function (e) { clearTimeout(timer); throw e; });
     }
 
     // Eén titel: genrecode teruggeven en basisgegevens in de metadata-service zetten

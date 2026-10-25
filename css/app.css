@@ -558,9 +558,9 @@ b { font-weight: 700; }
 .sk { position: absolute; left: 80px; top: 124px; width: 548px; z-index: 2; }
 .sk-query { height: 76px; display: flex; align-items: center; gap: 16px; margin-bottom: 22px; padding: 0 6px; border-bottom: 2px solid rgba(255, 255, 255, .25); font-size: 36px; font-weight: 600; white-space: nowrap; overflow: hidden; }
 .sk-query .ic { width: 34px; height: 34px; color: var(--muted); }
-.sk-text.ph { color: var(--subtle); font-size: 26px; font-weight: 400; }
+.sk-text.empty { color: var(--subtle); font-size: 26px; font-weight: 400; }
 .sk-caret { width: 3px; height: 40px; margin-left: -10px; background: var(--accent); animation: sk-blink 1.1s steps(1) infinite; }
-.sk-text.ph + .sk-caret { order: -1; margin: 0 -6px 0 0; }
+.sk-text.empty + .sk-caret { order: -1; margin: 0 -6px 0 0; }
 @keyframes sk-blink { 50% { opacity: 0; } }
 .sk-keys { display: grid; grid-template-columns: repeat(6, 84px); gap: 8px; }
 .sk-key { height: 70px; border-radius: 12px; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 600;

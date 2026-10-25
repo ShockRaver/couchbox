@@ -39,9 +39,14 @@ var Db = (function () {
         return tx(store, 'readwrite', function (s) { entries.forEach(function (e) { s.put(e[1], e[0]); }); });
     }
     // Alles uitlezen: { keys: [...], values: [...] }
+    // Oudere TV's (Chromium < 48) kennen getAll/getAllKeys niet: dan met een cursor
     function all(store) {
-        return tx(store, 'readonly', function (s) { return { k: s.getAllKeys(), v: s.getAll() }; })
-            .then(function (r) { return { keys: r.k.result || [], values: r.v.result || [] }; });
+        return tx(store, 'readonly', function (s) {
+            if (s.getAll && s.getAllKeys) return { k: s.getAllKeys(), v: s.getAll() };
+            var out = { keys: [], values: [] }, c = s.openCursor();
+            c.onsuccess = function () { var cur = c.result; if (cur) { out.keys.push(cur.key); out.values.push(cur.value); cur['continue'](); } };
+            return out;
+        }).then(function (r) { return r.k ? { keys: r.k.result || [], values: r.v.result || [] } : r; });
     }
     function clear(store) { return tx(store, 'readwrite', function (s) { s.clear(); }); }
     function del(store, key) { return tx(store, 'readwrite', function (s) { s.delete(key); }); }

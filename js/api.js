@@ -71,7 +71,7 @@ var Api = (function () {
                 if (e instanceof TypeError) throw new Error(T('Kan de server niet bereiken'));
                 throw e;
             })
-            .finally(function () { clearTimeout(timer); });
+            .then(function (x) { clearTimeout(timer); return x; }, function (e) { clearTimeout(timer); throw e; });
     }
 
     // Resultaat in het geheugen bewaren, maximaal 6 uur (daarna opnieuw ophalen, zodat nieuwe titels verschijnen);

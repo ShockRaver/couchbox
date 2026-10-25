@@ -78,7 +78,7 @@ I18N.add('tr', {
     "Deze stream bevat geen ondertitels": "Bu yayında altyazı yok",
     "Deze trailer kan niet in Kijkdoos spelen; hij opent in de YouTube-app": "Bu fragman Kijkdoos'ta oynatılamıyor; YouTube uygulamasında açılıyor",
     "Deze TV kan de gids niet in delen lezen": "Bu TV rehberi parçalar halinde okuyamıyor",
-    "Deze TV kan geen ingepakte (.gz) gids uitpakken; gebruik een .xml-adres": "Bu TV sıkıştırılmış (.gz) bir rehberi açamıyor; .xml adresi kullan",
+    "Deze ingepakte gids is te groot voor deze TV; gebruik een .xml-adres": "Bu sıkıştırılmış rehber bu TV için çok büyük; .xml adresi kullanın",
     "Deze video kan niet worden afgespeeld.\n({error})": "Bu video oynatılamıyor.\n({error})",
     "Deze zender kan niet worden afgespeeld": "Bu kanal oynatılamıyor",
     "Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.": "Bu kanal şu anda oynatılamıyor.\n▲ / ▼ ile başka bir kanal dene.",

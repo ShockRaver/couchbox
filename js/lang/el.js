@@ -78,7 +78,7 @@ I18N.add('el', {
     "Deze stream bevat geen ondertitels": "Αυτή η ροή δεν έχει υπότιτλους",
     "Deze trailer kan niet in Kijkdoos spelen; hij opent in de YouTube-app": "Αυτό το τρέιλερ δεν παίζει στο Kijkdoos, θα ανοίξει στην εφαρμογή YouTube",
     "Deze TV kan de gids niet in delen lezen": "Αυτή η TV δεν μπορεί να διαβάσει τον οδηγό τμηματικά",
-    "Deze TV kan geen ingepakte (.gz) gids uitpakken; gebruik een .xml-adres": "Αυτή η TV δεν μπορεί να αποσυμπιέσει συμπιεσμένο (.gz) οδηγό, χρησιμοποιήστε διεύθυνση .xml",
+    "Deze ingepakte gids is te groot voor deze TV; gebruik een .xml-adres": "Αυτός ο συμπιεσμένος οδηγός είναι πολύ μεγάλος για αυτή την τηλεόραση· χρησιμοποίησε διεύθυνση .xml",
     "Deze video kan niet worden afgespeeld.\n({error})": "Αυτό το βίντεο δεν μπορεί να αναπαραχθεί.\n({error})",
     "Deze zender kan niet worden afgespeeld": "Αυτό το κανάλι δεν μπορεί να αναπαραχθεί",
     "Deze zender kan nu niet worden afgespeeld.\nProbeer een andere zender met ▲ / ▼.": "Αυτό το κανάλι δεν μπορεί να αναπαραχθεί αυτή τη στιγμή.\nΔοκιμάστε άλλο κανάλι με ▲ / ▼.",
