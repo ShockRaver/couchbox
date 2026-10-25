@@ -444,7 +444,7 @@ Screens.player = {
     },
 
     subsMenu: function (index) {
-        var self = this, tr = Player.tracks('TEXT'), online = !this.live, x = this.ext;
+        var self = this, tr = Player.tracks('TEXT'), online = !this.live && Subs.enabled(), x = this.ext;
         if (!tr.length && !online) { Toast.show(T('Deze stream bevat geen ondertitels')); return; }
         var on = Player.subtitlesActive() && !x, cur = on ? Player.currentTrack('TEXT') : -1;
         var items = [{ id: 'off', label: T('Uit'), lang: 'off', checked: !on && !x }].concat(tr.map(function (t) {

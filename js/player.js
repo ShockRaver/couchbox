@@ -309,22 +309,30 @@ var Player = (function () {
 
     // Voorkeurstaal uit de instellingen toepassen
     // Voorkeurstalen: per stream meegegeven (bv. onthouden per serie), anders uit de instellingen
-    function applyTrackPrefs() {
-        var s = Store.settings(), o = (cur && cur.opts) || {};
+    // again = 1 of 2: nog eens kijken, want sommige streams (bv. MKV) melden hun ondertitels pas na een paar seconden.
+    // Heeft de kijker zelf ondertitels gekozen (cur.userSubs), dan niets meer veranderen.
+    function applyTrackPrefs(again) {
+        var s = Store.settings(), c = cur, o = (c && c.opts) || {}, my = token;
         var aud = o.audioLang || s.audioLang, sub = o.subLang != null ? o.subLang : s.subLang;
-        if (aud && aud !== 'auto') {
+        if (!again && aud && aud !== 'auto') {
             var a = tracks('AUDIO').filter(function (t) { return t.lang === aud; })[0];
             if (a && a.index !== currentTrack('AUDIO')) selectTrack('AUDIO', a.index);
         }
+        if (c.userSubs || (again && subsOn)) return;
         var t = pickText(tracks('TEXT'), sub, o.live);
-        if (t) selectTrack('TEXT', t.index); else subtitlesOff();
+        if (t) { selectTrack('TEXT', t.index); return; }
+        if (!again) subtitlesOff();
+        if (sub !== 'off' && (again || 0) < 2) setTimeout(function () { if (my === token && cur === c) applyTrackPrefs((again || 0) + 1); }, again ? 5000 : 2500);
     }
-    // Welke ondertiteling aan (of null = uit). sub: 'auto' = alleen als er precies één is (niet bij live-zenders),
-    // 'off', of een taal
+    // Welke ondertiteling aan (of null = uit). sub: 'auto' = alleen als er precies één is, 'off', of een taal.
+    // Bij een taal: niet gevonden, maar wel precies één ondertiteling zonder bekende taal ("Onbekend")? Dan die.
+    // Nooit vanzelf bij live-zenders, behalve een gekozen taal.
     function pickText(text, sub, live) {
-        if (sub === 'auto') return text.length === 1 && !live ? text[0] : null;
         if (!sub || sub === 'off') return null;
-        return text.filter(function (x) { return x.lang === sub; })[0] || null;
+        if (sub === 'auto') return text.length === 1 && !live ? text[0] : null;
+        var hit = text.filter(function (x) { return x.lang === sub; })[0];
+        if (hit) return hit;
+        return text.length === 1 && !live && /^(|und|unk|unknown|none|mis|zxx)$/.test(text[0].lang || '') ? text[0] : null;
     }
 
     // TV-app naar de achtergrond (bv. Home-knop): stream stoppen en daarna hervatten
@@ -344,7 +352,10 @@ var Player = (function () {
     return {
         init: init, isNative: isNative, play: play, stop: stop, pause: pause, resume: resume, toggle: toggle,
         seek: seek, time: time, duration: duration, setRect: setRect, applyAspect: applyAspect,
-        tracks: tracks, currentTrack: currentTrack, selectTrack: selectTrack, subtitlesOff: subtitlesOff, pickText: pickText,
+        tracks: tracks, currentTrack: currentTrack, pickText: pickText,
+        // Door de kijker gekozen (menu, externe ondertitels): daarna kiest de speler zelf niets meer
+        selectTrack: function (type, index) { if (type === 'TEXT') cur.userSubs = true; return selectTrack(type, index); },
+        subtitlesOff: function () { cur.userSubs = true; subtitlesOff(); },
         subtitlesActive: function () { return subsOn; },
         state: function () { return state; }, url: function () { return cur.url; }, meta: function () { return cur.opts.meta || null; },
         on: on, off: off

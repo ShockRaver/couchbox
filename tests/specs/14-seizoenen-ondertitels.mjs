@@ -47,16 +47,31 @@ export default [
     }
   },
   {
-    name: 'Ondertitels: automatisch aan als er precies één is (niet bij live)',
+    name: 'Ondertitels: automatisch aan als er precies één is (niet bij live), ook als de taal onbekend is',
     async run(t) {
       await t.demo();
       const r = await t.eval(`(function () {
         var one = [{ index: 3, lang: 'en' }], two = [{ index: 3, lang: 'en' }, { index: 4, lang: 'nl' }];
         var f = function (x) { return x ? x.index : null; };
         return [f(Player.pickText(one, 'auto', false)), f(Player.pickText(one, 'auto', true)), f(Player.pickText(two, 'auto', false)),
-          f(Player.pickText(one, 'off', false)), f(Player.pickText(two, 'nl', false)), f(Player.pickText(one, 'nl', false)), Store.settings().subLang];
+          f(Player.pickText(one, 'off', false)), f(Player.pickText(two, 'nl', false)), f(Player.pickText(one, 'nl', false)),
+          // Eén ondertiteling zonder taal ("Onbekend"): ook bij een gekozen taal
+          f(Player.pickText([{ index: 7, lang: '' }], 'nl', false)), f(Player.pickText([{ index: 7, lang: 'und' }], 'auto', false)), f(Player.pickText([{ index: 7, lang: '' }], 'off', false)),
+          Store.settings().subLang];
       })()`);
-      t.eq(r, [3, null, null, null, 4, null, 'auto'], 'keuzes en standaardinstelling');
+      t.eq(r, [3, null, null, null, 4, null, 7, 7, null, 'auto'], 'keuzes en standaardinstelling');
     }
+  },
+  {
+    name: 'Ondertitels: zonder OpenSubtitles-sleutel geen "Online zoeken" in het menu',
+    async run(t) {
+      await t.demo();
+      await t.eval("CONFIG.osKey = ''; Store.setSetting('osKey', ''); App.go('player', { mode: 'movie', item: { id: '5001', name: 'Testfilm', ext: 'mp4', tmdb: '' } }); 1");
+      await t.until('App.screen() === Screens.player');
+      await t.eval('Screens.player.subsMenu(); 1');
+      const labels = await t.eval("Array.from(document.querySelectorAll('.dialog .di-label')).map(function (e) { return e.textContent; })");
+      t.ok(!labels.some(l => /OpenSubtitles/.test(l)), 'OpenSubtitles in het menu: ' + labels);
+    },
+    allow: /Speler-fout|Afspeelfout|Failed to load|NotSupported|404|ERR_/
   }
 ];
